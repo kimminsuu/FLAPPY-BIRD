@@ -32,3 +32,6 @@ tmpclaude/
 
 # MCP (contains tokens)
 .mcp.json
+
+# Claude Code local settings
+.claude/
