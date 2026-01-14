@@ -30,11 +30,11 @@
 - [ ]
 
 ### Pending
-- [ ] GitHub에 repository 생성 및 추가
-- [ ] Agent 추가하기 (Code Review, Security 등)
+- [ ]
 
 ### Completed
-- [x]
+- [x] GitHub에 repository 생성 및 추가
+- [x] Agent 추가하기 (Code Review, Security 등)
 
 ---
 
@@ -44,9 +44,9 @@
 
 | Agent Name | Role | Description |
 |------------|------|-------------|
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| code-review | 코드 리뷰 | PR 전 코드 품질 자동 체크 |
+| security-guidance | 보안 가이드 | 보안 취약점 사전 방지 |
+| pr-review-toolkit | PR 리뷰 | 이슈 연결 및 PR 리뷰 자동화 |
 
 ---
 
@@ -106,4 +106,4 @@ FLAPPY-BIRD/
 
 추가 참고 사항이나 주의점을 기록합니다.
 
--
+- 작업 완료 시 CLAUDE.md 업데이트 필요 여부 검토할 것
