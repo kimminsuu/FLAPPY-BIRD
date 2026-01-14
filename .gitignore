@@ -29,3 +29,6 @@ build/
 *.temp
 tmpclaude-*
 tmpclaude/
+
+# MCP (contains tokens)
+.mcp.json
