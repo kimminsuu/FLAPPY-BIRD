@@ -1,6 +1,6 @@
 # Project Overview
 
-프로젝트 이름: FLOPPY BIRD
+프로젝트 이름: FLAPPY-BIRD
 프로젝트 설명: Flappy Bird 스타일의 캐주얼 게임
 
 ---
@@ -30,7 +30,8 @@
 - [ ]
 
 ### Pending
-- [ ]
+- [ ] GitHub에 repository 생성 및 추가
+- [ ] Agent 추가하기 (Code Review, Security 등)
 
 ### Completed
 - [x]
@@ -70,7 +71,7 @@
 ## Project Structure
 
 ```
-gemini_pjt/
+FLAPPY-BIRD/
 ├──
 ├──
 └──
