@@ -8,10 +8,12 @@
 
 ## Tech Stack
 
-### Mobile App (후보 - 결정 예정)
-- React Native
-- Flutter
-- Unity
+### Frontend (확정)
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+- Lucide React (아이콘)
 
 ### Backend
 - TBD (Firebase / Supabase / Custom)
@@ -34,22 +36,24 @@
 ## TODO List
 
 ### In Progress
-- [ ] V0 목업 검토 및 기술 스택 결정 (React Native, Flutter, Unity 등)
-
-### Pending
-- [ ] 프로젝트 구조 설계
 - [ ] 실제 구현
-  - [ ] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
+  - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
   - [ ] HomeScreen (메인 메뉴)
   - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
   - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
   - [ ] RankingScreen (카카오톡 친구 기반)
+
+### Pending
+- [ ] 로그인 API 연동
+- [ ] 카카오 SDK 연동
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
 - [x] Agent 추가하기 (Code Review, Security 등)
 - [x] 브랜치 전략 설정 (main/dev)
 - [x] GitHub 템플릿 추가 (PR, Issue)
+- [x] V0 목업 검토 및 기술 스택 결정 (Next.js)
+- [x] 프로젝트 구조 설계
 
 ---
 
@@ -94,11 +98,12 @@ GameOverModal → HomeScreen
 
 ### Feature 1: 로그인 시스템
 - 설명: 사용자 이름/비밀번호 기반 로그인 + 카카오 ID 연동
-- 관련 파일: TBD
+- 관련 파일: `app/components/login-page.tsx`
 - 세부 기능:
-  - 일반 로그인 (이름 + 비밀번호)
-  - 카카오 소셜 로그인
-  - 자동 로그인 (토큰 저장)
+  - 일반 로그인 (이름 + 비밀번호) ✅
+  - 카카오 소셜 로그인 (UI 완료, API 연동 예정)
+  - 자동 로그인 (토큰 저장) - 예정
+- 구현 상태: UI 완료, API 연동 대기
 
 ### Feature 2: 인게임 플레이
 - 설명: Flappy Bird 스타일의 메인 게임 플레이
@@ -142,22 +147,22 @@ FLAPPY-BIRD/
 ├── .github/                    # GitHub 템플릿
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── ISSUE_TEMPLATE/
-├── src/                        # 소스 코드 (TBD)
+├── app/                        # Next.js App Router
 │   ├── components/             # UI 컴포넌트
-│   ├── screens/                # 페이지/화면
-│   │   ├── Login/
-│   │   ├── Game/
-│   │   ├── BirdSelection/
-│   │   └── Ranking/
-│   ├── assets/                 # 이미지, 사운드 등
-│   ├── services/               # API, 인증 등
-│   └── utils/                  # 유틸리티 함수
+│   │   ├── login-page.tsx      # 로그인 페이지
+│   │   ├── game-page.tsx       # 게임 페이지 (예정)
+│   │   ├── bird-selection-page.tsx  # 새 선택 (예정)
+│   │   └── ranking-page.tsx    # 랭킹 페이지 (예정)
+│   ├── globals.css             # 전역 스타일
+│   ├── layout.tsx              # 루트 레이아웃
+│   └── page.tsx                # 메인 페이지
+├── images/                     # 목업 이미지
+├── package.json
+├── tailwind.config.ts
+├── tsconfig.json
 ├── .gitignore
-├── CLAUDE.md                   # 프로젝트 문서
-└── README.md                   # (예정)
+└── CLAUDE.md                   # 프로젝트 문서
 ```
-
-> 실제 구조는 기술 스택 결정 후 확정
 
 ---
 
@@ -165,13 +170,19 @@ FLAPPY-BIRD/
 
 ```bash
 # 설치
+npm install
 
-# 실행
+# 개발 서버 실행
+npm run dev
 
 # 테스트
+npm run lint
 
 # 빌드
+npm run build
 
+# 프로덕션 실행
+npm run start
 ```
 
 ---
