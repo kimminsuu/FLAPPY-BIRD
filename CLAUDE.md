@@ -1,26 +1,33 @@
 # Project Overview
 
 프로젝트 이름: FLAPPY-BIRD
-프로젝트 설명: Flappy Bird 스타일의 캐주얼 게임
+프로젝트 설명: Flappy Bird 스타일의 캐주얼 **모바일 게임 앱**
+플랫폼: iOS / Android
 
 ---
 
 ## Tech Stack
 
-### Frontend
--
+### Mobile App (후보 - 결정 예정)
+- React Native
+- Flutter
+- Unity
 
 ### Backend
--
+- TBD (Firebase / Supabase / Custom)
 
 ### Database
--
+- TBD (Firestore / PostgreSQL)
+
+### 외부 서비스
+- Kakao SDK (로그인, 친구 목록)
+- 인앱 결제 (App Store / Google Play)
 
 ### DevOps / Infrastructure
--
+- TBD
 
 ### Other Tools
--
+- V0 (UI 목업)
 
 ---
 
@@ -32,10 +39,11 @@
 ### Pending
 - [ ] 프로젝트 구조 설계
 - [ ] 실제 구현
-  - [ ] 로그인 페이지 (사용자 이름/비밀번호, 카카오 ID 연동)
-  - [ ] 인게임 화면 (새 조작, 점수, 파이프 장애물)
-  - [ ] 새 선택 화면 (COMMON, RARE, EPIC, UNIQUE 등급)
-  - [ ] 랭킹 화면 (카카오톡 친구 기반)
+  - [ ] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
+  - [ ] HomeScreen (메인 메뉴)
+  - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
+  - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
+  - [ ] RankingScreen (카카오톡 친구 기반)
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
@@ -57,15 +65,26 @@
 
 ---
 
-## Pages
+## Screens (앱 화면 구성)
 
-| 페이지 | 경로 (예상) | 설명 |
-|--------|-------------|------|
-| 로그인 | `/login` | 로그인/회원가입 화면 |
-| 인게임 | `/game` | 메인 게임 플레이 화면 |
-| 새 선택 | `/birds` | 캐릭터 선택 및 구매 화면 |
-| 랭킹 | `/ranking` | 친구 랭킹 조회 화면 |
-| 홈 | `/` | 메인 메뉴 (로그인 후) |
+| 화면 | Screen Name | 설명 |
+|------|-------------|------|
+| 로그인 | `LoginScreen` | 로그인/회원가입 화면 |
+| 홈 | `HomeScreen` | 메인 메뉴 (로그인 후) |
+| 인게임 | `GameScreen` | 메인 게임 플레이 화면 |
+| 새 선택 | `BirdSelectionScreen` | 캐릭터 선택 및 구매 화면 |
+| 랭킹 | `RankingScreen` | 친구 랭킹 조회 화면 |
+
+### 화면 흐름 (Navigation Flow)
+```
+LoginScreen
+    ↓ (로그인 성공)
+HomeScreen ←→ BirdSelectionScreen
+    ↓              ↓
+GameScreen    RankingScreen
+    ↓
+GameOverModal → HomeScreen
+```
 
 ---
 
@@ -202,7 +221,14 @@ main (production)
 - 카카오 개발자 계정 필요 (로그인 + 친구 목록 API)
 - 카카오 앱 등록 필요
 
-### 고려 사항
-- 모바일 우선 개발 (터치 인터페이스)
-- 오프라인 플레이 지원 여부 결정 필요
-- 인앱 결제 (새 구매) 구현 방식 결정 필요
+### 모바일 앱 고려 사항
+- **터치 인터페이스**: 탭으로 새 점프 조작
+- **오프라인 플레이**: 지원 여부 결정 필요
+- **인앱 결제**: App Store / Google Play 결제 시스템
+- **앱 스토어 배포**: iOS (App Store), Android (Google Play)
+- **푸시 알림**: 친구 점수 갱신 알림 (선택)
+
+### 앱 권한 (Permissions)
+- 인터넷 접근
+- 카카오 계정 연동
+- (선택) 푸시 알림
