@@ -31,6 +31,10 @@
 ### Other Tools
 - V0 (UI 목업)
 
+### MCP (Model Context Protocol)
+- **context7** - 최신 라이브러리 문서 참조 (필수)
+- **github** - GitHub API 연동
+
 ---
 
 ## TODO List
@@ -227,6 +231,27 @@ main (production)
 - 작업 완료 시 CLAUDE.md 업데이트 필요 여부 검토할 것
 - 기능 개발 전 관련 이슈 생성 필수
 - PR은 반드시 `dev` 브랜치로 먼저 머지
+
+### Context7 MCP 필수 사용 (중요!)
+**모든 개발 작업 시 Context7 MCP를 사용하여 최신 문서를 참조할 것**
+
+사용 방법:
+- 프롬프트에 `use context7` 키워드 포함
+- 라이브러리/프레임워크 관련 코드 작성 시 반드시 최신 문서 확인
+
+예시:
+```
+"use context7로 Next.js App Router 라우팅 구현해줘"
+"use context7로 Tailwind CSS 최신 문법 확인해줘"
+"use context7로 React 18 hooks 사용법 알려줘"
+```
+
+참조 필수 항목:
+- Next.js (App Router, Server Components)
+- React 18 (Hooks, Suspense)
+- Tailwind CSS
+- TypeScript
+- Kakao SDK (로그인 연동 시)
 
 ### 외부 연동
 - 카카오 개발자 계정 필요 (로그인 + 친구 목록 API)
