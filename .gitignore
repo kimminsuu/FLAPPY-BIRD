@@ -3,26 +3,34 @@ node_modules/
 venv/
 __pycache__/
 *.pyc
+.pnp/
+.pnp.js
 
 # Environment
 .env
 .env.local
 .env.*.local
+.env.production
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-*
 
 # OS
 .DS_Store
 Thumbs.db
+*.lnk
 
 # Build
 dist/
 build/
+out/
 *.log
+.next/
+.nuxt/
 
 # Temp
 *.tmp
@@ -35,3 +43,59 @@ tmpclaude/
 
 # Claude Code local settings
 .claude/
+
+# ===== Game Development =====
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.pidb
+*.booproj
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+*.iml
+android/.gradle/
+android/app/debug/
+android/app/release/
+ios/Pods/
+ios/.symlinks/
+*.jks
+
+# React Native
+android/app/build/
+ios/build/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.xcuserstate
+.expo/
+.expo-shared/
+
+# Phaser / Web Game
+.cache/
+
+# Assets (large files - use Git LFS)
+# *.png
+# *.jpg
+# *.mp3
+# *.wav
+# *.ogg
+
+# Test & Coverage
+coverage/
+.nyc_output/
+*.lcov

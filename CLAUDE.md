@@ -27,10 +27,15 @@
 ## TODO List
 
 ### In Progress
-- [ ]
+- [ ] V0 목업 검토 및 기술 스택 결정 (React Native, Flutter, Unity 등)
 
 ### Pending
-- [ ]
+- [ ] 프로젝트 구조 설계
+- [ ] 실제 구현
+  - [ ] 로그인 페이지 (사용자 이름/비밀번호, 카카오 ID 연동)
+  - [ ] 인게임 화면 (새 조작, 점수, 파이프 장애물)
+  - [ ] 새 선택 화면 (COMMON, RARE, EPIC, UNIQUE 등급)
+  - [ ] 랭킹 화면 (카카오톡 친구 기반)
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
@@ -96,9 +101,33 @@ FLAPPY-BIRD/
 
 ## Workflow
 
+### Branch Strategy
+
+```
+main (production)
+ └── dev (development)
+      ├── feature/login
+      ├── feature/game
+      ├── feature/bird-selection
+      └── feature/ranking
+```
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | 배포 가능한 안정 버전 |
+| `dev` | 개발 통합 브랜치 |
+| `feature/*` | 기능별 작업 브랜치 |
+
+### 작업 흐름
+1. `dev`에서 `feature/*` 브랜치 생성
+2. 작업 완료 → `dev`로 PR 생성 및 Merge
+3. `dev`에서 충분히 테스트
+4. 안정화되면 `main`으로 Merge
+
 ### PR 생성 시
 - PR 생성 전 관련 이슈 확인 필수
 - 이슈와 연결하여 PR 생성
+- PR 템플릿 양식에 맞게 작성
 
 ---
 
