@@ -3,69 +3,12 @@
 import { useState } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { User, Lock, MessageCircle } from "lucide-react";
-
-// Flappy Bird 스타일 새 컴포넌트 (배경 없음)
-function FlappyBird({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 100 100"
-      className={className}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      role="img"
-    >
-      {/* 몸통 (노란색/주황색) */}
-      <ellipse cx="50" cy="55" rx="35" ry="30" fill="#F9D71C" />
-      <ellipse cx="50" cy="60" rx="30" ry="22" fill="#F5AB35" />
-
-      {/* 배 (연한 크림색) */}
-      <ellipse cx="55" cy="62" rx="18" ry="16" fill="#FFF8DC" />
-
-      {/* 눈 (흰색 배경) */}
-      <circle cx="62" cy="42" r="14" fill="white" />
-      <circle cx="62" cy="42" r="12" stroke="#333" strokeWidth="2" fill="white" />
-
-      {/* 눈동자 */}
-      <circle cx="65" cy="42" r="6" fill="#333" />
-      <circle cx="67" cy="40" r="2" fill="white" />
-
-      {/* 부리 (주황/빨강) */}
-      <path
-        d="M 75 52 L 95 55 L 75 62 Z"
-        fill="#E84A3C"
-      />
-      <path
-        d="M 75 52 L 95 55 L 75 56 Z"
-        fill="#F39C12"
-      />
-
-      {/* 날개 */}
-      <ellipse cx="30" cy="55" rx="15" ry="10" fill="#E8B923" />
-      <ellipse cx="28" cy="55" rx="10" ry="6" fill="#D4A017" />
-
-      {/* 꼬리 */}
-      <path
-        d="M 15 50 Q 5 45 10 55 Q 5 65 15 60 Z"
-        fill="#E8B923"
-      />
-    </svg>
-  );
-}
-
-// 구름 컴포넌트
-function Cloud({ className = "" }: { className?: string }) {
-  return (
-    <div
-      className={`absolute bg-white rounded-full opacity-90 ${className}`}
-      style={{
-        width: "120px",
-        height: "40px",
-        borderRadius: "20px",
-      }}
-      aria-hidden="true"
-    />
-  );
-}
+import {
+  FlappyBird,
+  SeasonalBackground,
+  SeasonSelector,
+  Season,
+} from "@/components/ui";
 
 export default function LoginPage() {
   const { data: session, status } = useSession();
@@ -73,16 +16,23 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [currentSeason, setCurrentSeason] = useState<Season>("summer");
 
   // 이미 로그인된 경우 표시
   if (status === "authenticated" && session) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#4EC0CA] to-[#87CEEB]">
-        <FlappyBird className="w-24 h-24 mb-4" />
-        <h1 className="text-2xl font-bold text-white mb-2">환영합니다!</h1>
-        <p className="text-white mb-4">{session.user?.name || "플레이어"}님</p>
-        <p className="text-white/80 text-sm">곧 게임 화면으로 이동합니다...</p>
-      </div>
+      <SeasonalBackground season={currentSeason}>
+        <SeasonSelector
+          currentSeason={currentSeason}
+          onSeasonChange={setCurrentSeason}
+        />
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
+          <FlappyBird className="w-24 h-24 mb-4" />
+          <h1 className="text-2xl font-bold text-white mb-2">환영합니다!</h1>
+          <p className="text-white mb-4">{session.user?.name || "플레이어"}님</p>
+          <p className="text-white/80 text-sm">곧 게임 화면으로 이동합니다...</p>
+        </div>
+      </SeasonalBackground>
     );
   }
 
@@ -130,20 +80,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
-      {/* 하늘 배경 */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "linear-gradient(180deg, #4EC0CA 0%, #71C5CF 50%, #87CEEB 100%)",
-        }}
+    <SeasonalBackground season={currentSeason}>
+      {/* 배경 선택 버튼 */}
+      <SeasonSelector
+        currentSeason={currentSeason}
+        onSeasonChange={setCurrentSeason}
       />
-
-      {/* 구름들 */}
-      <Cloud className="top-12 left-8" />
-      <Cloud className="top-32 left-1/3" />
-      <Cloud className="top-16 right-12" />
-      <Cloud className="top-48 right-1/4" />
 
       {/* 메인 컨텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pb-32">
@@ -268,24 +210,6 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
-
-      {/* 잔디 배경 */}
-      <div className="absolute bottom-0 left-0 right-0 h-24" aria-hidden="true">
-        {/* 진한 초록색 잔디 */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-20"
-          style={{
-            background: "linear-gradient(180deg, #5B8C3E 0%, #4A7A2E 100%)",
-          }}
-        />
-        {/* 연한 초록색 잔디 상단 */}
-        <div
-          className="absolute bottom-16 left-0 right-0 h-8"
-          style={{
-            background: "#7CB342",
-          }}
-        />
-      </div>
-    </div>
+    </SeasonalBackground>
   );
 }

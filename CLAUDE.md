@@ -9,11 +9,12 @@
 ## Tech Stack
 
 ### Frontend (확정)
-- Next.js 14 (App Router)
+- Next.js 16 (App Router, Turbopack)
 - React 18
 - TypeScript
 - Tailwind CSS
 - Lucide React (아이콘)
+- NextAuth.js (인증)
 
 ### Backend
 - TBD (Firebase / Supabase / Custom)
@@ -58,6 +59,8 @@
 - [x] GitHub 템플릿 추가 (PR, Issue)
 - [x] V0 목업 검토 및 기술 스택 결정 (Next.js)
 - [x] 프로젝트 구조 설계
+- [x] UI 컴포넌트 모듈화 (FlappyBird, SeasonalBackground)
+- [x] 계절 테마 시스템 구현 (봄/여름/가을/겨울)
 
 ---
 
@@ -102,7 +105,7 @@ GameOverModal → HomeScreen
 
 ### Feature 1: 로그인 시스템
 - 설명: 사용자 이름/비밀번호 기반 로그인 + 카카오 ID 연동
-- 관련 파일: `app/components/login-page.tsx`
+- 관련 파일: `components/login-page.tsx`, `lib/auth.ts`
 - 세부 기능:
   - 일반 로그인 (이름 + 비밀번호) ✅
   - 카카오 소셜 로그인 (UI 완료, API 연동 예정)
@@ -137,8 +140,20 @@ GameOverModal → HomeScreen
   - 친구들 간 점수 비교
   - 주간/전체 랭킹
 
+### Feature 5: 계절 테마 시스템
+- 설명: 사용자가 선택 가능한 계절별 배경 테마
+- 관련 파일: `components/ui/SeasonalBackground.tsx`, `components/ui/SeasonSelector.tsx`
+- 테마 종류:
+  | 계절 | 하늘 | 잔디 | 장식 |
+  |------|------|------|------|
+  | 봄 | 연한 하늘빛 | 연두색 | 벚꽃잎 |
+  | 여름 | 청량한 파랑 | 진초록 | - |
+  | 가을 | 노을빛 | 갈색 | 낙엽 |
+  | 겨울 | 연한 회색빛 | 흰색(눈) | 눈송이 |
+- 구현 상태: 완료
+
 ### 디자인 컨셉
-- **자연 친화적 분위기**: 숲, 하늘, 자연 배경
+- **자연 친화적 분위기**: 숲, 하늘, 자연 배경 + 계절 테마
 - **현대적 UI**: 깔끔하고 세련된 인터페이스
 - **강렬한 장애물**: 기존보다 임팩트 있는 파이프 디자인
 
@@ -161,6 +176,11 @@ FLAPPY-BIRD/
 │   └── providers.tsx           # Context Providers
 │
 ├── components/                 # UI 컴포넌트 (Frontend)
+│   ├── ui/                     # 공통 UI 컴포넌트
+│   │   ├── FlappyBird.tsx      # 새 아이콘 SVG
+│   │   ├── SeasonalBackground.tsx # 계절 배경 테마
+│   │   ├── SeasonSelector.tsx  # 배경 선택 드롭다운
+│   │   └── index.ts            # 컴포넌트 Export
 │   ├── login-page.tsx          # 로그인 페이지
 │   ├── game-page.tsx           # 게임 페이지 (예정)
 │   ├── bird-selection-page.tsx # 새 선택 (예정)
