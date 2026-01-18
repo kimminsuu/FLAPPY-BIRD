@@ -151,22 +151,44 @@ FLAPPY-BIRD/
 ├── .github/                    # GitHub 템플릿
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── ISSUE_TEMPLATE/
-├── app/                        # Next.js App Router
-│   ├── components/             # UI 컴포넌트
-│   │   ├── login-page.tsx      # 로그인 페이지
-│   │   ├── game-page.tsx       # 게임 페이지 (예정)
-│   │   ├── bird-selection-page.tsx  # 새 선택 (예정)
-│   │   └── ranking-page.tsx    # 랭킹 페이지 (예정)
+│
+├── app/                        # Next.js App Router (라우팅)
+│   ├── api/                    # API 라우트 (Backend)
+│   │   └── auth/               # 인증 API (NextAuth)
 │   ├── globals.css             # 전역 스타일
 │   ├── layout.tsx              # 루트 레이아웃
-│   └── page.tsx                # 메인 페이지
+│   ├── page.tsx                # 메인 페이지
+│   └── providers.tsx           # Context Providers
+│
+├── components/                 # UI 컴포넌트 (Frontend)
+│   ├── login-page.tsx          # 로그인 페이지
+│   ├── game-page.tsx           # 게임 페이지 (예정)
+│   ├── bird-selection-page.tsx # 새 선택 (예정)
+│   └── ranking-page.tsx        # 랭킹 페이지 (예정)
+│
+├── lib/                        # 비즈니스 로직 (Backend)
+│   └── auth.ts                 # NextAuth 설정
+│
+├── types/                      # TypeScript 타입 정의
+│   └── next-auth.d.ts          # NextAuth 타입 확장
+│
 ├── images/                     # 목업 이미지
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
+├── .env.local                  # 환경 변수 (Git 제외)
 ├── .gitignore
 └── CLAUDE.md                   # 프로젝트 문서
 ```
+
+### 폴더 역할
+| 폴더 | 역할 | 구분 |
+|------|------|------|
+| `app/` | 라우팅, 페이지, API | Router |
+| `app/api/` | REST API 엔드포인트 | Backend |
+| `components/` | UI 컴포넌트 | Frontend |
+| `lib/` | 비즈니스 로직, 설정 | Backend |
+| `types/` | 타입 정의 | Shared |
 
 ---
 

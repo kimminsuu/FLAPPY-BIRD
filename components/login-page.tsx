@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
 import { User, Lock, MessageCircle } from "lucide-react";
 
 // Flappy Bird 스타일 새 컴포넌트 (배경 없음)
@@ -67,10 +68,23 @@ function Cloud({ className = "" }: { className?: string }) {
 }
 
 export default function LoginPage() {
+  const { data: session, status } = useSession();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // 이미 로그인된 경우 표시
+  if (status === "authenticated" && session) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#4EC0CA] to-[#87CEEB]">
+        <FlappyBird className="w-24 h-24 mb-4" />
+        <h1 className="text-2xl font-bold text-white mb-2">환영합니다!</h1>
+        <p className="text-white mb-4">{session.user?.name || "플레이어"}님</p>
+        <p className="text-white/80 text-sm">곧 게임 화면으로 이동합니다...</p>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -102,10 +116,16 @@ export default function LoginPage() {
     }
   };
 
-  const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 구현
-    if (process.env.NODE_ENV === "development") {
-      console.log("Kakao login initiated");
+  const handleKakaoLogin = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      await signIn("kakao", {
+        callbackUrl: "/", // 로그인 성공 후 이동할 페이지
+      });
+    } catch {
+      setError("카카오 로그인에 실패했습니다. 다시 시도해주세요.");
+      setIsLoading(false);
     }
   };
 
