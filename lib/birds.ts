@@ -1,18 +1,39 @@
 /**
- * 새(캐릭터) 데이터 및 매핑
+ * 새(캐릭터) 데이터 및 뽑기 시스템
  *
  * TODO: 추후 데이터베이스 테이블로 마이그레이션 예정
- * - birds 테이블: 새 정보 (id, name, rarity, price, etc.)
+ * - birds 테이블: 새 정보 (id, name, rarity, etc.)
  * - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped, etc.)
  */
 
-import { Bird, BirdRarity } from "@/types/bird";
+import {
+  Bird,
+  BirdRarity,
+  BIRD_RARITIES,
+  BIRD_RARITY_INFO,
+  GACHA_CONFIG,
+  GachaResult,
+} from "@/types/bird";
+
+// ==================== 유틸리티 ====================
 
 /**
- * 전체 새 목록
+ * 배열에서 랜덤 요소 선택
+ */
+function getRandomElement<T>(array: readonly T[]): T {
+  if (array.length === 0) {
+    throw new Error("Cannot get random element from empty array");
+  }
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+// ==================== 새 데이터 ====================
+
+/**
+ * 전체 새 목록 (불변)
  * ID 규칙: bird_{rarity}_{number}
  */
-export const BIRDS: Bird[] = [
+export const BIRDS: readonly Bird[] = [
   // ========== COMMON 등급 (10마리) ==========
   {
     id: "bird_common_1",
@@ -21,8 +42,7 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "The original Flappy Bird! Everyone starts with this cheerful yellow bird.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
-    isDefault: true, // 모든 유저가 기본 보유
+    isDefault: true,
   },
   {
     id: "bird_common_2",
@@ -31,7 +51,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A friendly little sparrow that loves to hop around.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_3",
@@ -40,7 +59,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A bright blue bird that brings happiness.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_4",
@@ -49,7 +67,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A cheerful robin with a red breast.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_5",
@@ -58,7 +75,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A small finch with beautiful patterns.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_6",
@@ -67,7 +83,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A tiny but mighty wren.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_7",
@@ -76,7 +91,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A playful chickadee that chirps happily.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_8",
@@ -85,7 +99,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A golden canary with a beautiful song.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_9",
@@ -94,7 +107,6 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A colorful little parakeet.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
   {
     id: "bird_common_10",
@@ -103,9 +115,10 @@ export const BIRDS: Bird[] = [
     rarity: "common",
     description: "A sweet lovebird looking for a friend.",
     imagePath: "/images/birds/common/image.png",
-    price: 100,
   },
-];
+] as const;
+
+// ==================== 조회 함수 ====================
 
 /**
  * ID로 새 찾기
@@ -117,7 +130,7 @@ export function getBirdById(id: string): Bird | undefined {
 /**
  * 등급별 새 목록 조회
  */
-export function getBirdsByRarity(rarity: BirdRarity): Bird[] {
+export function getBirdsByRarity(rarity: BirdRarity): readonly Bird[] {
   return BIRDS.filter((bird) => bird.rarity === rarity);
 }
 
@@ -140,21 +153,111 @@ export function getTotalBirdCount(): number {
 }
 
 /**
- * 등급별 새 개수
+ * 등급별 새 개수 (단일 순회로 최적화)
  */
 export function getBirdCountByRarity(): Record<BirdRarity, number> {
-  return {
-    common: getBirdsByRarity("common").length,
-    rare: getBirdsByRarity("rare").length,
-    epic: getBirdsByRarity("epic").length,
-    unique: getBirdsByRarity("unique").length,
+  const counts: Record<BirdRarity, number> = {
+    common: 0,
+    rare: 0,
+    epic: 0,
+    unique: 0,
   };
+
+  for (const bird of BIRDS) {
+    counts[bird.rarity]++;
+  }
+
+  return counts;
 }
 
 /**
  * 신규 유저 기본 보유 새 목록
- * (가입 시 자동으로 지급되는 새)
  */
-export function getStarterBirds(): Bird[] {
+export function getStarterBirds(): readonly Bird[] {
   return BIRDS.filter((bird) => bird.isDefault);
+}
+
+// ==================== 뽑기(가챠) 시스템 ====================
+
+/**
+ * 뽑기 비용 조회
+ */
+export function getGachaCost(): number {
+  return GACHA_CONFIG.cost;
+}
+
+/**
+ * 확률에 따라 등급 결정 (BIRD_RARITY_INFO를 Single Source of Truth로 사용)
+ */
+export function rollRarity(): BirdRarity {
+  const random = Math.random() * 100;
+  let cumulative = 0;
+
+  for (const rarity of BIRD_RARITIES) {
+    cumulative += BIRD_RARITY_INFO[rarity].probability;
+    if (random < cumulative) {
+      return rarity;
+    }
+  }
+
+  // 부동소수점 오차 대비 fallback
+  return "common";
+}
+
+/**
+ * 뽑기 실행 - GachaResult 반환
+ * @param ownedBirdIds 이미 보유한 새 ID 목록
+ * @returns 뽑기 결과 (새 + 신규 여부 + 환급 코인)
+ */
+export function performGacha(ownedBirdIds: readonly string[] = []): GachaResult {
+  const rarity = rollRarity();
+  const birdsOfRarity = getBirdsByRarity(rarity);
+
+  let selectedBird: Bird;
+
+  if (birdsOfRarity.length === 0) {
+    // 해당 등급 새가 없으면 common으로 대체
+    const commonBirds = getBirdsByRarity("common");
+    if (commonBirds.length === 0) {
+      throw new Error("No birds available for gacha!");
+    }
+    selectedBird = getRandomElement(commonBirds);
+  } else {
+    selectedBird = getRandomElement(birdsOfRarity);
+  }
+
+  const isNew = !ownedBirdIds.includes(selectedBird.id);
+
+  return {
+    bird: selectedBird,
+    isNew,
+    refundCoins: isNew ? 0 : GACHA_CONFIG.duplicateRefund,
+  };
+}
+
+/**
+ * 뽑기 가능 여부 확인
+ */
+export function canPerformGacha(userCoins: number): boolean {
+  return userCoins >= GACHA_CONFIG.cost;
+}
+
+/**
+ * 중복 시 환급 코인 조회
+ */
+export function getDuplicateRefund(): number {
+  return GACHA_CONFIG.duplicateRefund;
+}
+
+/**
+ * 등급별 확률 조회 (UI 표시용)
+ */
+export function getGachaProbabilities(): Record<BirdRarity, number> {
+  return BIRD_RARITIES.reduce(
+    (acc, rarity) => ({
+      ...acc,
+      [rarity]: BIRD_RARITY_INFO[rarity].probability,
+    }),
+    {} as Record<BirdRarity, number>
+  );
 }

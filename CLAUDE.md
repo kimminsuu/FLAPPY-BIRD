@@ -52,8 +52,12 @@
 - [ ] 로그인 API 연동
 - [ ] 카카오 SDK 연동
 - [ ] 새(Bird) 데이터베이스 테이블 생성
-  - birds 테이블: 새 정보 (id, name, rarity, price 등)
+  - birds 테이블: 새 정보 (id, name, rarity 등)
   - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
+- [ ] 코인 시스템 구현
+  - 게임 점수 → 코인 변환 (게임 종료 시 점수를 보유 코인에 추가)
+  - 유저별 코인 잔액 관리
+- [ ] (검토중) 10연차 할인 시스템 (500 → 450코인)
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
@@ -124,21 +128,23 @@ GameOverModal → HomeScreen
   - 실시간 점수 표시
   - 게임 오버 처리
 
-### Feature 3: 새(캐릭터) 선택 시스템
-- 설명: 등급별 캐릭터 수집 및 선택
+### Feature 3: 새(캐릭터) 뽑기 시스템
+- 설명: 코인으로 랜덤 뽑기를 통해 새 캐릭터 획득
 - 관련 파일: `types/bird.ts`, `lib/birds.ts`
-- 등급 체계 (희귀도: UNIQUE > EPIC > RARE > COMMON):
-  | 등급 | 설명 | 색상 | 가격 범위 |
-  |------|------|------|----------|
-  | COMMON | 일반 새 | Gray | 100 |
-  | RARE | 희귀 새 | Blue | TBD |
-  | EPIC | 에픽 새 | Purple | TBD |
-  | UNIQUE | 유니크 새 | Gold | TBD |
+- **뽑기 시스템 (가챠)**:
+  - 1회 뽑기 비용: **50코인**
+  - 중복 시 환급: **25코인** (50%)
+  - 등급별 확률:
+    | 등급 | 확률 | 색상 |
+    |------|------|------|
+    | COMMON | 70% | Gray |
+    | RARE | 20% | Blue |
+    | EPIC | 7% | Purple |
+    | UNIQUE | 3% | Gold |
 - ID 규칙: `bird_{rarity}_{number}` (예: bird_common_1)
 - 현재 등록된 새: COMMON 10마리 (bird_common_1은 기본 보유)
 - 이미지 경로: `images/birds/{rarity}/`
-- 가격: COMMON 전체 100코인
-- 구현 상태: 타입/매핑 완료, UI 구현 예정
+- 구현 상태: 타입/로직 완료, UI 구현 예정
 
 ### Feature 4: 랭킹 시스템
 - 설명: 카카오톡 친구 기반 순위 시스템
