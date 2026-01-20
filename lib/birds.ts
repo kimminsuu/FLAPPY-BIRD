@@ -41,7 +41,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "플래피",
     rarity: "common",
     description: "The original Flappy Bird! Everyone starts with this cheerful yellow bird.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "svg", // FlappyBird SVG 컴포넌트 사용
     isDefault: true,
   },
   {
@@ -50,7 +50,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "참새",
     rarity: "common",
     description: "A friendly little sparrow that loves to hop around.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_2.png",
   },
   {
     id: "bird_common_3",
@@ -58,7 +58,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "파랑새",
     rarity: "common",
     description: "A bright blue bird that brings happiness.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_3.png",
   },
   {
     id: "bird_common_4",
@@ -66,7 +66,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "울새",
     rarity: "common",
     description: "A cheerful robin with a red breast.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_4.png",
   },
   {
     id: "bird_common_5",
@@ -74,7 +74,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "되새",
     rarity: "common",
     description: "A small finch with beautiful patterns.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_5.png",
   },
   {
     id: "bird_common_6",
@@ -82,7 +82,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "굴뚝새",
     rarity: "common",
     description: "A tiny but mighty wren.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_6.png",
   },
   {
     id: "bird_common_7",
@@ -90,7 +90,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "박새",
     rarity: "common",
     description: "A playful chickadee that chirps happily.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_7.png",
   },
   {
     id: "bird_common_8",
@@ -98,7 +98,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "카나리아",
     rarity: "common",
     description: "A golden canary with a beautiful song.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_8.png",
   },
   {
     id: "bird_common_9",
@@ -106,7 +106,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "잉꼬",
     rarity: "common",
     description: "A colorful little parakeet.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_9.png",
   },
   {
     id: "bird_common_10",
@@ -114,7 +114,7 @@ export const BIRDS: readonly Bird[] = [
     nameKo: "모란앵무",
     rarity: "common",
     description: "A sweet lovebird looking for a friend.",
-    imagePath: "/images/birds/common/image.png",
+    imagePath: "/images/birds/common/bird_common_10.png",
   },
 ] as const;
 

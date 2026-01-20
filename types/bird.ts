@@ -67,7 +67,7 @@ export interface Bird {
   readonly nameKo: string; // 새 이름 (한글)
   readonly rarity: BirdRarity; // 등급
   readonly description: string; // 설명
-  readonly imagePath: string; // 이미지 경로
+  readonly imagePath: string; // 이미지 경로 ("svg" 또는 파일 경로)
   readonly isDefault?: boolean; // 기본 새 여부
 }
 

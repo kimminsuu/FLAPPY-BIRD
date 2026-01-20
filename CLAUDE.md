@@ -135,14 +135,25 @@ GameOverModal → HomeScreen
   - 1회 뽑기 비용: **50코인**
   - 중복 시 환급: **25코인** (50%)
   - 등급별 확률:
-    | 등급 | 확률 | 색상 |
-    |------|------|------|
-    | COMMON | 70% | Gray |
-    | RARE | 20% | Blue |
-    | EPIC | 7% | Purple |
-    | UNIQUE | 3% | Gold |
+    | 등급 | 확률 |
+    |------|------|
+    | COMMON | 70% |
+    | RARE | 20% |
+    | EPIC | 7% |
+    | UNIQUE | 3% |
+- **등급별 UI 색상** (카드 테두리, 배지, 이펙트 등):
+  | 등급 | 색상 | HEX |
+  |------|------|-----|
+  | COMMON | Gray | #6B7280 |
+  | RARE | Blue | #3B82F6 |
+  | EPIC | Purple | #8B5CF6 |
+  | UNIQUE | Gold | #F59E0B |
 - ID 규칙: `bird_{rarity}_{number}` (예: bird_common_1)
 - 현재 등록된 새: COMMON 10마리 (bird_common_1은 기본 보유)
+- **이미지 처리**:
+  - `bird_common_1`: FlappyBird SVG 컴포넌트 (`imagePath: "svg"`)
+  - `bird_common_2~10`: 개별 PNG 파일 (`bird_common_2.png` ~ `bird_common_10.png`)
+  - 모든 이미지 크기 동일해야 함
 - 이미지 경로: `images/birds/{rarity}/`
 - 구현 상태: 타입/로직 완료, UI 구현 예정
 
