@@ -51,6 +51,9 @@
 ### Pending
 - [ ] 로그인 API 연동
 - [ ] 카카오 SDK 연동
+- [ ] 새(Bird) 데이터베이스 테이블 생성
+  - birds 테이블: 새 정보 (id, name, rarity, price 등)
+  - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
@@ -123,14 +126,19 @@ GameOverModal → HomeScreen
 
 ### Feature 3: 새(캐릭터) 선택 시스템
 - 설명: 등급별 캐릭터 수집 및 선택
-- 관련 파일: TBD
-- 등급 체계:
-  | 등급 | 설명 | 가격 |
-  |------|------|------|
-  | COMMON | 기본 새 | 낮음 |
-  | RARE | 희귀 새 | 중간 |
-  | EPIC | 특별한 새 | 높음 |
-  | UNIQUE | 프리미엄 비행체 | 최고 |
+- 관련 파일: `types/bird.ts`, `lib/birds.ts`
+- 등급 체계 (희귀도: UNIQUE > EPIC > RARE > COMMON):
+  | 등급 | 설명 | 색상 | 가격 범위 |
+  |------|------|------|----------|
+  | COMMON | 일반 새 | Gray | 100 |
+  | RARE | 희귀 새 | Blue | TBD |
+  | EPIC | 에픽 새 | Purple | TBD |
+  | UNIQUE | 유니크 새 | Gold | TBD |
+- ID 규칙: `bird_{rarity}_{number}` (예: bird_common_1)
+- 현재 등록된 새: COMMON 10마리 (bird_common_1은 기본 보유)
+- 이미지 경로: `images/birds/{rarity}/`
+- 가격: COMMON 전체 100코인
+- 구현 상태: 타입/매핑 완료, UI 구현 예정
 
 ### Feature 4: 랭킹 시스템
 - 설명: 카카오톡 친구 기반 순위 시스템
@@ -187,12 +195,19 @@ FLAPPY-BIRD/
 │   └── ranking-page.tsx        # 랭킹 페이지 (예정)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
-│   └── auth.ts                 # NextAuth 설정
+│   ├── auth.ts                 # NextAuth 설정
+│   └── birds.ts                # 새 데이터 및 매핑
 │
 ├── types/                      # TypeScript 타입 정의
-│   └── next-auth.d.ts          # NextAuth 타입 확장
+│   ├── next-auth.d.ts          # NextAuth 타입 확장
+│   └── bird.ts                 # 새 관련 타입 정의
 │
-├── images/                     # 목업 이미지
+├── images/                     # 이미지 리소스
+│   └── birds/                  # 새 이미지
+│       ├── common/             # COMMON 등급
+│       ├── rare/               # RARE 등급
+│       ├── epic/               # EPIC 등급
+│       └── unique/             # UNIQUE 등급
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
