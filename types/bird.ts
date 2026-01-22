@@ -56,8 +56,8 @@ export const BIRD_RARITY_INFO: Readonly<Record<BirdRarity, BirdRarityMeta>> = {
 
 // 뽑기 시스템 설정 (확률은 BIRD_RARITY_INFO에서 참조)
 export const GACHA_CONFIG = {
-  cost: 50, // 1회 뽑기 비용 (코인)
-  duplicateRefund: 25, // 중복 시 환급 코인
+  cost: 100, // 1회 뽑기 비용 (코인)
+  duplicateRefund: 50, // 중복 시 환급 코인
 } as const;
 
 // 새 데이터 인터페이스
