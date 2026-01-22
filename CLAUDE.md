@@ -149,7 +149,9 @@ GameOverModal → HomeScreen
   | EPIC | Purple | #8B5CF6 |
   | UNIQUE | Gold | #F59E0B |
 - ID 규칙: `bird_{rarity}_{number}` (예: bird_common_1)
-- 현재 등록된 새: COMMON 10마리 (bird_common_1은 기본 보유)
+- 현재 등록된 새:
+  - COMMON: 10마리 (bird_common_1은 기본 보유)
+  - EPIC: 9마리
 - **이미지 처리**:
   - `bird_common_1`: FlappyBird SVG 컴포넌트 (`imagePath: "svg"`)
   - 그 외 모든 새: 개별 PNG 파일 (`bird_{rarity}_{number}.png`)
