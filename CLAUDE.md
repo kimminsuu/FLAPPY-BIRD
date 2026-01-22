@@ -152,8 +152,19 @@ GameOverModal → HomeScreen
 - 현재 등록된 새: COMMON 10마리 (bird_common_1은 기본 보유)
 - **이미지 처리**:
   - `bird_common_1`: FlappyBird SVG 컴포넌트 (`imagePath: "svg"`)
-  - `bird_common_2~10`: 개별 PNG 파일 (`bird_common_2.png` ~ `bird_common_10.png`)
-  - 이미지 규격: **128x93px** (가로세로 비율 유지, 중앙 정렬)
+  - 그 외 모든 새: 개별 PNG 파일 (`bird_{rarity}_{number}.png`)
+  - **이미지 규격** (모든 등급 공통):
+    | 항목 | 값 |
+    |------|-----|
+    | 캔버스 크기 | **160x110px** |
+    | 배경 | **투명 (PNG alpha)** |
+    | 새 정렬 | **가운데 정렬** |
+    | 새 크기/여백 | `bird_common_2.png` 기준 |
+  - **이미지 업로드 시 처리 순서**:
+    1. 배경이 투명한지 검증 (불투명 시 사용자에게 확인)
+    2. 새의 바운딩 박스 추출
+    3. `bird_common_2.png` 기준 크기로 스케일 (비율 유지)
+    4. 160x110 투명 캔버스에 가운데 배치
 - 이미지 경로: `images/birds/{rarity}/`
 - 구현 상태: 타입/로직 완료, UI 구현 예정
 
