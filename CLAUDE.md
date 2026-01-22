@@ -1,116 +1,40 @@
-# Project Overview
+# FLAPPY-BIRD
 
-프로젝트 이름: FLAPPY-BIRD
-프로젝트 설명: Flappy Bird 스타일의 캐주얼 **모바일 게임 앱**
-플랫폼: iOS / Android
+> Flappy Bird 스타일의 캐주얼 모바일 게임 앱 (iOS / Android)
+
+## Quick Start
+
+```bash
+npm install      # 설치
+npm run dev      # 개발 서버
+npm run build    # 빌드
+npm run lint     # 린트
+```
+
+---
+
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Documentation](#documentation)
+- [Screens](#screens)
+- [Workflow](#workflow)
+- [TODO](#todo)
+- [Notes](#notes)
 
 ---
 
 ## Tech Stack
 
-### Frontend (확정)
-- Next.js 16 (App Router, Turbopack)
-- React 18
-- TypeScript
-- Tailwind CSS
-- Lucide React (아이콘)
-- NextAuth.js (인증)
-
-### Backend
-- TBD (Firebase / Supabase / Custom)
-
-### Database
-- TBD (Firestore / PostgreSQL)
-
-### 외부 서비스
-- Kakao SDK (로그인, 친구 목록)
-- 인앱 결제 (App Store / Google Play)
-
-### DevOps / Infrastructure
-- TBD
-
-### Other Tools
-- V0 (UI 목업)
-
-### MCP (Model Context Protocol)
-- **context7** - 최신 라이브러리 문서 참조 (필수)
-- **github** - GitHub API 연동
-
----
-
-## TODO List
-
-### In Progress
-- [ ] 실제 구현
-  - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
-  - [ ] HomeScreen (메인 메뉴)
-  - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
-  - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
-  - [ ] RankingScreen (카카오톡 친구 기반)
-
-### Pending
-- [ ] 로그인 API 연동
-- [ ] 카카오 SDK 연동
-- [ ] 새(Bird) 데이터베이스 테이블 생성
-  - birds 테이블: 새 정보 (id, name, rarity 등)
-  - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
-- [ ] 코인 시스템 구현
-  - 게임 점수 → 코인 변환 (게임 종료 시 점수를 보유 코인에 추가)
-  - 유저별 코인 잔액 관리
-- [ ] (검토중) 10연차 할인 시스템 (500 → 450코인)
-
-### Completed
-- [x] GitHub에 repository 생성 및 추가
-- [x] Agent 추가하기 (Code Review, Security 등)
-- [x] 브랜치 전략 설정 (main/dev)
-- [x] GitHub 템플릿 추가 (PR, Issue)
-- [x] V0 목업 검토 및 기술 스택 결정 (Next.js)
-- [x] 프로젝트 구조 설계
-- [x] UI 컴포넌트 모듈화 (FlappyBird, SeasonalBackground)
-- [x] 계절 테마 시스템 구현 (봄/여름/가을/겨울)
-
----
-
-## Agent Types
-
-프로젝트에서 사용하는 AI Agent 유형을 정의합니다.
-
-| Agent Name | Role | Description |
-|------------|------|-------------|
-| code-review | 코드 리뷰 | PR 전 코드 품질 자동 체크 |
-| security-guidance | 보안 가이드 | 보안 취약점 사전 방지 |
-| pr-review-toolkit | PR 리뷰 | 이슈 연결 및 PR 리뷰 자동화 |
-
----
-
-## Screens (앱 화면 구성)
-
-| 화면 | Screen Name | 설명 |
-|------|-------------|------|
-| 로그인 | `LoginScreen` | 로그인/회원가입 화면 |
-| 홈 | `HomeScreen` | 메인 메뉴 (로그인 후) |
-| 인게임 | `GameScreen` | 메인 게임 플레이 화면 |
-| 새 선택 | `BirdSelectionScreen` | 캐릭터 선택 및 구매 화면 |
-| 랭킹 | `RankingScreen` | 친구 랭킹 조회 화면 |
-
-### 화면 흐름 (Navigation Flow)
-```
-LoginScreen
-    ↓ (로그인 성공)
-HomeScreen ←→ BirdSelectionScreen
-    ↓              ↓
-GameScreen    RankingScreen
-    ↓
-GameOverModal → HomeScreen
-```
-
----
-
-## KEY FEATURES
-
-👉 [docs/features.md](docs/features.md) 참조
-
-> **Note**: 기능 변경 시 `docs/features.md` 파일에 업데이트할 것
+| Category | Stack |
+|----------|-------|
+| Frontend | Next.js 16, React 18, TypeScript, Tailwind CSS |
+| Auth | NextAuth.js, Kakao SDK |
+| Backend | TBD (Firebase / Supabase) |
+| Database | TBD (Firestore / PostgreSQL) |
+| Icons | Lucide React |
+| AI/MCP | context7 (필수), github |
 
 ---
 
@@ -118,87 +42,61 @@ GameOverModal → HomeScreen
 
 ```
 FLAPPY-BIRD/
-├── .github/                    # GitHub 템플릿
-│   ├── PULL_REQUEST_TEMPLATE.md
-│   └── ISSUE_TEMPLATE/
-│
-├── app/                        # Next.js App Router (라우팅)
-│   ├── api/                    # API 라우트 (Backend)
-│   │   └── auth/               # 인증 API (NextAuth)
-│   ├── globals.css             # 전역 스타일
-│   ├── layout.tsx              # 루트 레이아웃
-│   ├── page.tsx                # 메인 페이지
-│   └── providers.tsx           # Context Providers
-│
-├── components/                 # UI 컴포넌트 (Frontend)
-│   ├── ui/                     # 공통 UI 컴포넌트
-│   │   ├── FlappyBird.tsx      # 새 아이콘 SVG
-│   │   ├── SeasonalBackground.tsx # 계절 배경 테마
-│   │   ├── SeasonSelector.tsx  # 배경 선택 드롭다운
-│   │   └── index.ts            # 컴포넌트 Export
-│   ├── login-page.tsx          # 로그인 페이지
-│   ├── game-page.tsx           # 게임 페이지 (예정)
-│   ├── bird-selection-page.tsx # 새 선택 (예정)
-│   └── ranking-page.tsx        # 랭킹 페이지 (예정)
-│
-├── lib/                        # 비즈니스 로직 (Backend)
-│   ├── auth.ts                 # NextAuth 설정
-│   └── birds.ts                # 새 데이터 및 매핑
-│
-├── types/                      # TypeScript 타입 정의
-│   ├── next-auth.d.ts          # NextAuth 타입 확장
-│   └── bird.ts                 # 새 관련 타입 정의
-│
-├── images/                     # 이미지 리소스
-│   └── birds/                  # 새 이미지
-│       ├── common/             # COMMON 등급
-│       ├── rare/               # RARE 등급
-│       ├── epic/               # EPIC 등급
-│       └── unique/             # UNIQUE 등급
-├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-├── .env.local                  # 환경 변수 (Git 제외)
-├── .gitignore
-└── CLAUDE.md                   # 프로젝트 문서
+├── app/                 # Next.js App Router
+│   ├── api/auth/        # 인증 API
+│   └── page.tsx         # 메인 페이지
+├── components/          # UI 컴포넌트
+│   ├── ui/              # 공통 UI
+│   ├── login-page.tsx
+│   ├── home-page.tsx
+│   ├── game-page.tsx
+│   ├── bird-selection-page.tsx
+│   └── ranking-page.tsx
+├── lib/                 # 비즈니스 로직
+├── types/               # TypeScript 타입
+├── images/birds/        # 새 이미지 (common/rare/epic/unique)
+└── docs/                # 문서
 ```
 
-### 폴더 역할
-| 폴더 | 역할 | 구분 |
-|------|------|------|
-| `app/` | 라우팅, 페이지, API | Router |
-| `app/api/` | REST API 엔드포인트 | Backend |
-| `components/` | UI 컴포넌트 | Frontend |
-| `lib/` | 비즈니스 로직, 설정 | Backend |
-| `types/` | 타입 정의 | Shared |
+| 폴더 | 역할 |
+|------|------|
+| `app/` | 라우팅, API |
+| `components/` | UI 컴포넌트 |
+| `lib/` | 비즈니스 로직 |
+| `types/` | 타입 정의 |
+| `docs/` | 상세 문서 |
 
 ---
 
-## ER Diagram
+## Documentation
 
-👉 [docs/er_diagram.md](docs/er_diagram.md) 참조
+| 문서 | 설명 |
+|------|------|
+| [docs/features.md](docs/features.md) | 핵심 기능 상세 (가챠, 이미지 규격 등) |
+| [docs/er_diagram.md](docs/er_diagram.md) | DB 엔터티 관계도 |
 
-> **Note**: 새로운 엔터티 추가 시 `docs/er_diagram.md` 파일에 업데이트할 것
+> **Note**: 기능/엔터티 변경 시 해당 문서 업데이트 필수
 
 ---
 
-## Commands
+## Screens
 
-```bash
-# 설치
-npm install
+| Screen | File | 상태 |
+|--------|------|------|
+| LoginScreen | `login-page.tsx` | ✅ 완료 |
+| HomeScreen | `home-page.tsx` | ⏳ placeholder |
+| GameScreen | `game-page.tsx` | ⏳ placeholder |
+| BirdSelectionScreen | `bird-selection-page.tsx` | ⏳ placeholder |
+| RankingScreen | `ranking-page.tsx` | ⏳ placeholder |
 
-# 개발 서버 실행
-npm run dev
+### Navigation Flow
 
-# 테스트
-npm run lint
-
-# 빌드
-npm run build
-
-# 프로덕션 실행
-npm run start
+```
+LoginScreen → HomeScreen ←→ BirdSelectionScreen
+                 ↓                  ↓
+            GameScreen        RankingScreen
+                 ↓
+            GameOverModal → HomeScreen
 ```
 
 ---
@@ -210,73 +108,65 @@ npm run start
 ```
 main (production)
  └── dev (development)
-      ├── feature/login
-      ├── feature/game
-      ├── feature/bird-selection
-      └── feature/ranking
+      └── feature/*
 ```
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | 배포 가능한 안정 버전 |
-| `dev` | 개발 통합 브랜치 |
-| `feature/*` | 기능별 작업 브랜치 |
+### PR 규칙
 
-### 작업 흐름
 1. `dev`에서 `feature/*` 브랜치 생성
-2. 작업 완료 → `dev`로 PR 생성 및 Merge
-3. `dev`에서 충분히 테스트
-4. 안정화되면 `main`으로 Merge
+2. 작업 완료 → `dev`로 PR
+3. 테스트 후 `main`으로 Merge
 
-### PR 생성 시
-- PR 생성 전 관련 이슈 확인 필수
-- 이슈와 연결하여 PR 생성
-- PR 템플릿 양식에 맞게 작성
+---
+
+## TODO
+
+### In Progress
+- [ ] 화면 구현
+  - [x] LoginScreen
+  - [ ] HomeScreen
+  - [ ] GameScreen
+  - [ ] BirdSelectionScreen
+  - [ ] RankingScreen
+
+### Pending
+- [ ] 로그인 API 연동
+- [ ] 카카오 SDK 연동
+- [ ] DB 테이블 생성 (birds, user_birds)
+- [ ] 코인 시스템 구현
+
+### Completed
+- [x] 프로젝트 구조 설계
+- [x] UI 컴포넌트 모듈화
+- [x] 계절 테마 시스템
+- [x] 새 데이터/가챠 로직
 
 ---
 
 ## Notes
 
-추가 참고 사항이나 주의점을 기록합니다.
-
 ### 개발 규칙
-- 작업 완료 시 CLAUDE.md 업데이트 필요 여부 검토할 것
-- 기능 개발 전 관련 이슈 생성 필수
-- PR은 반드시 `dev` 브랜치로 먼저 머지
 
-### Context7 MCP 필수 사용 (중요!)
-**모든 개발 작업 시 Context7 MCP를 사용하여 최신 문서를 참조할 것**
+- 작업 완료 시 문서 업데이트 검토
+- 기능 개발 전 이슈 생성 필수
+- PR은 `dev` 브랜치로 먼저
 
-사용 방법:
-- 프롬프트에 `use context7` 키워드 포함
-- 라이브러리/프레임워크 관련 코드 작성 시 반드시 최신 문서 확인
+### Context7 MCP (필수)
 
-예시:
 ```
-"use context7로 Next.js App Router 라우팅 구현해줘"
-"use context7로 Tailwind CSS 최신 문법 확인해줘"
-"use context7로 React 18 hooks 사용법 알려줘"
+"use context7로 Next.js App Router 구현해줘"
+"use context7로 React 18 hooks 확인해줘"
 ```
 
-참조 필수 항목:
-- Next.js (App Router, Server Components)
-- React 18 (Hooks, Suspense)
-- Tailwind CSS
-- TypeScript
-- Kakao SDK (로그인 연동 시)
+### AI Agents
+
+| Agent | 역할 |
+|-------|------|
+| code-review | 코드 품질 체크 |
+| security-guidance | 보안 취약점 방지 |
+| pr-review-toolkit | PR 리뷰 자동화 |
 
 ### 외부 연동
-- 카카오 개발자 계정 필요 (로그인 + 친구 목록 API)
-- 카카오 앱 등록 필요
 
-### 모바일 앱 고려 사항
-- **터치 인터페이스**: 탭으로 새 점프 조작
-- **오프라인 플레이**: 지원 여부 결정 필요
-- **인앱 결제**: App Store / Google Play 결제 시스템
-- **앱 스토어 배포**: iOS (App Store), Android (Google Play)
-- **푸시 알림**: 친구 점수 갱신 알림 (선택)
-
-### 앱 권한 (Permissions)
-- 인터넷 접근
-- 카카오 계정 연동
-- (선택) 푸시 알림
+- 카카오 개발자 계정 필요
+- 인앱 결제 (App Store / Google Play)
