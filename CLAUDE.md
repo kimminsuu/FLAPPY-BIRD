@@ -257,6 +257,67 @@ FLAPPY-BIRD/
 
 ---
 
+## ER Diagram
+
+```mermaid
+erDiagram
+    USER {
+        string id PK "유저 고유 ID"
+        string username "사용자명"
+        string password "비밀번호 (해시)"
+        string kakaoId UK "카카오 ID (nullable)"
+        int coins "보유 코인"
+        datetime createdAt "가입일"
+        datetime updatedAt "수정일"
+    }
+
+    BIRD {
+        string id PK "새 ID (bird_common_1)"
+        string name "영문 이름"
+        string nameKo "한글 이름"
+        enum rarity "등급 (common/rare/epic/unique)"
+        string description "설명"
+        string imagePath "이미지 경로"
+        boolean isDefault "기본 새 여부"
+    }
+
+    USER_BIRD {
+        string id PK "고유 ID"
+        string userId FK "유저 ID"
+        string birdId FK "새 ID"
+        boolean isEquipped "장착 여부"
+        datetime acquiredAt "획득일"
+    }
+
+    GAME_SCORE {
+        string id PK "고유 ID"
+        string userId FK "유저 ID"
+        int score "점수"
+        int coinsEarned "획득 코인"
+        datetime playedAt "플레이 일시"
+    }
+
+    USER ||--o{ USER_BIRD : "owns"
+    BIRD ||--o{ USER_BIRD : "owned by"
+    USER ||--o{ GAME_SCORE : "plays"
+```
+
+### 엔터티 설명
+
+| 엔터티 | 설명 |
+|--------|------|
+| `USER` | 사용자 정보 (로그인, 코인 잔액) |
+| `BIRD` | 새(캐릭터) 마스터 데이터 |
+| `USER_BIRD` | 사용자별 보유 새 (N:M 관계) |
+| `GAME_SCORE` | 게임 기록 (랭킹용) |
+
+### 관계
+
+- **USER ↔ BIRD**: 다대다 (USER_BIRD 중간 테이블)
+- **USER → GAME_SCORE**: 일대다 (한 유저가 여러 게임 기록)
+
+---
+
 ## Commands
 
 ```bash
