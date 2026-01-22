@@ -48,6 +48,13 @@
   - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
   - [ ] RankingScreen (카카오톡 친구 기반)
 
+### Next Up
+- [ ] BirdSelectionScreen 구현
+  - 보유 캐릭터 목록 표시
+  - 등급별 필터링 (COMMON/RARE/EPIC/UNIQUE)
+  - 가챠(뽑기) 기능 UI
+  - 캐릭터 장착 기능
+
 ### Pending
 - [ ] 로그인 API 연동
 - [ ] 카카오 SDK 연동
@@ -57,7 +64,7 @@
 - [ ] 코인 시스템 구현
   - 게임 점수 → 코인 변환 (게임 종료 시 점수를 보유 코인에 추가)
   - 유저별 코인 잔액 관리
-- [ ] (검토중) 10연차 할인 시스템 (500 → 450코인)
+- [ ] (검토중) 10연차 할인 시스템 (1000 → 900코인)
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
