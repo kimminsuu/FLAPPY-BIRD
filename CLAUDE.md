@@ -259,7 +259,9 @@ FLAPPY-BIRD/
 
 ## ER Diagram
 
-👉 [docs/ER_DIAGRAM.md](docs/ER_DIAGRAM.md) 참조
+👉 [docs/er_diagram.md](docs/er_diagram.md) 참조
+
+> **Note**: 새로운 엔터티 추가 시 `docs/er_diagram.md` 파일에 업데이트할 것
 
 ---
 
