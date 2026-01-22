@@ -153,7 +153,7 @@ GameOverModal → HomeScreen
 - **이미지 처리**:
   - `bird_common_1`: FlappyBird SVG 컴포넌트 (`imagePath: "svg"`)
   - `bird_common_2~10`: 개별 PNG 파일 (`bird_common_2.png` ~ `bird_common_10.png`)
-  - 모든 이미지 크기 동일해야 함
+  - 이미지 규격: **128x93px** (가로세로 비율 유지, 중앙 정렬)
 - 이미지 경로: `images/birds/{rarity}/`
 - 구현 상태: 타입/로직 완료, UI 구현 예정
 
