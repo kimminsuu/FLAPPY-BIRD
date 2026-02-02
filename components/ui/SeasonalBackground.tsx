@@ -133,12 +133,6 @@ export default function SeasonalBackground({
         style={{ background: theme.sky }}
       />
 
-      {/* 구름들 */}
-      <Cloud className="top-12 left-8" color={theme.cloudColor} />
-      <Cloud className="top-32 left-1/3" color={theme.cloudColor} />
-      <Cloud className="top-16 right-12" color={theme.cloudColor} />
-      <Cloud className="top-48 right-1/4" color={theme.cloudColor} />
-
       {/* 계절별 장식 요소 */}
       {season === "spring" && (
         <>

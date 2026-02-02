@@ -1,22 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { signIn, useSession } from "next-auth/react";
 import { User, Lock, MessageCircle } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
   SeasonSelector,
-  Season,
 } from "@/components/ui";
+import { useSeason } from "@/lib/season-context";
+
+// 마스터 계정 (TODO: 추후 DB 연동으로 대체)
+const MASTER_ACCOUNT = {
+  username: "admin",
+  password: "admin1!",
+} as const;
 
 export default function LoginPage() {
+  const router = useRouter();
   const { data: session, status } = useSession();
+  const { currentSeason, setCurrentSeason } = useSeason();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [currentSeason, setCurrentSeason] = useState<Season>("summer");
 
   // 이미 로그인된 경우 표시
   if (status === "authenticated" && session) {
@@ -52,12 +60,21 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // TODO: 실제 로그인 API 호출
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // 임시 딜레이
+      // TODO: 추후 실제 로그인 API 호출로 대체
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 로그인 성공 시 처리
-      if (process.env.NODE_ENV === "development") {
-        console.log("Login attempt for user:", username);
+      if (
+        username.trim() === MASTER_ACCOUNT.username &&
+        password === MASTER_ACCOUNT.password
+      ) {
+        // 로그인 성공: 인증 정보 저장 후 홈으로 이동
+        localStorage.setItem(
+          "flappy_auth_user",
+          JSON.stringify({ username: username.trim() })
+        );
+        router.push("/home");
+      } else {
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
       }
     } catch {
       setError("로그인에 실패했습니다. 다시 시도해주세요.");

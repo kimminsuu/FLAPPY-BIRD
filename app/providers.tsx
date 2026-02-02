@@ -1,6 +1,7 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
+import { SeasonProvider } from "@/lib/season-context";
 import { ReactNode } from "react";
 
 interface ProvidersProps {
@@ -8,5 +9,9 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children }: ProvidersProps) {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <SeasonProvider>{children}</SeasonProvider>
+    </SessionProvider>
+  );
 }
