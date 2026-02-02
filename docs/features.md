@@ -12,7 +12,28 @@
   - 일반 로그인 (이름 + 비밀번호) ✅
   - 카카오 소셜 로그인 (UI 완료, API 연동 예정)
   - 자동 로그인 (토큰 저장) - 예정
-- **구현 상태**: UI 완료, API 연동 대기
+  - master 계정 로그인 (`admin` / `admin1!`) ✅
+  - 로그인 성공 시 `/home` 라우팅 ✅
+  - 인증 정보 localStorage 저장 ✅
+- **구현 상태**: 기본 로그인 플로우 완료, DB 연동 대기
+- **향후 계획**:
+  - 새 유저 생성 시 ERD 기반 user insert
+  - 기존 user 존재 시 handling
+
+---
+
+## Feature 1.5: 홈 화면
+
+- **설명**: 로그인 후 메인 메뉴 화면
+- **관련 파일**: `components/home-page.tsx`, `app/home/page.tsx`
+- **세부 기능**:
+  - START 버튼 (게임 시작) ✅
+  - SELECT BIRD 버튼 (캐릭터 선택) ✅
+  - RANKING 버튼 (랭킹 조회) ✅
+  - EXIT 버튼 ✅
+  - 로그아웃 버튼 + 확인 모달 ✅
+  - 비인증 상태 접근 시 로그인 페이지 리다이렉트 ✅
+- **구현 상태**: UI 완료, 각 버튼 라우팅 연결 예정
 
 ---
 
@@ -122,8 +143,10 @@ images/birds/
 
 ## Feature 5: 계절 테마 시스템
 
-- **설명**: 사용자가 선택 가능한 계절별 배경 테마
-- **관련 파일**: `components/ui/SeasonalBackground.tsx`, `components/ui/SeasonSelector.tsx`
+- **설명**: 사용자가 선택 가능한 계절별 배경 테마 (전역 적용)
+- **관련 파일**: `components/ui/SeasonalBackground.tsx`, `components/ui/SeasonSelector.tsx`, `lib/season-context.tsx`
+- **구현 방식**: React Context (`SeasonProvider`) + localStorage 영속화
+- **적용 범위**: 모든 화면에서 동일한 계절 테마 공유
 
 ### 테마 종류
 

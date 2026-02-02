@@ -43,7 +43,7 @@
 ### In Progress
 - [ ] 실제 구현
   - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
-  - [ ] HomeScreen (메인 메뉴)
+  - [x] HomeScreen (메인 메뉴, 로그인/로그아웃 연동)
   - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
   - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
   - [ ] RankingScreen (카카오톡 친구 기반)
@@ -56,7 +56,7 @@
   - 캐릭터 장착 기능
 
 ### Pending
-- [ ] 로그인 API 연동
+- [ ] 로그인 API 연동 (현재 master 계정으로 임시 구현)
 - [ ] 카카오 SDK 연동
 - [ ] 새(Bird) 데이터베이스 테이블 생성
   - birds 테이블: 새 정보 (id, name, rarity 등)
@@ -75,6 +75,7 @@
 - [x] 프로젝트 구조 설계
 - [x] UI 컴포넌트 모듈화 (FlappyBird, SeasonalBackground)
 - [x] 계절 테마 시스템 구현 (봄/여름/가을/겨울)
+- [x] 글로벌 계절 테마 (React Context + localStorage)
 
 ---
 
