@@ -72,6 +72,8 @@ export default function LoginPage() {
           "flappy_auth_user",
           JSON.stringify({ username: username.trim() })
         );
+        // admin 계정은 테스트용 500 코인 지급
+        localStorage.setItem("flappy_user_coins", "500");
         router.push("/home");
       } else {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");

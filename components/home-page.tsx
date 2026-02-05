@@ -1,19 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Play, Trophy, LogOut, Bird, Power } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
   SeasonSelector,
+  UserInfoBar,
 } from "@/components/ui";
 import { useSeason } from "@/lib/season-context";
+import { getBirdById } from "@/lib/birds";
 
 export default function HomePage() {
   const router = useRouter();
   const { currentSeason, setCurrentSeason } = useSeason();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [equippedBirdId, setEquippedBirdId] = useState("bird_common_1");
+
+  // localStorage에서 장착된 새 불러오기
+  useEffect(() => {
+    const saved = localStorage.getItem("flappy_equipped_bird");
+    if (saved) {
+      setEquippedBirdId(saved);
+    }
+  }, []);
+
+  // 장착된 새 정보
+  const equippedBird = getBirdById(equippedBirdId);
 
   const handleStart = () => {
     // TODO: GameScreen으로 이동
@@ -21,8 +36,7 @@ export default function HomePage() {
   };
 
   const handleSelectBird = () => {
-    // TODO: BirdSelectionScreen으로 이동
-    console.log("Select bird");
+    router.push("/bird-selection");
   };
 
   const handleRanking = () => {
@@ -42,26 +56,46 @@ export default function HomePage() {
 
   return (
     <SeasonalBackground season={currentSeason}>
-      {/* 배경 선택 버튼 */}
-      <SeasonSelector
-        currentSeason={currentSeason}
-        onSeasonChange={setCurrentSeason}
-      />
+      {/* 상단 헤더 */}
+      <div className="relative z-20 px-4 pt-4 pb-2">
+        {/* 첫째 줄: 로그아웃 + 계절선택 */}
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={() => setShowLogoutModal(true)}
+            className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-xl border border-white/30 transition-all"
+            aria-label="로그아웃"
+          >
+            <Power className="w-5 h-5 text-white" />
+          </button>
+          <SeasonSelector
+            currentSeason={currentSeason}
+            onSeasonChange={setCurrentSeason}
+          />
+        </div>
 
-      {/* 로그아웃 버튼 (좌측 상단) */}
-      <button
-        onClick={() => setShowLogoutModal(true)}
-        className="absolute top-4 left-4 z-20 p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-xl border border-white/30 transition-all"
-        aria-label="로그아웃"
-      >
-        <Power className="w-5 h-5 text-white" />
-      </button>
+        {/* 둘째 줄: 유저 정보 */}
+        <div className="flex justify-end">
+          <UserInfoBar />
+        </div>
+      </div>
 
       {/* 메인 컨텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
-        {/* 새 아이콘 */}
+        {/* 장착된 새 아이콘 */}
         <div className="mb-4">
-          <FlappyBird className="w-28 h-28 drop-shadow-lg" />
+          {equippedBird?.imagePath === "svg" ? (
+            <FlappyBird className="w-28 h-28 drop-shadow-lg" />
+          ) : equippedBird?.imagePath ? (
+            <Image
+              src={equippedBird.imagePath}
+              alt={equippedBird.nameKo}
+              width={112}
+              height={77}
+              className="drop-shadow-lg object-contain"
+            />
+          ) : (
+            <FlappyBird className="w-28 h-28 drop-shadow-lg" />
+          )}
         </div>
 
         {/* 타이틀 */}

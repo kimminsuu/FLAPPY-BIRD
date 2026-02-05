@@ -31,11 +31,11 @@ export default function SeasonSelector({
   };
 
   return (
-    <div className="absolute top-4 right-4 z-50">
+    <div className="relative z-50">
       {/* 배경 선택 버튼 */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all"
+        className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-lg transition-all"
         aria-label="배경 선택"
       >
         <Palette className="w-5 h-5 text-gray-600" />

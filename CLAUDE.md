@@ -45,15 +45,15 @@
   - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
   - [x] HomeScreen (메인 메뉴, 로그인/로그아웃 연동)
   - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
-  - [ ] BirdSelectionScreen (COMMON, RARE, EPIC, UNIQUE 등급)
+  - [x] BirdSelectionScreen (등급별 격자, 장착 기능)
   - [ ] RankingScreen (카카오톡 친구 기반)
 
 ### Next Up
-- [ ] BirdSelectionScreen 구현
-  - 보유 캐릭터 목록 표시
-  - 등급별 필터링 (COMMON/RARE/EPIC/UNIQUE)
-  - 가챠(뽑기) 기능 UI
-  - 캐릭터 장착 기능
+- [ ] 가챠(뽑기) 기능 UI
+  - 코인 차감 로직
+  - 뽑기 애니메이션
+  - 결과 표시 모달
+- [ ] GameScreen 구현
 
 ### Pending
 - [ ] 로그인 API 연동 (현재 master 계정으로 임시 구현)
@@ -61,9 +61,7 @@
 - [ ] 새(Bird) 데이터베이스 테이블 생성
   - birds 테이블: 새 정보 (id, name, rarity 등)
   - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
-- [ ] 코인 시스템 구현
-  - 게임 점수 → 코인 변환 (게임 종료 시 점수를 보유 코인에 추가)
-  - 유저별 코인 잔액 관리
+- [ ] 코인 시스템 DB 연동 (현재 localStorage 임시 구현)
 - [ ] (검토중) 10연차 할인 시스템 (1000 → 900코인)
 
 ### Completed
@@ -76,6 +74,9 @@
 - [x] UI 컴포넌트 모듈화 (FlappyBird, SeasonalBackground)
 - [x] 계절 테마 시스템 구현 (봄/여름/가을/겨울)
 - [x] 글로벌 계절 테마 (React Context + localStorage)
+- [x] BirdSelectionScreen UI (등급별 격자, 스크롤바, 장착)
+- [x] 유저 정보 표시 (UserInfoBar: 이름 + 코인)
+- [x] 장착 새 HomeScreen 연동
 
 ---
 
@@ -143,10 +144,12 @@ FLAPPY-BIRD/
 │   │   ├── FlappyBird.tsx      # 새 아이콘 SVG
 │   │   ├── SeasonalBackground.tsx # 계절 배경 테마
 │   │   ├── SeasonSelector.tsx  # 배경 선택 드롭다운
+│   │   ├── UserInfoBar.tsx     # 유저 정보 (이름 + 코인)
 │   │   └── index.ts            # 컴포넌트 Export
 │   ├── login-page.tsx          # 로그인 페이지
+│   ├── home-page.tsx           # 홈 페이지
+│   ├── bird-selection-page.tsx # 새 선택 페이지
 │   ├── game-page.tsx           # 게임 페이지 (예정)
-│   ├── bird-selection-page.tsx # 새 선택 (예정)
 │   └── ranking-page.tsx        # 랭킹 페이지 (예정)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
@@ -157,12 +160,13 @@ FLAPPY-BIRD/
 │   ├── next-auth.d.ts          # NextAuth 타입 확장
 │   └── bird.ts                 # 새 관련 타입 정의
 │
-├── images/                     # 이미지 리소스
-│   └── birds/                  # 새 이미지
-│       ├── common/             # COMMON 등급
-│       ├── rare/               # RARE 등급
-│       ├── epic/               # EPIC 등급
-│       └── unique/             # UNIQUE 등급
+├── public/                     # 정적 파일 (Next.js)
+│   └── images/                 # 이미지 리소스
+│       └── birds/              # 새 이미지
+│           ├── common/         # COMMON 등급
+│           ├── rare/           # RARE 등급
+│           ├── epic/           # EPIC 등급
+│           └── unique/         # UNIQUE 등급
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
