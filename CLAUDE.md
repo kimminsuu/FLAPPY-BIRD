@@ -44,7 +44,7 @@
 - [ ] 실제 구현
   - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
   - [x] HomeScreen (메인 메뉴, 로그인/로그아웃 연동)
-  - [ ] GameScreen (새 조작, 점수, 파이프 장애물)
+  - [x] GameScreen (Canvas 게임, 물리엔진, 파이프, 아이템 시스템, 코인 보상)
   - [x] BirdSelectionScreen (등급별 격자, 장착 기능)
   - [ ] RankingScreen (카카오톡 친구 기반)
 
@@ -53,7 +53,7 @@
   - 코인 차감 로직
   - 뽑기 애니메이션
   - 결과 표시 모달
-- [ ] GameScreen 구현
+- [ ] RankingScreen 구현
 
 ### Pending
 - [ ] 로그인 API 연동 (현재 master 계정으로 임시 구현)
@@ -77,6 +77,7 @@
 - [x] BirdSelectionScreen UI (등급별 격자, 스크롤바, 장착)
 - [x] 유저 정보 표시 (UserInfoBar: 이름 + 코인)
 - [x] 장착 새 HomeScreen 연동
+- [x] GameScreen 구현 (Canvas, 물리엔진, 아이템, 코인 보상)
 
 ---
 
@@ -149,7 +150,7 @@ FLAPPY-BIRD/
 │   ├── login-page.tsx          # 로그인 페이지
 │   ├── home-page.tsx           # 홈 페이지
 │   ├── bird-selection-page.tsx # 새 선택 페이지
-│   ├── game-page.tsx           # 게임 페이지 (예정)
+│   ├── game-page.tsx           # 게임 페이지 (Canvas 기반)
 │   └── ranking-page.tsx        # 랭킹 페이지 (예정)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
@@ -158,7 +159,8 @@ FLAPPY-BIRD/
 │
 ├── types/                      # TypeScript 타입 정의
 │   ├── next-auth.d.ts          # NextAuth 타입 확장
-│   └── bird.ts                 # 새 관련 타입 정의
+│   ├── bird.ts                 # 새 관련 타입 정의
+│   └── game.ts                 # 게임 관련 타입 정의
 │
 ├── public/                     # 정적 파일 (Next.js)
 │   └── images/                 # 이미지 리소스

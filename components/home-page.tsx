@@ -31,8 +31,7 @@ export default function HomePage() {
   const equippedBird = getBirdById(equippedBirdId);
 
   const handleStart = () => {
-    // TODO: GameScreen으로 이동
-    console.log("Start game");
+    router.push("/game");
   };
 
   const handleSelectBird = () => {

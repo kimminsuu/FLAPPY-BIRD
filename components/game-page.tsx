@@ -1,10 +1,767 @@
 "use client";
 
-// TODO: 게임 페이지 구현 예정
+import { useRef, useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Home, RotateCcw } from "lucide-react";
+import { useSeason } from "@/lib/season-context";
+import { getBirdById } from "@/lib/birds";
+import { addUserCoins } from "@/components/ui/UserInfoBar";
+import type { BirdRarity } from "@/types/bird";
+import {
+  GAME_CONFIG,
+  ITEM_SPAWN_INTERVALS,
+  ITEM_TYPES,
+  PIPE_COLORS,
+  type GameStatus,
+  type BirdState,
+  type Pipe,
+  type GameItem,
+} from "@/types/game";
+
+// ==================== 게임 상태 (ref로 관리) ====================
+
+interface GameStateRef {
+  status: GameStatus;
+  score: number;
+  highScore: number;
+  bird: BirdState;
+  pipes: Pipe[];
+  items: GameItem[];
+  frameCount: number;
+  isWraith: boolean;
+  wraithEndFrame: number;
+  wraithTimeLeft: number;
+  birdRarity: BirdRarity;
+  lastItemSpawnTime: number;
+  canvasWidth: number;
+  canvasHeight: number;
+}
+
+function createInitialState(
+  canvasWidth: number,
+  canvasHeight: number,
+  rarity: BirdRarity,
+  highScore: number
+): GameStateRef {
+  return {
+    status: "ready",
+    score: 0,
+    highScore,
+    bird: {
+      x: canvasWidth * 0.25,
+      y: canvasHeight * 0.4,
+      velocity: 0,
+      rotation: 0,
+    },
+    pipes: [],
+    items: [],
+    frameCount: 0,
+    isWraith: false,
+    wraithEndFrame: 0,
+    wraithTimeLeft: 0,
+    birdRarity: rarity,
+    lastItemSpawnTime: 0,
+    canvasWidth,
+    canvasHeight,
+  };
+}
+
+// ==================== 메인 컴포넌트 ====================
+
 export default function GamePage() {
+  const router = useRouter();
+  const { currentSeason } = useSeason();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const gameRef = useRef<GameStateRef | null>(null);
+  const animFrameRef = useRef<number>(0);
+  const birdImageRef = useRef<HTMLImageElement | null>(null);
+
+  // React 상태 (UI 표시용)
+  const [gameStatus, setGameStatus] = useState<GameStatus>("ready");
+  const [score, setScore] = useState(0);
+  const [highScore, setHighScore] = useState(0);
+  const [coinReward, setCoinReward] = useState(0);
+
+  // 장착된 새 정보
+  const equippedBirdId =
+    typeof window !== "undefined"
+      ? localStorage.getItem("flappy_equipped_bird") || "bird_common_1"
+      : "bird_common_1";
+  const equippedBird = getBirdById(equippedBirdId);
+  const birdRarity: BirdRarity = equippedBird?.rarity || "common";
+
+  // 최고점수 로드
+  useEffect(() => {
+    const saved = localStorage.getItem("flappy_high_score");
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!Number.isNaN(parsed)) setHighScore(parsed);
+    }
+  }, []);
+
+  // 새 이미지 로드
+  useEffect(() => {
+    if (!equippedBird) return;
+    if (equippedBird.imagePath === "svg") {
+      const svgString = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="55" rx="35" ry="30" fill="#F9D71C"/>
+        <ellipse cx="50" cy="60" rx="30" ry="22" fill="#F5AB35"/>
+        <ellipse cx="55" cy="62" rx="18" ry="16" fill="#FFF8DC"/>
+        <circle cx="62" cy="42" r="14" fill="white"/>
+        <circle cx="62" cy="42" r="12" stroke="#333" stroke-width="2" fill="white"/>
+        <circle cx="65" cy="42" r="6" fill="#333"/>
+        <circle cx="67" cy="40" r="2" fill="white"/>
+        <path d="M 75 52 L 95 55 L 75 62 Z" fill="#E84A3C"/>
+        <path d="M 75 52 L 95 55 L 75 56 Z" fill="#F39C12"/>
+        <ellipse cx="30" cy="55" rx="15" ry="10" fill="#E8B923"/>
+        <ellipse cx="28" cy="55" rx="10" ry="6" fill="#D4A017"/>
+        <path d="M 15 50 Q 5 45 10 55 Q 5 65 15 60 Z" fill="#E8B923"/>
+      </svg>`;
+      const blob = new Blob([svgString], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        birdImageRef.current = img;
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    } else {
+      const img = new Image();
+      img.onload = () => {
+        birdImageRef.current = img;
+      };
+      img.src = equippedBird.imagePath;
+    }
+  }, [equippedBird]);
+
+  // ==================== 게임 로직 함수 ====================
+
+  const spawnPipe = useCallback((state: GameStateRef) => {
+    const { canvasWidth, canvasHeight } = state;
+    const playableHeight = canvasHeight - GAME_CONFIG.groundHeight;
+    const gapHeight =
+      GAME_CONFIG.pipeGapMin +
+      Math.random() * (GAME_CONFIG.pipeGapMax - GAME_CONFIG.pipeGapMin);
+    const minGapY = gapHeight / 2 + 40;
+    const maxGapY = playableHeight - gapHeight / 2 - 40;
+    const gapY = minGapY + Math.random() * (maxGapY - minGapY);
+
+    state.pipes.push({
+      x: canvasWidth + 10,
+      gapY,
+      gapHeight,
+      passed: false,
+      width: GAME_CONFIG.pipeWidth,
+    });
+  }, []);
+
+  const spawnItem = useCallback((state: GameStateRef) => {
+    const interval = ITEM_SPAWN_INTERVALS[state.birdRarity];
+    if (interval === 0) return;
+
+    const fps = 60;
+    const intervalFrames = interval * fps;
+    if (
+      state.frameCount - state.lastItemSpawnTime < intervalFrames &&
+      state.lastItemSpawnTime !== 0
+    )
+      return;
+
+    const recentPipe = state.pipes[state.pipes.length - 1];
+    if (!recentPipe) return;
+
+    const type = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
+    const itemY =
+      recentPipe.gapY -
+      recentPipe.gapHeight / 2 +
+      Math.random() * recentPipe.gapHeight;
+
+    state.items.push({
+      x: recentPipe.x + recentPipe.width / 2,
+      y: itemY,
+      type,
+      collected: false,
+      size: GAME_CONFIG.itemSize,
+    });
+
+    state.lastItemSpawnTime = state.frameCount;
+  }, []);
+
+  const applyBreak = useCallback((state: GameStateRef) => {
+    let bonusScore = 0;
+    state.pipes.forEach((pipe) => {
+      if (!pipe.passed) {
+        bonusScore++;
+        pipe.passed = true;
+      }
+    });
+    state.score += bonusScore;
+    state.pipes = [];
+  }, []);
+
+  const applyWraith = useCallback((state: GameStateRef) => {
+    state.isWraith = true;
+    state.wraithEndFrame =
+      state.frameCount + GAME_CONFIG.wraithDuration * 60;
+    state.wraithTimeLeft = GAME_CONFIG.wraithDuration;
+  }, []);
+
+  const applyPoint = useCallback((state: GameStateRef) => {
+    state.score += 10;
+  }, []);
+
+  const checkAABB = useCallback(
+    (
+      ax: number, ay: number, aw: number, ah: number,
+      bx: number, by: number, bw: number, bh: number
+    ) => {
+      return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    },
+    []
+  );
+
+  // ==================== 게임 루프 ====================
+
+  const gameLoop = useCallback(
+    (ctx: CanvasRenderingContext2D) => {
+      const state = gameRef.current;
+      if (!state) return;
+
+      const { canvasWidth: W, canvasHeight: H } = state;
+      const playableHeight = H - GAME_CONFIG.groundHeight;
+      const pipeColors = PIPE_COLORS[currentSeason] || PIPE_COLORS.summer;
+
+      // === 업데이트 ===
+      if (state.status === "playing") {
+        state.frameCount++;
+
+        // 새 물리
+        state.bird.velocity += GAME_CONFIG.gravity;
+        state.bird.y += state.bird.velocity;
+        state.bird.rotation = Math.min(
+          90,
+          Math.max(-30, state.bird.velocity * 3)
+        );
+
+        // 천장 제한
+        if (state.bird.y < 0) {
+          state.bird.y = 0;
+          state.bird.velocity = 0;
+        }
+
+        // 바닥 충돌
+        if (
+          !state.isWraith &&
+          state.bird.y + GAME_CONFIG.birdSize > playableHeight
+        ) {
+          state.status = "gameover";
+        }
+        // 바닥 아래로 내려가지 않도록 제한
+        if (state.bird.y + GAME_CONFIG.birdSize > playableHeight) {
+          state.bird.y = playableHeight - GAME_CONFIG.birdSize;
+          state.bird.velocity = 0;
+        }
+
+        // 파이프 생성
+        if (state.frameCount % GAME_CONFIG.pipeSpawnInterval === 0) {
+          spawnPipe(state);
+        }
+
+        // 아이템 생성 (파이프 생성 직후)
+        if (state.frameCount % GAME_CONFIG.pipeSpawnInterval === 0) {
+          spawnItem(state);
+        }
+
+        // 파이프 이동 + 통과 체크
+        for (let i = state.pipes.length - 1; i >= 0; i--) {
+          const pipe = state.pipes[i];
+          pipe.x -= GAME_CONFIG.pipeSpeed;
+
+          if (!pipe.passed && pipe.x + pipe.width < state.bird.x) {
+            pipe.passed = true;
+            state.score++;
+          }
+
+          if (pipe.x + pipe.width < -10) {
+            state.pipes.splice(i, 1);
+          }
+        }
+
+        // 아이템 이동
+        for (let i = state.items.length - 1; i >= 0; i--) {
+          const item = state.items[i];
+          item.x -= GAME_CONFIG.pipeSpeed;
+
+          if (item.x + item.size < -10) {
+            state.items.splice(i, 1);
+          }
+        }
+
+        // 파이프 충돌 감지
+        if (!state.isWraith) {
+          const bx = state.bird.x + GAME_CONFIG.birdHitboxPadding;
+          const by = state.bird.y + GAME_CONFIG.birdHitboxPadding;
+          const bw = GAME_CONFIG.birdSize - GAME_CONFIG.birdHitboxPadding * 2;
+          const bh = GAME_CONFIG.birdSize - GAME_CONFIG.birdHitboxPadding * 2;
+
+          for (const pipe of state.pipes) {
+            const topPipeH = pipe.gapY - pipe.gapHeight / 2;
+            const bottomPipeY = pipe.gapY + pipe.gapHeight / 2;
+            const bottomPipeH = playableHeight - bottomPipeY;
+
+            if (
+              checkAABB(bx, by, bw, bh, pipe.x, 0, pipe.width, topPipeH) ||
+              checkAABB(
+                bx, by, bw, bh,
+                pipe.x, bottomPipeY, pipe.width, bottomPipeH
+              )
+            ) {
+              state.status = "gameover";
+              break;
+            }
+          }
+        }
+
+        // 아이템 충돌 감지
+        const bx2 = state.bird.x;
+        const by2 = state.bird.y;
+        const bs2 = GAME_CONFIG.birdSize;
+
+        for (let i = state.items.length - 1; i >= 0; i--) {
+          const item = state.items[i];
+          if (item.collected) continue;
+
+          if (
+            checkAABB(
+              bx2, by2, bs2, bs2,
+              item.x - item.size / 2,
+              item.y - item.size / 2,
+              item.size,
+              item.size
+            )
+          ) {
+            item.collected = true;
+            switch (item.type) {
+              case "break":
+                applyBreak(state);
+                break;
+              case "wraith":
+                applyWraith(state);
+                break;
+              case "point":
+                applyPoint(state);
+                break;
+            }
+            state.items.splice(i, 1);
+          }
+        }
+
+        // wraith 타이머
+        if (state.isWraith) {
+          const framesLeft = state.wraithEndFrame - state.frameCount;
+          if (framesLeft <= 0) {
+            state.isWraith = false;
+            state.wraithTimeLeft = 0;
+          } else {
+            state.wraithTimeLeft = Math.ceil(framesLeft / 60);
+          }
+        }
+
+        // 게임오버 처리
+        if (state.status === "gameover") {
+          if (state.score > state.highScore) {
+            state.highScore = state.score;
+            localStorage.setItem(
+              "flappy_high_score",
+              state.highScore.toString()
+            );
+          }
+          const reward = state.score * GAME_CONFIG.coinRewardMultiplier;
+          addUserCoins(reward);
+          setCoinReward(reward);
+          setScore(state.score);
+          setHighScore(state.highScore);
+          setGameStatus("gameover");
+          return;
+        }
+
+        setScore(state.score);
+      }
+
+      // === 렌더링 ===
+
+      // 하늘 배경
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+      switch (currentSeason) {
+        case "spring":
+          skyGrad.addColorStop(0, "#87CEEB");
+          skyGrad.addColorStop(0.5, "#B0E0E6");
+          skyGrad.addColorStop(1, "#98D8C8");
+          break;
+        case "summer":
+          skyGrad.addColorStop(0, "#4EC0CA");
+          skyGrad.addColorStop(0.5, "#71C5CF");
+          skyGrad.addColorStop(1, "#87CEEB");
+          break;
+        case "autumn":
+          skyGrad.addColorStop(0, "#F4A460");
+          skyGrad.addColorStop(0.5, "#DEB887");
+          skyGrad.addColorStop(1, "#D2B48C");
+          break;
+        case "winter":
+          skyGrad.addColorStop(0, "#B0C4DE");
+          skyGrad.addColorStop(0.5, "#87CEEB");
+          skyGrad.addColorStop(1, "#E0FFFF");
+          break;
+      }
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      // 파이프
+      for (const pipe of state.pipes) {
+        const topH = pipe.gapY - pipe.gapHeight / 2;
+        const bottomY = pipe.gapY + pipe.gapHeight / 2;
+
+        // 상단 파이프 몸체
+        ctx.fillStyle = pipeColors.body;
+        ctx.fillRect(pipe.x, 0, pipe.width, topH);
+        // 상단 파이프 캡
+        ctx.fillStyle = pipeColors.highlight;
+        ctx.fillRect(pipe.x - 4, topH - 30, pipe.width + 8, 30);
+
+        // 하단 파이프 몸체
+        ctx.fillStyle = pipeColors.body;
+        ctx.fillRect(pipe.x, bottomY, pipe.width, playableHeight - bottomY);
+        // 하단 파이프 캡
+        ctx.fillStyle = pipeColors.highlight;
+        ctx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 30);
+      }
+
+      // 잔디
+      const grassGrad = ctx.createLinearGradient(0, playableHeight, 0, H);
+      switch (currentSeason) {
+        case "spring":
+          grassGrad.addColorStop(0, "#8BC34A");
+          grassGrad.addColorStop(0.2, "#7CB342");
+          grassGrad.addColorStop(1, "#558B2F");
+          break;
+        case "summer":
+          grassGrad.addColorStop(0, "#7CB342");
+          grassGrad.addColorStop(0.2, "#5B8C3E");
+          grassGrad.addColorStop(1, "#4A7A2E");
+          break;
+        case "autumn":
+          grassGrad.addColorStop(0, "#D2691E");
+          grassGrad.addColorStop(0.2, "#CD853F");
+          grassGrad.addColorStop(1, "#8B4513");
+          break;
+        case "winter":
+          grassGrad.addColorStop(0, "#FFFAFA");
+          grassGrad.addColorStop(0.2, "#F0F8FF");
+          grassGrad.addColorStop(1, "#E8E8E8");
+          break;
+      }
+      ctx.fillStyle = grassGrad;
+      ctx.fillRect(0, playableHeight, W, GAME_CONFIG.groundHeight);
+
+      // 아이템
+      for (const item of state.items) {
+        if (item.collected) continue;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(item.x, item.y, item.size / 2, 0, Math.PI * 2);
+
+        switch (item.type) {
+          case "break":
+            ctx.fillStyle = "rgba(239, 68, 68, 0.9)";
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.font = `${item.size * 0.55}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("\u{1F4A5}", item.x, item.y);
+            break;
+          case "wraith":
+            ctx.fillStyle = "rgba(168, 85, 247, 0.9)";
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.font = `${item.size * 0.55}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("\u{1F47B}", item.x, item.y);
+            break;
+          case "point":
+            ctx.fillStyle = "rgba(234, 179, 8, 0.9)";
+            ctx.fill();
+            ctx.fillStyle = "white";
+            ctx.font = `${item.size * 0.55}px sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("\u2B50", item.x, item.y);
+            break;
+        }
+        ctx.restore();
+      }
+
+      // 새
+      ctx.save();
+      const birdCX = state.bird.x + GAME_CONFIG.birdSize / 2;
+      const birdCY = state.bird.y + GAME_CONFIG.birdSize / 2;
+      ctx.translate(birdCX, birdCY);
+      ctx.rotate((state.bird.rotation * Math.PI) / 180);
+
+      if (state.isWraith) {
+        ctx.globalAlpha = 0.4;
+      }
+
+      if (birdImageRef.current) {
+        ctx.drawImage(
+          birdImageRef.current,
+          -GAME_CONFIG.birdSize / 2,
+          -GAME_CONFIG.birdSize / 2,
+          GAME_CONFIG.birdSize,
+          GAME_CONFIG.birdSize
+        );
+      } else {
+        ctx.fillStyle = "#F9D71C";
+        ctx.beginPath();
+        ctx.arc(0, 0, GAME_CONFIG.birdSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // 점수 HUD
+      ctx.save();
+      ctx.fillStyle = "white";
+      ctx.strokeStyle = "rgba(0,0,0,0.4)";
+      ctx.lineWidth = 4;
+      ctx.font = "bold 48px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.strokeText(state.score.toString(), W / 2, 50);
+      ctx.fillText(state.score.toString(), W / 2, 50);
+      ctx.restore();
+
+      // wraith 카운트다운
+      if (state.isWraith && state.wraithTimeLeft > 0) {
+        ctx.save();
+        ctx.fillStyle = "rgba(168, 85, 247, 0.8)";
+        ctx.font = "bold 28px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(
+          `\u{1F47B} ${state.wraithTimeLeft}s`,
+          W / 2,
+          105
+        );
+        ctx.restore();
+      }
+
+      // Ready 화면
+      if (state.status === "ready") {
+        state.bird.y =
+          state.canvasHeight * 0.4 + Math.sin(Date.now() / 300) * 10;
+
+        ctx.save();
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 3;
+        ctx.font = "bold 30px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        const tapText = "Tap to Start";
+        ctx.strokeText(tapText, W / 2, H * 0.62);
+        ctx.fillText(tapText, W / 2, H * 0.62);
+        ctx.restore();
+      }
+
+      // 다음 프레임
+      if (state.status !== "gameover") {
+        animFrameRef.current = requestAnimationFrame(() => gameLoop(ctx));
+      }
+    },
+    [
+      currentSeason,
+      spawnPipe,
+      spawnItem,
+      applyBreak,
+      applyWraith,
+      applyPoint,
+      checkAABB,
+    ]
+  );
+
+  // ==================== Canvas 초기화 ====================
+
+  const initGame = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+
+    const W = rect.width;
+    const H = rect.height;
+
+    let hs = highScore;
+    const saved = localStorage.getItem("flappy_high_score");
+    if (saved) {
+      const parsed = parseInt(saved, 10);
+      if (!Number.isNaN(parsed)) hs = parsed;
+    }
+
+    gameRef.current = createInitialState(W, H, birdRarity, hs);
+    setGameStatus("ready");
+    setScore(0);
+    setCoinReward(0);
+
+    if (animFrameRef.current) {
+      cancelAnimationFrame(animFrameRef.current);
+    }
+
+    animFrameRef.current = requestAnimationFrame(() => gameLoop(ctx));
+  }, [birdRarity, highScore, gameLoop]);
+
+  useEffect(() => {
+    initGame();
+    return () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+      }
+    };
+  }, [initGame]);
+
+  // 리사이즈 (게임 중이 아닐 때만)
+  useEffect(() => {
+    const handleResize = () => {
+      if (gameRef.current?.status === "playing") return;
+      initGame();
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [initGame]);
+
+  // ==================== 입력 핸들러 ====================
+
+  const handleTap = useCallback(() => {
+    const state = gameRef.current;
+    if (!state) return;
+
+    if (state.status === "ready") {
+      state.status = "playing";
+      setGameStatus("playing");
+      state.bird.velocity = GAME_CONFIG.jumpForce;
+    } else if (state.status === "playing") {
+      state.bird.velocity = GAME_CONFIG.jumpForce;
+    }
+  }, []);
+
+  const handleRestart = useCallback(() => {
+    initGame();
+    setTimeout(() => {
+      const state = gameRef.current;
+      if (state) {
+        state.status = "playing";
+        setGameStatus("playing");
+        state.bird.velocity = GAME_CONFIG.jumpForce;
+      }
+    }, 100);
+  }, [initGame]);
+
+  const handleGoHome = useCallback(() => {
+    router.push("/home");
+  }, [router]);
+
+  // 키보드
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" || e.code === "ArrowUp") {
+        e.preventDefault();
+        if (gameStatus === "gameover") return;
+        handleTap();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleTap, gameStatus]);
+
+  // ==================== JSX ====================
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-sky-400">
-      <h1 className="text-2xl font-bold text-white">Game Page - Coming Soon</h1>
+    <div className="fixed inset-0 overflow-hidden bg-black">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full block"
+        onClick={gameStatus !== "gameover" ? handleTap : undefined}
+        onTouchStart={
+          gameStatus !== "gameover"
+            ? (e) => {
+                e.preventDefault();
+                handleTap();
+              }
+            : undefined
+        }
+      />
+
+      {/* 게임오버 모달 */}
+      {gameStatus === "gameover" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-3xl shadow-2xl w-80 overflow-hidden">
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-red-500 to-orange-500 py-5">
+              <h2 className="text-white text-2xl font-bold text-center">
+                Game Over
+              </h2>
+            </div>
+
+            {/* 점수 */}
+            <div className="p-6 space-y-4">
+              <div className="text-center">
+                <p className="text-gray-500 text-sm mb-1">Score</p>
+                <p className="text-5xl font-bold text-gray-800">{score}</p>
+              </div>
+
+              <div className="text-center">
+                <p className="text-gray-500 text-sm mb-1">Best</p>
+                <p className="text-2xl font-bold text-yellow-500">
+                  {highScore}
+                </p>
+              </div>
+
+              {coinReward > 0 && (
+                <div className="text-center bg-yellow-50 rounded-xl py-2 px-4">
+                  <p className="text-yellow-700 font-bold text-sm">
+                    +{coinReward} Coins
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleGoHome}
+                  className="flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Home className="w-5 h-5" />
+                  Home
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="flex-1 py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
