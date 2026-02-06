@@ -2,23 +2,38 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, Lock } from "lucide-react";
+import { ArrowLeft, Check, Lock, Coins, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import { FlappyBird, SeasonalBackground, UserInfoBar } from "@/components/ui";
+import { getUserCoins, subtractUserCoins, addUserCoins } from "@/components/ui/UserInfoBar";
 import { useSeason } from "@/lib/season-context";
-import { BIRDS, getBirdsByRarity } from "@/lib/birds";
-import { Bird, BirdRarity, BIRD_RARITIES, BIRD_RARITY_INFO } from "@/types/bird";
+import { BIRDS, getBirdsByRarity, performGacha, getGachaCost, canPerformGacha } from "@/lib/birds";
+import { Bird, BirdRarity, BIRD_RARITIES, BIRD_RARITY_INFO, GACHA_CONFIG, GachaResult } from "@/types/bird";
 
-// 임시: 유저가 보유한 새 ID (나중에 DB에서 가져옴)
-// TODO: DB 연동 시 user_birds 테이블에서 조회
-const TEMP_OWNED_BIRD_IDS = [
-  "bird_common_1",  // 플래피 (COMMON)
-  "bird_rare_1",    // 루비새 (RARE)
-  "bird_epic_1",    // 강아지 (EPIC)
-  "bird_unique_1",  // 우주선 (UNIQUE)
-];
-// 임시: 현재 장착된 새 ID
-const TEMP_EQUIPPED_BIRD_ID = "bird_common_1";
+const STORAGE_KEY_OWNED_BIRDS = "flappy_owned_birds";
+const STORAGE_KEY_EQUIPPED_BIRD = "flappy_equipped_bird";
+
+/** localStorage에서 보유 새 목록 읽기 */
+function loadOwnedBirds(): string[] {
+  if (typeof window === "undefined") return ["bird_common_1"];
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_OWNED_BIRDS);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch { /* fallback */ }
+  return ["bird_common_1"];
+}
+
+/** localStorage에 보유 새 목록 저장 */
+function saveOwnedBirds(birdIds: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_OWNED_BIRDS, JSON.stringify(birdIds));
+  } catch { /* storage unavailable */ }
+}
+
+type GachaPhase = "idle" | "animating" | "result";
 
 interface BirdCardProps {
   bird: Bird;
@@ -150,17 +165,31 @@ export default function BirdSelectionPage() {
   const scrollThumbRef = useRef<HTMLDivElement>(null);
 
   // 상태
-  const [ownedBirdIds] = useState<string[]>(TEMP_OWNED_BIRD_IDS);
-  const [equippedBirdId, setEquippedBirdId] = useState(TEMP_EQUIPPED_BIRD_ID);
+  const [ownedBirdIds, setOwnedBirdIds] = useState<string[]>(() => loadOwnedBirds());
+  const [equippedBirdId, setEquippedBirdId] = useState("bird_common_1");
   const [selectedBirdId, setSelectedBirdId] = useState<string | null>(null);
+  const [userCoins, setUserCoins] = useState<number>(0);
+  const [coinRefreshKey, setCoinRefreshKey] = useState(0);
 
-  // localStorage에서 장착된 새 불러오기
+  // 가챠 상태
+  const [gachaPhase, setGachaPhase] = useState<GachaPhase>("idle");
+  const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
+
+  // 초기화 (클라이언트에서만 실행)
   useEffect(() => {
-    const saved = localStorage.getItem("flappy_equipped_bird");
-    if (saved && ownedBirdIds.includes(saved)) {
-      setEquippedBirdId(saved);
+    // 보유 새 불러오기
+    setOwnedBirdIds(loadOwnedBirds());
+
+    // 장착된 새 불러오기
+    const savedEquipped = localStorage.getItem(STORAGE_KEY_EQUIPPED_BIRD);
+    const owned = loadOwnedBirds();
+    if (savedEquipped && owned.includes(savedEquipped)) {
+      setEquippedBirdId(savedEquipped);
     }
-  }, [ownedBirdIds]);
+
+    // 코인 불러오기
+    setUserCoins(getUserCoins());
+  }, []);
 
   // 스크롤바 상태
   const [thumbPosition, setThumbPosition] = useState(0);
@@ -271,12 +300,65 @@ export default function BirdSelectionPage() {
       setEquippedBirdId(selectedBirdId);
       setSelectedBirdId(null);
       // localStorage에 저장 (나중에 DB로 대체)
-      localStorage.setItem("flappy_equipped_bird", selectedBirdId);
+      localStorage.setItem(STORAGE_KEY_EQUIPPED_BIRD, selectedBirdId);
     }
   };
 
   const handleBack = () => {
     router.push("/home");
+  };
+
+  // 가챠 실행
+  const handleGacha = () => {
+    const currentCoins = getUserCoins();
+    if (!canPerformGacha(currentCoins)) {
+      return;
+    }
+
+    // 코인 차감
+    const { success, newAmount } = subtractUserCoins(getGachaCost());
+    if (!success) return;
+
+    setUserCoins(newAmount);
+    setCoinRefreshKey((prev) => prev + 1);
+
+    // 뽑기 실행
+    const result = performGacha(ownedBirdIds);
+    setGachaResult(result);
+    setGachaPhase("animating");
+
+    // 애니메이션 후 결과 표시
+    setTimeout(() => {
+      setGachaPhase("result");
+
+      // 신규 새면 보유 목록에 추가
+      if (result.isNew) {
+        const newOwnedBirds = [...ownedBirdIds, result.bird.id];
+        setOwnedBirdIds(newOwnedBirds);
+        saveOwnedBirds(newOwnedBirds);
+      } else {
+        // 중복이면 환급
+        const refundedAmount = addUserCoins(result.refundCoins);
+        setUserCoins(refundedAmount);
+        setCoinRefreshKey((prev) => prev + 1);
+      }
+    }, 1500);
+  };
+
+  // 가챠 모달 닫기
+  const handleCloseGacha = () => {
+    setGachaPhase("idle");
+    setGachaResult(null);
+  };
+
+  // 한 번 더 뽑기
+  const handleGachaAgain = () => {
+    setGachaPhase("idle");
+    setGachaResult(null);
+    // 약간의 딜레이 후 다시 뽑기
+    setTimeout(() => {
+      handleGacha();
+    }, 100);
   };
 
   // 선택된 새 정보
@@ -306,7 +388,7 @@ export default function BirdSelectionPage() {
       {/* 유저 정보 + 보유 현황 */}
       <div className="relative z-20 px-4 py-2 space-y-2">
         <div className="flex justify-end">
-          <UserInfoBar />
+          <UserInfoBar key={coinRefreshKey} />
         </div>
         <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 border border-white/30">
           <p className="text-white text-center text-sm">
@@ -364,6 +446,30 @@ export default function BirdSelectionPage() {
           </div>
         </div>
 
+        {/* 가챠 버튼 */}
+        <button
+          onClick={handleGacha}
+          disabled={!canPerformGacha(userCoins)}
+          className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl transition-all flex items-center justify-center gap-3 ${
+            canPerformGacha(userCoins)
+              ? "bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 active:scale-95 text-white"
+              : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          }`}
+        >
+          <Sparkles className="w-6 h-6" />
+          {canPerformGacha(userCoins) ? (
+            <>
+              뽑기 1회
+              <span className="flex items-center gap-1 bg-white/30 px-3 py-1 rounded-full text-base">
+                <Coins className="w-4 h-4" />
+                {GACHA_CONFIG.cost}
+              </span>
+            </>
+          ) : (
+            <>코인 부족 (필요: {GACHA_CONFIG.cost})</>
+          )}
+        </button>
+
         {/* 액션 바 (선택 시) */}
         {selectedBird && (
           <div className="bg-white rounded-2xl shadow-xl p-4">
@@ -407,6 +513,132 @@ export default function BirdSelectionPage() {
           </div>
         )}
       </div>
+
+      {/* 가챠 모달 */}
+      {gachaPhase !== "idle" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* 오버레이 */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
+          {/* 모달 컨텐츠 */}
+          <div className="relative z-10 w-80">
+            {/* 애니메이션 단계 */}
+            {gachaPhase === "animating" && (
+              <div className="flex flex-col items-center">
+                {/* 카드 뒷면 + 빛나는 효과 */}
+                <div className="relative">
+                  <div className="w-48 h-64 bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 rounded-2xl shadow-2xl animate-pulse flex items-center justify-center">
+                    <div className="absolute inset-0 rounded-2xl animate-spin-slow bg-gradient-to-r from-white/0 via-white/30 to-white/0" />
+                    <Sparkles className="w-16 h-16 text-white animate-bounce" />
+                  </div>
+                  {/* 빛나는 파티클 */}
+                  <div className="absolute -top-4 -left-4 w-8 h-8 bg-yellow-300 rounded-full animate-ping opacity-75" />
+                  <div className="absolute -bottom-4 -right-4 w-6 h-6 bg-pink-300 rounded-full animate-ping opacity-75 delay-300" />
+                  <div className="absolute top-1/2 -right-6 w-4 h-4 bg-blue-300 rounded-full animate-ping opacity-75 delay-500" />
+                </div>
+                <p className="mt-6 text-white text-xl font-bold animate-pulse">
+                  뽑는 중...
+                </p>
+              </div>
+            )}
+
+            {/* 결과 단계 */}
+            {gachaPhase === "result" && gachaResult && (
+              <div className="flex flex-col items-center">
+                {/* 닫기 버튼 */}
+                <button
+                  onClick={handleCloseGacha}
+                  className="absolute -top-2 -right-2 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                >
+                  <X className="w-6 h-6 text-white" />
+                </button>
+
+                {/* 결과 카드 */}
+                <div
+                  className="relative w-56 h-72 rounded-2xl shadow-2xl overflow-hidden transform animate-flip-in"
+                  style={{
+                    backgroundColor: BIRD_RARITY_INFO[gachaResult.bird.rarity].bgColor,
+                    borderWidth: "4px",
+                    borderColor: BIRD_RARITY_INFO[gachaResult.bird.rarity].color,
+                  }}
+                >
+                  {/* 빛 이펙트 */}
+                  <div
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                      background: `radial-gradient(circle at 50% 30%, ${BIRD_RARITY_INFO[gachaResult.bird.rarity].color}40, transparent 70%)`,
+                    }}
+                  />
+
+                  {/* NEW 또는 중복 배지 */}
+                  <div className="absolute top-3 left-3 z-10">
+                    {gachaResult.isNew ? (
+                      <span className="px-3 py-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold rounded-full text-sm shadow-lg animate-bounce">
+                        NEW!
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-full text-sm shadow-lg flex items-center gap-1">
+                        중복 +{gachaResult.refundCoins}
+                        <Coins className="w-3 h-3" />
+                      </span>
+                    )}
+                  </div>
+
+                  {/* 새 이미지 */}
+                  <div className="flex items-center justify-center h-44 pt-8">
+                    {gachaResult.bird.imagePath === "svg" ? (
+                      <FlappyBird className="w-24 h-24 drop-shadow-lg" />
+                    ) : (
+                      <Image
+                        src={gachaResult.bird.imagePath}
+                        alt={gachaResult.bird.nameKo}
+                        width={96}
+                        height={66}
+                        className="object-contain drop-shadow-lg"
+                      />
+                    )}
+                  </div>
+
+                  {/* 새 정보 */}
+                  <div className="px-4 pb-4 text-center">
+                    <p
+                      className="text-xl font-bold"
+                      style={{ color: BIRD_RARITY_INFO[gachaResult.bird.rarity].color }}
+                    >
+                      {gachaResult.bird.nameKo}
+                    </p>
+                    <p
+                      className="text-sm font-medium mt-1"
+                      style={{ color: BIRD_RARITY_INFO[gachaResult.bird.rarity].color }}
+                    >
+                      {BIRD_RARITY_INFO[gachaResult.bird.rarity].labelKo}
+                    </p>
+                  </div>
+                </div>
+
+                {/* 버튼들 */}
+                <div className="flex gap-3 mt-6 w-full">
+                  <button
+                    onClick={handleCloseGacha}
+                    className="flex-1 py-3 bg-white/20 hover:bg-white/30 text-white font-bold rounded-xl transition-colors"
+                  >
+                    확인
+                  </button>
+                  {canPerformGacha(userCoins) && (
+                    <button
+                      onClick={handleGachaAgain}
+                      className="flex-1 py-3 bg-gradient-to-r from-orange-400 to-yellow-400 hover:from-orange-500 hover:to-yellow-500 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      한 번 더!
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </SeasonalBackground>
   );
 }

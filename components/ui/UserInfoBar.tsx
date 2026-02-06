@@ -31,7 +31,8 @@ export default function UserInfoBar({ className = "" }: UserInfoBarProps) {
     // 코인 불러오기 (없으면 기본값 설정)
     const savedCoins = localStorage.getItem(STORAGE_KEY_COINS);
     if (savedCoins) {
-      setCoins(parseInt(savedCoins, 10));
+      const parsed = parseInt(savedCoins, 10);
+      setCoins(Number.isNaN(parsed) ? DEFAULT_COINS : parsed);
     } else {
       localStorage.setItem(STORAGE_KEY_COINS, DEFAULT_COINS.toString());
       setCoins(DEFAULT_COINS);

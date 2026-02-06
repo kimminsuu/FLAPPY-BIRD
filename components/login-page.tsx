@@ -30,10 +30,14 @@ export default function LoginPage() {
   if (status === "authenticated" && session) {
     return (
       <SeasonalBackground season={currentSeason}>
-        <SeasonSelector
-          currentSeason={currentSeason}
-          onSeasonChange={setCurrentSeason}
-        />
+        <div className="relative z-20 px-4 pt-4 pb-2">
+          <div className="flex justify-end">
+            <SeasonSelector
+              currentSeason={currentSeason}
+              onSeasonChange={setCurrentSeason}
+            />
+          </div>
+        </div>
         <div className="relative z-10 flex-1 flex flex-col items-center justify-center">
           <FlappyBird className="w-24 h-24 mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">환영합니다!</h1>
@@ -72,8 +76,26 @@ export default function LoginPage() {
           "flappy_auth_user",
           JSON.stringify({ username: username.trim() })
         );
-        // admin 계정은 테스트용 500 코인 지급
-        localStorage.setItem("flappy_user_coins", "500");
+        // admin 계정: 코인이 없을 때만 테스트용 500 코인 지급
+        if (!localStorage.getItem("flappy_user_coins")) {
+          localStorage.setItem("flappy_user_coins", "500");
+        }
+        // 보유 새 초기화 (없을 때만)
+        if (!localStorage.getItem("flappy_owned_birds")) {
+          if (username.trim() === "admin") {
+            // admin: 테스트용 4종 보유
+            localStorage.setItem(
+              "flappy_owned_birds",
+              JSON.stringify(["bird_common_1", "bird_rare_1", "bird_epic_1", "bird_unique_1"])
+            );
+          } else {
+            // 일반 유저: 기본 새만 보유
+            localStorage.setItem(
+              "flappy_owned_birds",
+              JSON.stringify(["bird_common_1"])
+            );
+          }
+        }
         router.push("/home");
       } else {
         setError("아이디 또는 비밀번호가 올바르지 않습니다.");
@@ -100,11 +122,15 @@ export default function LoginPage() {
 
   return (
     <SeasonalBackground season={currentSeason}>
-      {/* 배경 선택 버튼 */}
-      <SeasonSelector
-        currentSeason={currentSeason}
-        onSeasonChange={setCurrentSeason}
-      />
+      {/* 상단 헤더: 계절 선택 버튼 */}
+      <div className="relative z-20 px-4 pt-4 pb-2">
+        <div className="flex justify-end">
+          <SeasonSelector
+            currentSeason={currentSeason}
+            onSeasonChange={setCurrentSeason}
+          />
+        </div>
+      </div>
 
       {/* 메인 컨텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pb-32">

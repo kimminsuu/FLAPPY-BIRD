@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Trophy, LogOut, Bird, Power } from "lucide-react";
+import { Play, Trophy, Bird, Power, LogOut } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
