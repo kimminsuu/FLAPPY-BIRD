@@ -6,11 +6,10 @@
 
 ## Feature 1: 로그인 시스템
 
-- **설명**: 사용자 이름/비밀번호 기반 로그인 + 카카오 ID 연동
-- **관련 파일**: `components/login-page.tsx`, `lib/auth.ts`
+- **설명**: 사용자 이름/비밀번호 기반 로그인
+- **관련 파일**: `components/login-page.tsx`
 - **세부 기능**:
   - 일반 로그인 (이름 + 비밀번호) ✅
-  - 카카오 소셜 로그인 (UI 완료, API 연동 예정)
   - 자동 로그인 (토큰 저장) - 예정
   - master 계정 로그인 (`admin` / `admin1!`) ✅
   - 로그인 성공 시 `/home` 라우팅 ✅
@@ -29,7 +28,7 @@
 - **세부 기능**:
   - START 버튼 (게임 시작) ✅
   - SELECT BIRD 버튼 (캐릭터 선택) ✅
-  - RANKING 버튼 (랭킹 조회) ✅
+  - ~~RANKING 버튼~~ (제거됨)
   - EXIT 버튼 ✅
   - 로그아웃 버튼 + 확인 모달 ✅
   - 비인증 상태 접근 시 로그인 페이지 리다이렉트 ✅
@@ -130,18 +129,7 @@ images/birds/
 
 ---
 
-## Feature 4: 랭킹 시스템
-
-- **설명**: 카카오톡 친구 기반 순위 시스템
-- **관련 파일**: TBD
-- **세부 기능**:
-  - 카카오 친구 목록 연동
-  - 친구들 간 점수 비교
-  - 주간/전체 랭킹
-
----
-
-## Feature 5: 계절 테마 시스템
+## Feature 4: 계절 테마 시스템
 
 - **설명**: 사용자가 선택 가능한 계절별 배경 테마 (전역 적용)
 - **관련 파일**: `components/ui/SeasonalBackground.tsx`, `components/ui/SeasonSelector.tsx`, `lib/season-context.tsx`

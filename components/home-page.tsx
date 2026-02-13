@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Trophy, Bird, Power, LogOut } from "lucide-react";
+import { Play, Bird, Power, LogOut } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
@@ -36,11 +36,6 @@ export default function HomePage() {
 
   const handleSelectBird = () => {
     router.push("/bird-selection");
-  };
-
-  const handleRanking = () => {
-    // TODO: RankingScreen으로 이동
-    console.log("Ranking");
   };
 
   const handleExit = () => {
@@ -134,15 +129,6 @@ export default function HomePage() {
           >
             <Bird className="w-6 h-6" />
             SELECT BIRD
-          </button>
-
-          {/* RANKING 버튼 */}
-          <button
-            onClick={handleRanking}
-            className="w-full py-3.5 bg-[#FFC107] hover:bg-[#FFB300] active:bg-[#FFA000] text-[#3E2723] text-lg font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
-          >
-            <Trophy className="w-6 h-6" />
-            RANKING
           </button>
 
           {/* EXIT 버튼 */}

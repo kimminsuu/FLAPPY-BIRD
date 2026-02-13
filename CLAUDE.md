@@ -14,7 +14,6 @@
 - TypeScript
 - Tailwind CSS
 - Lucide React (아이콘)
-- NextAuth.js (인증)
 
 ### Backend
 - TBD (Firebase / Supabase / Custom)
@@ -23,7 +22,6 @@
 - TBD (Firestore / PostgreSQL)
 
 ### 외부 서비스
-- Kakao SDK (로그인, 친구 목록)
 - 인앱 결제 (App Store / Google Play)
 
 ### DevOps / Infrastructure
@@ -42,22 +40,18 @@
 
 ### In Progress
 - [ ] 실제 구현
-  - [x] LoginScreen (사용자 이름/비밀번호, 카카오 ID 연동)
+  - [x] LoginScreen (사용자 이름/비밀번호)
   - [x] HomeScreen (메인 메뉴, 로그인/로그아웃 연동)
   - [x] GameScreen (Canvas 게임, 물리엔진, 파이프, 아이템 시스템, 코인 보상)
   - [x] BirdSelectionScreen (등급별 격자, 장착 기능)
-  - [ ] RankingScreen (카카오톡 친구 기반)
-
 ### Next Up
 - [ ] 가챠(뽑기) 기능 UI
   - 코인 차감 로직
   - 뽑기 애니메이션
   - 결과 표시 모달
-- [ ] RankingScreen 구현
 
 ### Pending
 - [ ] 로그인 API 연동 (현재 master 계정으로 임시 구현)
-- [ ] 카카오 SDK 연동
 - [ ] 새(Bird) 데이터베이스 테이블 생성
   - birds 테이블: 새 정보 (id, name, rarity 등)
   - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
@@ -97,19 +91,18 @@
 
 | 화면 | Screen Name | 설명 |
 |------|-------------|------|
-| 로그인 | `LoginScreen` | 로그인/회원가입 화면 |
+| 로그인 | `LoginScreen` | 로그인 화면 |
 | 홈 | `HomeScreen` | 메인 메뉴 (로그인 후) |
 | 인게임 | `GameScreen` | 메인 게임 플레이 화면 |
 | 새 선택 | `BirdSelectionScreen` | 캐릭터 선택 및 구매 화면 |
-| 랭킹 | `RankingScreen` | 친구 랭킹 조회 화면 |
 
 ### 화면 흐름 (Navigation Flow)
 ```
 LoginScreen
     ↓ (로그인 성공)
 HomeScreen ←→ BirdSelectionScreen
-    ↓              ↓
-GameScreen    RankingScreen
+    ↓
+GameScreen
     ↓
 GameOverModal → HomeScreen
 ```
@@ -133,8 +126,6 @@ FLAPPY-BIRD/
 │   └── ISSUE_TEMPLATE/
 │
 ├── app/                        # Next.js App Router (라우팅)
-│   ├── api/                    # API 라우트 (Backend)
-│   │   └── auth/               # 인증 API (NextAuth)
 │   ├── globals.css             # 전역 스타일
 │   ├── layout.tsx              # 루트 레이아웃
 │   ├── page.tsx                # 메인 페이지
@@ -150,15 +141,12 @@ FLAPPY-BIRD/
 │   ├── login-page.tsx          # 로그인 페이지
 │   ├── home-page.tsx           # 홈 페이지
 │   ├── bird-selection-page.tsx # 새 선택 페이지
-│   ├── game-page.tsx           # 게임 페이지 (Canvas 기반)
-│   └── ranking-page.tsx        # 랭킹 페이지 (예정)
+│   └── game-page.tsx           # 게임 페이지 (Canvas 기반)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
-│   ├── auth.ts                 # NextAuth 설정
 │   └── birds.ts                # 새 데이터 및 매핑
 │
 ├── types/                      # TypeScript 타입 정의
-│   ├── next-auth.d.ts          # NextAuth 타입 확장
 │   ├── bird.ts                 # 새 관련 타입 정의
 │   └── game.ts                 # 게임 관련 타입 정의
 │
@@ -180,8 +168,7 @@ FLAPPY-BIRD/
 ### 폴더 역할
 | 폴더 | 역할 | 구분 |
 |------|------|------|
-| `app/` | 라우팅, 페이지, API | Router |
-| `app/api/` | REST API 엔드포인트 | Backend |
+| `app/` | 라우팅, 페이지 | Router |
 | `components/` | UI 컴포넌트 | Frontend |
 | `lib/` | 비즈니스 로직, 설정 | Backend |
 | `types/` | 타입 정의 | Shared |
@@ -226,8 +213,7 @@ main (production)
  └── dev (development)
       ├── feature/login
       ├── feature/game
-      ├── feature/bird-selection
-      └── feature/ranking
+      └── feature/bird-selection
 ```
 
 | Branch | Purpose |
@@ -277,12 +263,6 @@ main (production)
 - React 18 (Hooks, Suspense)
 - Tailwind CSS
 - TypeScript
-- Kakao SDK (로그인 연동 시)
-
-### 외부 연동
-- 카카오 개발자 계정 필요 (로그인 + 친구 목록 API)
-- 카카오 앱 등록 필요
-
 ### 모바일 앱 고려 사항
 - **터치 인터페이스**: 탭으로 새 점프 조작
 - **오프라인 플레이**: 지원 여부 결정 필요
@@ -292,5 +272,4 @@ main (production)
 
 ### 앱 권한 (Permissions)
 - 인터넷 접근
-- 카카오 계정 연동
 - (선택) 푸시 알림
