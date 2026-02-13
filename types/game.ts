@@ -116,10 +116,12 @@ export const ITEM_TYPES: readonly ItemType[] = [
 ] as const;
 
 // 계절별 파이프 색상
-export const PIPE_COLORS: Record<string, { body: string; highlight: string }> =
-  {
-    spring: { body: "#7CB342", highlight: "#558B2F" },
-    summer: { body: "#43A047", highlight: "#2E7D32" },
-    autumn: { body: "#8D6E63", highlight: "#5D4037" },
-    winter: { body: "#90A4AE", highlight: "#607D8B" },
-  } as const;
+export const PIPE_COLORS: Record<
+  string,
+  { body: string; highlight: string; capEdge: string }
+> = {
+  spring: { body: "#7CB342", highlight: "#558B2F", capEdge: "#33691E" },
+  summer: { body: "#43A047", highlight: "#2E7D32", capEdge: "#1B5E20" },
+  autumn: { body: "#8D6E63", highlight: "#5D4037", capEdge: "#3E2723" },
+  winter: { body: "#90A4AE", highlight: "#607D8B", capEdge: "#455A64" },
+} as const;

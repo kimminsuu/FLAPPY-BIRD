@@ -591,20 +591,117 @@ export default function GamePage() {
       for (const pipe of state.pipes) {
         const topH = pipe.gapY - pipe.gapHeight / 2;
         const bottomY = pipe.gapY + pipe.gapHeight / 2;
+        const bottomH = playableHeight - bottomY;
+        const pw = pipe.width;
+        const px = pipe.x;
+        const capH = 30;
+        const capOverhang = 5;
 
-        // 상단 파이프 몸체
-        ctx.fillStyle = pipeColors.body;
-        ctx.fillRect(pipe.x, 0, pipe.width, topH);
-        // 상단 파이프 캡
-        ctx.fillStyle = pipeColors.highlight;
-        ctx.fillRect(pipe.x - 4, topH - 30, pipe.width + 8, 30);
+        // --- 파이프 몸체 그리기 헬퍼 ---
+        const drawPipeBody = (x: number, y: number, w: number, h: number) => {
+          if (h <= 0) return;
+          // 몸체 좌→우 그라데이션 (입체감)
+          const bodyGrad = ctx.createLinearGradient(x, 0, x + w, 0);
+          bodyGrad.addColorStop(0, pipeColors.highlight);
+          bodyGrad.addColorStop(0.15, pipeColors.body);
+          bodyGrad.addColorStop(0.5, pipeColors.body);
+          bodyGrad.addColorStop(0.85, pipeColors.highlight);
+          bodyGrad.addColorStop(1, pipeColors.highlight);
+          ctx.fillStyle = bodyGrad;
+          ctx.fillRect(x, y, w, h);
 
-        // 하단 파이프 몸체
-        ctx.fillStyle = pipeColors.body;
-        ctx.fillRect(pipe.x, bottomY, pipe.width, playableHeight - bottomY);
-        // 하단 파이프 캡
-        ctx.fillStyle = pipeColors.highlight;
-        ctx.fillRect(pipe.x - 4, bottomY, pipe.width + 8, 30);
+          // 왼쪽 하이라이트 줄
+          ctx.fillStyle = "rgba(255,255,255,0.18)";
+          ctx.fillRect(x + 4, y, 6, h);
+          ctx.fillStyle = "rgba(255,255,255,0.08)";
+          ctx.fillRect(x + 12, y, 3, h);
+
+          // 오른쪽 그림자 줄
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          ctx.fillRect(x + w - 8, y, 5, h);
+          ctx.fillStyle = "rgba(0,0,0,0.06)";
+          ctx.fillRect(x + w - 14, y, 3, h);
+
+          // 수평 세그먼트 라인 (마디)
+          ctx.strokeStyle = "rgba(0,0,0,0.07)";
+          ctx.lineWidth = 1;
+          const segmentHeight = 28;
+          const startSeg = Math.ceil(y / segmentHeight) * segmentHeight;
+          for (let sy = startSeg; sy < y + h; sy += segmentHeight) {
+            ctx.beginPath();
+            ctx.moveTo(x + 2, sy);
+            ctx.lineTo(x + w - 2, sy);
+            ctx.stroke();
+          }
+
+          // 외곽선
+          ctx.strokeStyle = "rgba(0,0,0,0.25)";
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(x + 0.5, y, w - 1, h);
+        };
+
+        // --- 캡 그리기 헬퍼 ---
+        const drawPipeCap = (x: number, y: number, w: number, h: number) => {
+          // 캡은 highlight를 메인, 가장자리는 더 어둡게
+          const capGrad = ctx.createLinearGradient(x, 0, x + w, 0);
+          capGrad.addColorStop(0, pipeColors.capEdge);
+          capGrad.addColorStop(0.15, pipeColors.highlight);
+          capGrad.addColorStop(0.5, pipeColors.highlight);
+          capGrad.addColorStop(0.85, pipeColors.highlight);
+          capGrad.addColorStop(1, pipeColors.capEdge);
+          ctx.fillStyle = capGrad;
+
+          // 둥근 모서리 캡
+          const r = 4;
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.arcTo(x + w, y, x + w, y + r, r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+          ctx.lineTo(x + r, y + h);
+          ctx.arcTo(x, y + h, x, y + h - r, r);
+          ctx.lineTo(x, y + r);
+          ctx.arcTo(x, y, x + r, y, r);
+          ctx.closePath();
+          ctx.fill();
+
+          // 캡 상단 하이라이트
+          ctx.fillStyle = "rgba(255,255,255,0.22)";
+          ctx.fillRect(x + 3, y + 2, w - 6, 4);
+
+          // 캡 하단 그림자
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          ctx.fillRect(x + 3, y + h - 5, w - 6, 3);
+
+          // 캡 왼쪽 하이라이트
+          ctx.fillStyle = "rgba(255,255,255,0.12)";
+          ctx.fillRect(x + 2, y + 4, 5, h - 8);
+
+          // 캡 외곽선
+          ctx.strokeStyle = "rgba(0,0,0,0.3)";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(x + r, y);
+          ctx.lineTo(x + w - r, y);
+          ctx.arcTo(x + w, y, x + w, y + r, r);
+          ctx.lineTo(x + w, y + h - r);
+          ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+          ctx.lineTo(x + r, y + h);
+          ctx.arcTo(x, y + h, x, y + h - r, r);
+          ctx.lineTo(x, y + r);
+          ctx.arcTo(x, y, x + r, y, r);
+          ctx.closePath();
+          ctx.stroke();
+        };
+
+        // 상단 파이프
+        drawPipeBody(px, 0, pw, topH - capH);
+        drawPipeCap(px - capOverhang, topH - capH, pw + capOverhang * 2, capH);
+
+        // 하단 파이프
+        drawPipeCap(px - capOverhang, bottomY, pw + capOverhang * 2, capH);
+        drawPipeBody(px, bottomY + capH, pw, bottomH - capH);
       }
 
       // 파티클

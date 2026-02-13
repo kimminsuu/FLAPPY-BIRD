@@ -125,14 +125,20 @@ function RaritySection({
     <div className="flex-shrink-0">
       {/* 등급 헤더 */}
       <div
-        className="px-4 py-2 mb-3 rounded-xl mx-2"
-        style={{ backgroundColor: rarityInfo.bgColor }}
+        className="mb-3 mx-2 rounded-2xl py-3 px-5 shadow-lg"
+        style={{
+          background: `linear-gradient(135deg, ${rarityInfo.color}, ${rarityInfo.color}DD)`,
+        }}
       >
         <h3
-          className="text-lg font-bold text-center"
-          style={{ color: rarityInfo.color }}
+          className="text-2xl font-black text-center tracking-widest"
+          style={{
+            color: "#FFFFFF",
+            textShadow: "0 1px 2px rgba(0,0,0,0.5), 0 0 10px rgba(255,255,255,0.3)",
+            WebkitTextStroke: "0.5px rgba(0,0,0,0.2)",
+          }}
         >
-          {rarityInfo.labelKo} ({birds.length})
+          {rarityInfo.label}
         </h3>
       </div>
 
@@ -400,7 +406,7 @@ export default function BirdSelectionPage() {
       {/* 새 목록 (스크롤 비활성화) */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-hidden px-2 py-4 pb-40"
+        className="relative z-10 flex-1 overflow-hidden px-2 py-4"
         style={{ touchAction: "none" }}
       >
         <div className="flex gap-6 h-full items-start">
@@ -418,8 +424,8 @@ export default function BirdSelectionPage() {
         </div>
       </div>
 
-      {/* 하단 고정 영역 */}
-      <div className="absolute bottom-24 left-0 right-0 z-30 px-4 space-y-3">
+      {/* 하단 고정 영역 (잔디 위) */}
+      <div className="relative z-30 px-4 pb-28 space-y-3">
         {/* 스크롤바 */}
         <div
           ref={scrollBarRef}

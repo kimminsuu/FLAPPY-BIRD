@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";
 
@@ -43,76 +43,257 @@ const seasonThemes: Record<
   },
 };
 
-// 구름 컴포넌트
-function Cloud({
-  className = "",
-  color = "rgba(255, 255, 255, 0.9)",
-}: {
-  className?: string;
-  color?: string;
-}) {
+// ==================== 계절별 애니메이션 파티클 ====================
+
+interface ParticleConfig {
+  count: number;
+  sizeRange: [number, number];
+  durationRange: [number, number];
+  delayRange: [number, number];
+}
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
+// 봄: 벚꽃잎 날리기
+function SpringParticles() {
+  const particles = useMemo(() => {
+    const items = [];
+    const cfg: ParticleConfig = {
+      count: 15,
+      sizeRange: [10, 18],
+      durationRange: [6, 12],
+      delayRange: [0, 8],
+    };
+    for (let i = 0; i < cfg.count; i++) {
+      const size =
+        cfg.sizeRange[0] + seededRandom(i) * (cfg.sizeRange[1] - cfg.sizeRange[0]);
+      const left = seededRandom(i + 100) * 100;
+      const duration =
+        cfg.durationRange[0] +
+        seededRandom(i + 200) * (cfg.durationRange[1] - cfg.durationRange[0]);
+      const delay =
+        cfg.delayRange[0] +
+        seededRandom(i + 300) * (cfg.delayRange[1] - cfg.delayRange[0]);
+      const color = seededRandom(i + 400) > 0.5 ? "#FFB7C5" : "#FFC0CB";
+      const swayAmount = 30 + seededRandom(i + 500) * 60;
+      items.push({ size, left, duration, delay, color, swayAmount, id: i });
+    }
+    return items;
+  }, []);
+
   return (
-    <div
-      className={`absolute rounded-full ${className}`}
-      style={{
-        width: "120px",
-        height: "40px",
-        borderRadius: "20px",
-        backgroundColor: color,
-      }}
-      aria-hidden="true"
-    />
+    <>
+      <style>{`
+        @keyframes cherry-fall {
+          0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.8; }
+          90% { opacity: 0.6; }
+          100% { transform: translateY(105vh) translateX(var(--sway)) rotate(360deg); opacity: 0; }
+        }
+      `}</style>
+      {particles.map((p) => (
+        <div
+          key={p.id}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: `${p.left}%`,
+            top: "-20px",
+            width: `${p.size}px`,
+            height: `${p.size}px`,
+            backgroundColor: p.color,
+            borderRadius: "50% 0 50% 50%",
+            opacity: 0,
+            animation: `cherry-fall ${p.duration}s ${p.delay}s ease-in-out infinite`,
+            ["--sway" as string]: `${p.swayAmount}px`,
+            pointerEvents: "none" as const,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
-// 눈송이 컴포넌트 (겨울용)
-function Snowflake({ className = "" }: { className?: string }) {
+// 여름: 구름 떠다니기
+function SummerParticles() {
+  const clouds = useMemo(() => {
+    const items = [];
+    const count = 6;
+    for (let i = 0; i < count; i++) {
+      const width = 80 + seededRandom(i) * 100;
+      const height = width * 0.35;
+      const top = 5 + seededRandom(i + 100) * 40;
+      const duration = 20 + seededRandom(i + 200) * 25;
+      const delay = seededRandom(i + 300) * 15;
+      const opacity = 0.4 + seededRandom(i + 400) * 0.4;
+      items.push({ width, height, top, duration, delay, opacity, id: i });
+    }
+    return items;
+  }, []);
+
   return (
-    <div
-      className={`absolute text-white text-opacity-80 ${className}`}
-      style={{ fontSize: "20px" }}
-      aria-hidden="true"
-    >
-      *
-    </div>
+    <>
+      <style>{`
+        @keyframes cloud-drift {
+          0% { transform: translateX(-150px); }
+          100% { transform: translateX(calc(100vw + 150px)); }
+        }
+      `}</style>
+      {clouds.map((c) => (
+        <div
+          key={c.id}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: `${c.top}%`,
+            left: "-150px",
+            width: `${c.width}px`,
+            height: `${c.height}px`,
+            borderRadius: "50px",
+            backgroundColor: "rgba(255, 255, 255, 0.9)",
+            opacity: c.opacity,
+            animation: `cloud-drift ${c.duration}s ${c.delay}s linear infinite`,
+            boxShadow: "0 4px 12px rgba(255,255,255,0.3)",
+            pointerEvents: "none" as const,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
-// 벚꽃잎 컴포넌트 (봄용)
-function CherryBlossom({ className = "" }: { className?: string }) {
+// 가을: 낙엽 날리기
+function AutumnParticles() {
+  const leaves = useMemo(() => {
+    const items = [];
+    const cfg: ParticleConfig = {
+      count: 12,
+      sizeRange: [12, 20],
+      durationRange: [7, 14],
+      delayRange: [0, 10],
+    };
+    const colors = ["#D2691E", "#CD853F", "#DAA520", "#B8860B", "#A0522D"];
+    for (let i = 0; i < cfg.count; i++) {
+      const size =
+        cfg.sizeRange[0] + seededRandom(i) * (cfg.sizeRange[1] - cfg.sizeRange[0]);
+      const left = seededRandom(i + 100) * 100;
+      const duration =
+        cfg.durationRange[0] +
+        seededRandom(i + 200) * (cfg.durationRange[1] - cfg.durationRange[0]);
+      const delay =
+        cfg.delayRange[0] +
+        seededRandom(i + 300) * (cfg.delayRange[1] - cfg.delayRange[0]);
+      const color = colors[Math.floor(seededRandom(i + 400) * colors.length)];
+      const swayAmount = 40 + seededRandom(i + 500) * 80;
+      const rotateEnd = 180 + seededRandom(i + 600) * 360;
+      items.push({ size, left, duration, delay, color, swayAmount, rotateEnd, id: i });
+    }
+    return items;
+  }, []);
+
   return (
-    <div
-      className={`absolute ${className}`}
-      style={{
-        width: "12px",
-        height: "12px",
-        backgroundColor: "#FFB7C5",
-        borderRadius: "50% 0 50% 50%",
-        transform: "rotate(45deg)",
-        opacity: 0.7,
-      }}
-      aria-hidden="true"
-    />
+    <>
+      <style>{`
+        @keyframes leaf-fall {
+          0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 0; }
+          10% { opacity: 0.7; }
+          50% { transform: translateY(50vh) translateX(var(--sway)) rotate(var(--rotate-half)); }
+          90% { opacity: 0.5; }
+          100% { transform: translateY(105vh) translateX(calc(var(--sway) * -0.5)) rotate(var(--rotate-end)); opacity: 0; }
+        }
+      `}</style>
+      {leaves.map((l) => (
+        <div
+          key={l.id}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: `${l.left}%`,
+            top: "-20px",
+            width: `${l.size}px`,
+            height: `${l.size}px`,
+            backgroundColor: l.color,
+            borderRadius: "0 50% 50% 50%",
+            opacity: 0,
+            animation: `leaf-fall ${l.duration}s ${l.delay}s ease-in-out infinite`,
+            ["--sway" as string]: `${l.swayAmount}px`,
+            ["--rotate-half" as string]: `${l.rotateEnd / 2}deg`,
+            ["--rotate-end" as string]: `${l.rotateEnd}deg`,
+            pointerEvents: "none" as const,
+          }}
+        />
+      ))}
+    </>
   );
 }
 
-// 낙엽 컴포넌트 (가을용)
-function Leaf({ className = "" }: { className?: string }) {
+// 겨울: 눈 내리기
+function WinterParticles() {
+  const snowflakes = useMemo(() => {
+    const items = [];
+    const cfg: ParticleConfig = {
+      count: 25,
+      sizeRange: [4, 10],
+      durationRange: [5, 12],
+      delayRange: [0, 8],
+    };
+    for (let i = 0; i < cfg.count; i++) {
+      const size =
+        cfg.sizeRange[0] + seededRandom(i) * (cfg.sizeRange[1] - cfg.sizeRange[0]);
+      const left = seededRandom(i + 100) * 100;
+      const duration =
+        cfg.durationRange[0] +
+        seededRandom(i + 200) * (cfg.durationRange[1] - cfg.durationRange[0]);
+      const delay =
+        cfg.delayRange[0] +
+        seededRandom(i + 300) * (cfg.delayRange[1] - cfg.delayRange[0]);
+      const swayAmount = 15 + seededRandom(i + 500) * 40;
+      const opacity = 0.5 + seededRandom(i + 600) * 0.5;
+      items.push({ size, left, duration, delay, swayAmount, opacity, id: i });
+    }
+    return items;
+  }, []);
+
   return (
-    <div
-      className={`absolute ${className}`}
-      style={{
-        width: "15px",
-        height: "15px",
-        backgroundColor: "#D2691E",
-        borderRadius: "0 50% 50% 50%",
-        transform: "rotate(45deg)",
-        opacity: 0.6,
-      }}
-      aria-hidden="true"
-    />
+    <>
+      <style>{`
+        @keyframes snow-fall {
+          0% { transform: translateY(-10px) translateX(0); opacity: 0; }
+          10% { opacity: var(--snow-opacity); }
+          50% { transform: translateY(50vh) translateX(var(--sway)); }
+          90% { opacity: var(--snow-opacity); }
+          100% { transform: translateY(105vh) translateX(calc(var(--sway) * -1)); opacity: 0; }
+        }
+      `}</style>
+      {snowflakes.map((s) => (
+        <div
+          key={s.id}
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: `${s.left}%`,
+            top: "-10px",
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            borderRadius: "50%",
+            backgroundColor: "white",
+            opacity: 0,
+            animation: `snow-fall ${s.duration}s ${s.delay}s ease-in-out infinite`,
+            boxShadow: "0 0 4px rgba(255,255,255,0.8)",
+            ["--sway" as string]: `${s.swayAmount}px`,
+            ["--snow-opacity" as string]: `${s.opacity}`,
+            pointerEvents: "none" as const,
+          }}
+        />
+      ))}
+    </>
   );
 }
+
+// ==================== 메인 컴포넌트 ====================
 
 interface SeasonalBackgroundProps {
   season: Season;
@@ -133,36 +314,13 @@ export default function SeasonalBackground({
         style={{ background: theme.sky }}
       />
 
-      {/* 계절별 장식 요소 */}
-      {season === "spring" && (
-        <>
-          <CherryBlossom className="top-20 left-1/4" />
-          <CherryBlossom className="top-40 right-1/3" />
-          <CherryBlossom className="top-60 left-1/2" />
-          <CherryBlossom className="top-24 right-1/5" />
-          <CherryBlossom className="top-52 left-1/6" />
-        </>
-      )}
-
-      {season === "autumn" && (
-        <>
-          <Leaf className="top-24 left-1/5" />
-          <Leaf className="top-44 right-1/4" />
-          <Leaf className="top-36 left-2/3" />
-          <Leaf className="top-56 right-1/3" />
-        </>
-      )}
-
-      {season === "winter" && (
-        <>
-          <Snowflake className="top-20 left-1/4" />
-          <Snowflake className="top-32 right-1/3" />
-          <Snowflake className="top-44 left-1/2" />
-          <Snowflake className="top-28 right-1/5" />
-          <Snowflake className="top-52 left-1/6" />
-          <Snowflake className="top-16 right-2/3" />
-        </>
-      )}
+      {/* 계절별 애니메이션 파티클 */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {season === "spring" && <SpringParticles />}
+        {season === "summer" && <SummerParticles />}
+        {season === "autumn" && <AutumnParticles />}
+        {season === "winter" && <WinterParticles />}
+      </div>
 
       {/* 메인 컨텐츠 */}
       {children}
