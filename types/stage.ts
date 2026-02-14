@@ -6,6 +6,10 @@ export interface StagePipeConfig {
   gapY: number; // gap 중심 y (0~1 비율, playableHeight 기준)
   gapHeight: number; // gap 높이 (px)
   spacing?: number; // 이 파이프까지의 간격 (프레임, 생략 시 pipeSpacing 사용)
+  teleport?: {
+    inY: number; // IN 포탈 y (0~1 비율)
+    outY: number; // OUT 포탈 y (0~1 비율)
+  };
 }
 
 export interface StageConfig {

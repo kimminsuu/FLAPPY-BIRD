@@ -46,6 +46,7 @@
   - [x] BirdSelectionScreen (등급별 격자, 장착 기능)
   - [x] ModeSelectionScreen (RECORD / STAGE 모드 선택)
   - [x] StageSelectScreen (스테이지 선택, 3x5 격자, 잠금/오픈)
+  - [x] Stage 3 텔레포트 기믹 (IN/OUT 포탈, 닫히는 파이프 애니메이션)
 ### Next Up
 - [ ] 가챠(뽑기) 기능 UI
   - 코인 차감 로직
@@ -59,6 +60,12 @@
   - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
 - [ ] 코인 시스템 DB 연동 (현재 localStorage 임시 구현)
 - [ ] (검토중) 10연차 할인 시스템 (1000 → 900코인)
+- [ ] 모바일 반응형 스케일링 (배포 전 처리)
+  - 기준 해상도: 390 x 844 (중형 폰)
+  - 스케일 팩터: `canvasWidth / 390` 적용 (GAME_CONFIG 고정 px값 일괄 스케일링)
+  - Safe Area 대응: 노치/다이나믹 아일랜드/홈 인디케이터 (`env(safe-area-inset-*)`)
+  - 가로 모드 고정 (세로 모드 차단 + 회전 안내 UI)
+  - 터치 영역 최소 44x44px 보장 (Apple HIG)
 - [ ] 배포 (게임 개발 완료 후 진행)
   - 아키텍처: Vercel + Supabase (서버리스)
   - Supabase Auth 연동 (localStorage → Supabase Auth 이전)
@@ -81,6 +88,9 @@
 - [x] 유저 정보 표시 (UserInfoBar: 이름 + 코인)
 - [x] 장착 새 HomeScreen 연동
 - [x] GameScreen 구현 (Canvas, 물리엔진, 아이템, 코인 보상)
+- [x] 스테이지 모드 구현 (진행률 HUD, 최고 기록, 잠금 해제)
+- [x] Stage 1 "초원", Stage 2 "숲길" 데이터
+- [x] Stage 3 "동굴" (텔레포트 기믹: IN/OUT 포탈, 닫히는 파이프)
 
 ---
 
@@ -115,7 +125,7 @@ HomeScreen ←→ BirdSelectionScreen
     ↓ (START)
 ModeSelectionScreen
     ├── RECORD MODE → GameScreen → GameOverModal → HomeScreen
-    └── STAGE MODE  → StageSelectScreen → GameScreen (추후 연동)
+    └── STAGE MODE  → StageSelectScreen → GameScreen → ClearModal/GameOverModal
 ```
 
 ---
@@ -159,11 +169,13 @@ FLAPPY-BIRD/
 │   └── game-page.tsx           # 게임 페이지 (Canvas 기반)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
-│   └── birds.ts                # 새 데이터 및 매핑
+│   ├── birds.ts                # 새 데이터 및 매핑
+│   └── stages.ts               # 스테이지 데이터 (파이프 배치, 기믹)
 │
 ├── types/                      # TypeScript 타입 정의
 │   ├── bird.ts                 # 새 관련 타입 정의
-│   └── game.ts                 # 게임 관련 타입 정의
+│   ├── game.ts                 # 게임 관련 타입 정의 (Pipe, TeleportPortal 등)
+│   └── stage.ts                # 스테이지 관련 타입 정의 (StagePipeConfig, StageConfig)
 │
 ├── public/                     # 정적 파일 (Next.js)
 │   └── images/                 # 이미지 리소스

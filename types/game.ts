@@ -25,6 +25,8 @@ export interface Pipe {
   gapHeight: number; // gap 높이
   passed: boolean; // 새가 통과했는지
   width: number;
+  isTeleportPipe?: boolean; // 텔레포트 파이프 여부
+  originalGapHeight?: number; // 닫히는 애니메이션용 원래 갭 높이
 }
 
 // 파티클
@@ -67,6 +69,16 @@ export interface GameItem {
   type: ItemType;
   collected: boolean;
   size: number; // ~30px
+}
+
+// 텔레포트 포탈
+export interface TeleportPortal {
+  x: number;
+  y: number;
+  type: "in" | "out";
+  activated: boolean;
+  size: number;
+  pipeIndex: number; // 연결된 파이프 인덱스
 }
 
 // 전체 게임 상태

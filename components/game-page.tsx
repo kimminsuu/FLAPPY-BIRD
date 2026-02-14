@@ -19,6 +19,7 @@ import {
   type Particle,
   type FloatingText,
   type ScreenFlash,
+  type TeleportPortal,
 } from "@/types/game";
 import type { StageConfig } from "@/types/stage";
 
@@ -50,19 +51,6 @@ function setStageBest(username: string, stageId: number, percent: number): void 
   }
 }
 
-// ==================== 스테이지 총 프레임 계산 ====================
-
-function calcStageTotalFrames(cfg: StageConfig, canvasWidth: number): number {
-  // 각 파이프의 실제 spacing을 합산
-  let spawnFrames = cfg.pipes[0]?.spacing ?? cfg.pipeSpacing; // 첫 파이프 스폰까지
-  for (let i = 1; i < cfg.pipes.length; i++) {
-    spawnFrames += cfg.pipes[i].spacing ?? cfg.pipeSpacing;
-  }
-  // 마지막 파이프가 새 위치까지 이동하는 시간
-  const pipeTravelFrames = Math.ceil(canvasWidth / cfg.pipeSpeed);
-  return spawnFrames + pipeTravelFrames;
-}
-
 // ==================== 게임 상태 (ref로 관리) ====================
 
 interface GameStateRef {
@@ -85,6 +73,10 @@ interface GameStateRef {
   canvasHeight: number;
   nextPipeIndex: number; // 스테이지 모드: 다음 스폰할 파이프 인덱스
   nextPipeFrame: number; // 스테이지 모드: 다음 파이프 스폰 프레임
+  portals: TeleportPortal[];
+  isTeleporting: boolean;
+  teleportOutPortal: TeleportPortal | null;
+  teleportPipeIndex: number; // 텔레포트 중인 파이프의 pipes 배열 인덱스
 }
 
 function createInitialState(
@@ -118,6 +110,10 @@ function createInitialState(
     canvasHeight,
     nextPipeIndex: 0,
     nextPipeFrame: 0,
+    portals: [],
+    isTeleporting: false,
+    teleportOutPortal: null,
+    teleportPipeIndex: -1,
   };
 }
 
@@ -421,31 +417,33 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       if (state.status === "playing") {
         state.frameCount++;
 
-        // 새 물리
-        state.bird.velocity += GAME_CONFIG.gravity;
-        state.bird.y += state.bird.velocity;
-        state.bird.rotation = Math.min(
-          90,
-          Math.max(-30, state.bird.velocity * 3)
-        );
+        // 새 물리 (텔레포트 중 스킵)
+        if (!state.isTeleporting) {
+          state.bird.velocity += GAME_CONFIG.gravity;
+          state.bird.y += state.bird.velocity;
+          state.bird.rotation = Math.min(
+            90,
+            Math.max(-30, state.bird.velocity * 3)
+          );
 
-        // 천장 제한
-        if (state.bird.y < 0) {
-          state.bird.y = 0;
-          state.bird.velocity = 0;
-        }
+          // 천장 제한
+          if (state.bird.y < 0) {
+            state.bird.y = 0;
+            state.bird.velocity = 0;
+          }
 
-        // 바닥 충돌
-        if (
-          !state.isWraith &&
-          state.bird.y + birdH > playableHeight
-        ) {
-          state.status = "gameover";
-        }
-        // 바닥 아래로 내려가지 않도록 제한
-        if (state.bird.y + birdH > playableHeight) {
-          state.bird.y = playableHeight - birdH;
-          state.bird.velocity = 0;
+          // 바닥 충돌
+          if (
+            !state.isWraith &&
+            state.bird.y + birdH > playableHeight
+          ) {
+            state.status = "gameover";
+          }
+          // 바닥 아래로 내려가지 않도록 제한
+          if (state.bird.y + birdH > playableHeight) {
+            state.bird.y = playableHeight - birdH;
+            state.bird.velocity = 0;
+          }
         }
 
         // 파이프 생성
@@ -459,13 +457,41 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             const playH = state.canvasHeight - GAME_CONFIG.groundHeight;
             const margin = pipeDef.gapHeight / 2 + 40;
             const gapY = margin + pipeDef.gapY * (playH - margin * 2);
+            const pipeX = state.canvasWidth + 10;
+            const pipeArrayIndex = state.pipes.length;
             state.pipes.push({
-              x: state.canvasWidth + 10,
+              x: pipeX,
               gapY,
-              gapHeight: pipeDef.gapHeight,
+              gapHeight: pipeDef.gapHeight, // 텔레포트 파이프도 처음엔 열린 상태
               passed: false,
               width: GAME_CONFIG.pipeWidth,
+              isTeleportPipe: !!pipeDef.teleport,
+              originalGapHeight: pipeDef.teleport ? pipeDef.gapHeight : undefined,
             });
+
+            // 텔레포트 포탈 생성
+            if (pipeDef.teleport) {
+              const portalSize = 50;
+              const inYPos = pipeDef.teleport.inY * playH;
+              const outYPos = pipeDef.teleport.outY * playH;
+              state.portals.push({
+                x: pipeX - 100,
+                y: inYPos,
+                type: "in",
+                activated: false,
+                size: portalSize,
+                pipeIndex: pipeArrayIndex,
+              });
+              state.portals.push({
+                x: pipeX + GAME_CONFIG.pipeWidth + 100,
+                y: outYPos,
+                type: "out",
+                activated: false,
+                size: portalSize,
+                pipeIndex: pipeArrayIndex,
+              });
+            }
+
             state.nextPipeIndex++;
             // 다음 파이프 스폰 프레임 계산
             if (state.nextPipeIndex < stageConfig.pipes.length) {
@@ -505,6 +531,22 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
         }
 
+        // 텔레포트 파이프 닫히는 애니메이션
+        for (const pipe of state.pipes) {
+          if (pipe.isTeleportPipe && pipe.originalGapHeight) {
+            const closeStartX = state.canvasWidth * 0.75;
+            const closeEndX = state.canvasWidth * 0.35;
+            if (pipe.x > closeStartX) {
+              pipe.gapHeight = pipe.originalGapHeight;
+            } else if (pipe.x < closeEndX) {
+              pipe.gapHeight = 0;
+            } else {
+              const t = (pipe.x - closeEndX) / (closeStartX - closeEndX);
+              pipe.gapHeight = pipe.originalGapHeight * t;
+            }
+          }
+        }
+
         // 아이템 이동
         for (let i = state.items.length - 1; i >= 0; i--) {
           const item = state.items[i];
@@ -512,6 +554,102 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
           if (item.x + item.size < -10) {
             state.items.splice(i, 1);
+          }
+        }
+
+        // 포탈 이동
+        for (let i = state.portals.length - 1; i >= 0; i--) {
+          state.portals[i].x -= currentPipeSpeed;
+          if (state.portals[i].x + state.portals[i].size < -60) {
+            state.portals.splice(i, 1);
+          }
+        }
+
+        // 텔레포트 IN 포탈 충돌 감지
+        if (!state.isTeleporting) {
+          const bx = state.bird.x + GAME_CONFIG.birdHitboxPadding;
+          const by = state.bird.y + GAME_CONFIG.birdHitboxPadding;
+          const bw = birdW - GAME_CONFIG.birdHitboxPadding * 2;
+          const bh = birdH - GAME_CONFIG.birdHitboxPadding * 2;
+
+          for (const portal of state.portals) {
+            if (portal.type !== "in" || portal.activated) continue;
+            const px = portal.x - portal.size / 2;
+            const py = portal.y - portal.size / 2;
+            if (checkAABB(bx, by, bw, bh, px, py, portal.size, portal.size)) {
+              // 텔레포트 활성화
+              state.isTeleporting = true;
+              portal.activated = true;
+              // OUT 포탈 찾기
+              const outPortal = state.portals.find(
+                (p) => p.type === "out" && p.pipeIndex === portal.pipeIndex
+              );
+              state.teleportOutPortal = outPortal || null;
+              state.teleportPipeIndex = portal.pipeIndex;
+
+              // IN 이펙트 파티클 (노란색 / 금색, 중심으로 수렴)
+              for (let k = 0; k < 16; k++) {
+                const angle = (Math.PI * 2 * k) / 16;
+                const dist = 30 + Math.random() * 20;
+                state.particles.push({
+                  x: portal.x + Math.cos(angle) * dist,
+                  y: portal.y + Math.sin(angle) * dist * 0.5,
+                  vx: -Math.cos(angle) * (1.5 + Math.random()),
+                  vy: -Math.sin(angle) * (1 + Math.random()) * 0.5,
+                  size: 3 + Math.random() * 4,
+                  color: Math.random() > 0.5 ? "#FBBF24" : "#FDE047",
+                  alpha: 1,
+                  life: 20 + Math.random() * 10,
+                  maxLife: 30,
+                  type: "circle",
+                });
+              }
+              state.screenFlash = { color: "rgba(251, 191, 36, 0.3)", alpha: 1, life: 10 };
+              break;
+            }
+          }
+        }
+
+        // 텔레포트 중: OUT 포탈 도달 체크
+        if (state.isTeleporting && state.teleportOutPortal) {
+          const out = state.teleportOutPortal;
+          if (out.x <= state.bird.x + birdW / 2) {
+            // 재등장
+            state.isTeleporting = false;
+            state.bird.y = out.y - birdH / 2;
+            state.bird.velocity = 0;
+            state.bird.rotation = 0;
+            out.activated = true;
+            state.teleportOutPortal = null;
+
+            // 막힌 파이프 자동 통과 처리
+            const tpPipe = state.pipes[state.teleportPipeIndex];
+            if (tpPipe && !tpPipe.passed) {
+              tpPipe.passed = true;
+              state.score++;
+            }
+            state.teleportPipeIndex = -1;
+
+            // OUT 이펙트 파티클 (노란색 / 금색, 방사)
+            const bCX = state.bird.x + birdW / 2;
+            const bCY = state.bird.y + birdH / 2;
+            for (let k = 0; k < 20; k++) {
+              const angle = (Math.PI * 2 * k) / 20;
+              const speed = 2 + Math.random() * 3;
+              state.particles.push({
+                x: bCX,
+                y: bCY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: 4 + Math.random() * 5,
+                color: Math.random() > 0.4 ? "#FBBF24" : "#FDE047",
+                alpha: 1,
+                life: 30 + Math.random() * 15,
+                maxLife: 45,
+                type: "circle",
+              });
+            }
+            state.screenFlash = { color: "rgba(251, 191, 36, 0.3)", alpha: 1, life: 12 };
           }
         }
 
@@ -551,8 +689,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
         }
 
-        // 파이프 충돌 감지
-        if (!state.isWraith) {
+        // 파이프 충돌 감지 (텔레포트 중 스킵)
+        if (!state.isWraith && !state.isTeleporting) {
           const bx = state.bird.x + GAME_CONFIG.birdHitboxPadding;
           const by = state.bird.y + GAME_CONFIG.birdHitboxPadding;
           const bw = birdW - GAME_CONFIG.birdHitboxPadding * 2;
@@ -641,9 +779,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         // 게임오버 처리
         if (state.status === "gameover") {
           if (stageConfig) {
-            // 스테이지 모드: 프레임 기반 정확한 진행률 (per-pipe spacing 합산)
-            const totalFrames = calcStageTotalFrames(stageConfig, state.canvasWidth);
-            const finalPct = Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+            // 스테이지 모드: 점수 기반 진행률
+            const finalPct = Math.min(99, Math.floor((state.score / stageConfig.goalScore) * 100));
             setProgress(finalPct);
             const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
             if (username) setStageBest(username, stageConfig.id, finalPct);
@@ -806,13 +943,148 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           ctx.stroke();
         };
 
-        // 상단 파이프
-        drawPipeBody(px, 0, pw, topH - capH);
-        drawPipeCap(px - capOverhang, topH - capH, pw + capOverhang * 2, capH);
+        if (pipe.gapHeight < capH * 2) {
+          // 갭이 캡 2개보다 작으면 → 막힌 파이프 스타일
+          // 닫히는 중간이면 캡 위치를 gapY 기준으로 배치
+          const midY = pipe.gapY;
+          const halfCap = capH / 2;
+          drawPipeBody(px, 0, pw, midY - halfCap);
+          drawPipeCap(px - capOverhang, midY - halfCap, pw + capOverhang * 2, capH);
+          drawPipeBody(px, midY + halfCap, pw, playableHeight - midY - halfCap);
+        } else {
+          // 상단 파이프
+          drawPipeBody(px, 0, pw, topH - capH);
+          drawPipeCap(px - capOverhang, topH - capH, pw + capOverhang * 2, capH);
 
-        // 하단 파이프
-        drawPipeCap(px - capOverhang, bottomY, pw + capOverhang * 2, capH);
-        drawPipeBody(px, bottomY + capH, pw, bottomH - capH);
+          // 하단 파이프
+          drawPipeCap(px - capOverhang, bottomY, pw + capOverhang * 2, capH);
+          drawPipeBody(px, bottomY + capH, pw, bottomH - capH);
+        }
+      }
+
+      // 포탈 렌더링
+      const now = Date.now();
+      for (const portal of state.portals) {
+        if (portal.activated && portal.type === "in") continue;
+        ctx.save();
+        const pulse = 1 + Math.sin(now / 180) * 0.1;
+        const rW = portal.size * 0.7 * pulse; // 링 외곽 반지름 (가로)
+        const rH = portal.size * 0.35 * pulse; // 링 외곽 반지름 (세로)
+        const thickness = 10; // 링 두께
+        const innerRW = rW - thickness;
+        const innerRH = rH - thickness * 0.5;
+        ctx.translate(portal.x, portal.y);
+
+        // 회전 애니메이션 (살짝 기울기 변화)
+        const tilt = Math.sin(now / 400) * 0.15;
+        ctx.rotate(tilt);
+
+        // 외곽 글로우
+        const glowGrad = ctx.createRadialGradient(0, 0, rW * 0.3, 0, 0, rW * 1.2);
+        glowGrad.addColorStop(0, "rgba(251, 191, 36, 0)");
+        glowGrad.addColorStop(0.5, "rgba(251, 191, 36, 0.15)");
+        glowGrad.addColorStop(1, "rgba(251, 191, 36, 0)");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW * 1.2, rH * 1.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 링 본체 (외곽 타원 - 내부 타원 = 도넛)
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW, rH, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, innerRW, innerRH, 0, 0, Math.PI * 2, true);
+        ctx.closePath();
+        const ringGrad = ctx.createLinearGradient(-rW, -rH, rW, rH);
+        ringGrad.addColorStop(0, "#FDE047"); // 밝은 노랑
+        ringGrad.addColorStop(0.3, "#FBBF24"); // 금색
+        ringGrad.addColorStop(0.6, "#F59E0B"); // 진한 금
+        ringGrad.addColorStop(1, "#FDE047");
+        ctx.fillStyle = ringGrad;
+        ctx.fill();
+
+        // 링 하이라이트 (상단 빛)
+        ctx.beginPath();
+        ctx.ellipse(0, -rH * 0.1, rW * 0.85, rH * 0.75, 0, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.ellipse(0, -rH * 0.1, innerRW * 0.85, innerRH * 0.75, 0, Math.PI * 1.9, Math.PI * 1.1, true);
+        ctx.closePath();
+        ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.fill();
+
+        // 링 테두리
+        ctx.strokeStyle = "rgba(180, 120, 0, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW, rH, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.ellipse(0, 0, innerRW, innerRH, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 중앙 빨려들어가는/나오는 효과 (소용돌이 라인)
+        const isIn = portal.type === "in";
+        const spiralCount = 4;
+        ctx.strokeStyle = isIn
+          ? "rgba(251, 191, 36, 0.4)"
+          : "rgba(251, 191, 36, 0.4)";
+        ctx.lineWidth = 1.5;
+        for (let s = 0; s < spiralCount; s++) {
+          const baseAngle = (now / 300) * (isIn ? 1 : -1) + (Math.PI * 2 * s) / spiralCount;
+          ctx.beginPath();
+          for (let t = 0; t <= 1; t += 0.05) {
+            const angle = baseAngle + t * Math.PI * 1.5 * (isIn ? 1 : -1);
+            const r = isIn ? innerRW * 0.8 * (1 - t) : innerRW * 0.8 * t;
+            const rY = isIn ? innerRH * 0.8 * (1 - t) : innerRH * 0.8 * t;
+            const px = Math.cos(angle) * r;
+            const py = Math.sin(angle) * rY;
+            if (t === 0) ctx.moveTo(px, py);
+            else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+
+        // IN/OUT 라벨 (링 아래)
+        ctx.rotate(-tilt); // 회전 해제
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 2;
+        ctx.font = "bold 12px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        const label = portal.type === "in" ? "IN" : "OUT";
+        ctx.strokeText(label, 0, rH + 4);
+        ctx.fillText(label, 0, rH + 4);
+
+        ctx.restore();
+      }
+
+      // 포탈 흡입/방출 파티클 생성 (매 프레임 조금씩)
+      if (state.status === "playing") {
+        for (const portal of state.portals) {
+          if (portal.activated && portal.type === "in") continue;
+          if (Math.random() > 0.3) continue; // ~30% 확률로 매 프레임 파티클
+          const isIn = portal.type === "in";
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 20 + Math.random() * 25;
+          const px = portal.x + Math.cos(angle) * dist * (isIn ? 1 : 0.3);
+          const py = portal.y + Math.sin(angle) * dist * 0.5 * (isIn ? 1 : 0.3);
+          const speed = 0.8 + Math.random() * 1.2;
+          // IN: 바깥에서 중심으로, OUT: 중심에서 바깥으로
+          const dx = portal.x - px;
+          const dy = portal.y - py;
+          const len = Math.sqrt(dx * dx + dy * dy) || 1;
+          state.particles.push({
+            x: isIn ? px : portal.x,
+            y: isIn ? py : portal.y,
+            vx: isIn ? (dx / len) * speed : -((dx / len) * speed),
+            vy: isIn ? (dy / len) * speed : -((dy / len) * speed),
+            size: 2 + Math.random() * 3,
+            color: Math.random() > 0.5 ? "#FBBF24" : "#FDE047",
+            alpha: 0.8,
+            life: 15 + Math.random() * 10,
+            maxLife: 25,
+            type: "circle",
+          });
+        }
       }
 
       // 파티클
@@ -898,32 +1170,34 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         ctx.restore();
       }
 
-      // 새
-      ctx.save();
-      const birdCX = state.bird.x + birdW / 2;
-      const birdCY = state.bird.y + birdH / 2;
-      ctx.translate(birdCX, birdCY);
-      ctx.rotate((state.bird.rotation * Math.PI) / 180);
+      // 새 (텔레포트 중 숨김)
+      if (!state.isTeleporting) {
+        ctx.save();
+        const birdCX = state.bird.x + birdW / 2;
+        const birdCY = state.bird.y + birdH / 2;
+        ctx.translate(birdCX, birdCY);
+        ctx.rotate((state.bird.rotation * Math.PI) / 180);
 
-      if (state.isWraith) {
-        ctx.globalAlpha = 0.4;
-      }
+        if (state.isWraith) {
+          ctx.globalAlpha = 0.4;
+        }
 
-      if (birdImageRef.current) {
-        ctx.drawImage(
-          birdImageRef.current,
-          -birdW / 2,
-          -birdH / 2,
-          birdW,
-          birdH
-        );
-      } else {
-        ctx.fillStyle = "#F9D71C";
-        ctx.beginPath();
-        ctx.ellipse(0, 0, birdW / 2, birdH / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
+        if (birdImageRef.current) {
+          ctx.drawImage(
+            birdImageRef.current,
+            -birdW / 2,
+            -birdH / 2,
+            birdW,
+            birdH
+          );
+        } else {
+          ctx.fillStyle = "#F9D71C";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, birdW / 2, birdH / 2, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
       }
-      ctx.restore();
 
       // 화면 플래시
       if (state.screenFlash) {
@@ -958,10 +1232,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       if (stageConfig) {
-        const totalFrames = calcStageTotalFrames(stageConfig, W);
         const exactPct = state.score >= stageConfig.goalScore
           ? 100
-          : Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+          : Math.min(99, Math.floor((state.score / stageConfig.goalScore) * 100));
         // HUD는 10% 단위로 표시
         const hudPct = exactPct >= 100 ? 100 : Math.floor(exactPct / 10) * 10;
         const hudText = `${hudPct}%`;
@@ -1106,7 +1379,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       state.status = "playing";
       setGameStatus("playing");
       state.bird.velocity = GAME_CONFIG.jumpForce;
-    } else if (state.status === "playing") {
+    } else if (state.status === "playing" && !state.isTeleporting) {
       state.bird.velocity = GAME_CONFIG.jumpForce;
     }
   }, []);

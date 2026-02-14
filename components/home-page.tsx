@@ -31,7 +31,7 @@ export default function HomePage() {
   const equippedBird = getBirdById(equippedBirdId);
 
   const handleStart = () => {
-    router.push("/game");
+    router.push("/mode-select");
   };
 
   const handleSelectBird = () => {
