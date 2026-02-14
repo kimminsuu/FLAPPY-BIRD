@@ -5,7 +5,7 @@
 import type { BirdRarity } from "./bird";
 
 // 게임 상태
-export type GameStatus = "ready" | "playing" | "gameover";
+export type GameStatus = "ready" | "playing" | "gameover" | "clear";
 
 // 아이템 종류
 export type ItemType = "break" | "wraith" | "point";

@@ -26,13 +26,45 @@
 - **설명**: 로그인 후 메인 메뉴 화면
 - **관련 파일**: `components/home-page.tsx`, `app/home/page.tsx`
 - **세부 기능**:
-  - START 버튼 (게임 시작) ✅
+  - START 버튼 (모드 선택 화면으로 이동) ✅
   - SELECT BIRD 버튼 (캐릭터 선택) ✅
   - ~~RANKING 버튼~~ (제거됨)
   - EXIT 버튼 ✅
   - 로그아웃 버튼 + 확인 모달 ✅
   - 비인증 상태 접근 시 로그인 페이지 리다이렉트 ✅
 - **구현 상태**: UI 완료, 각 버튼 라우팅 연결 예정
+
+---
+
+## Feature 1.6: 모드 선택 화면
+
+- **설명**: 게임 모드를 선택하는 화면 (RECORD MODE / STAGE MODE)
+- **관련 파일**: `components/mode-selection-page.tsx`, `app/mode-select/page.tsx`
+- **세부 기능**:
+  - RECORD MODE 선택 → 기존 게임 (`/game`) ✅
+  - STAGE MODE 선택 → 스테이지 선택 화면 (`/stage-select`) ✅
+  - 뒤로가기 → 홈 화면 (`/home`) ✅
+  - 계절 배경 테마 적용 ✅
+- **구현 상태**: UI 완료
+
+---
+
+## Feature 1.7: 스테이지 선택 화면
+
+- **설명**: STAGE MODE에서 플레이할 스테이지를 선택하는 화면
+- **관련 파일**: `components/stage-select-page.tsx`, `app/stage-select/page.tsx`
+- **세부 기능**:
+  - 3행 x 5열 격자 레이아웃 (총 15스테이지) ✅
+  - Stage 1~5: 오픈 상태 (색상 그라데이션, 클릭 가능) ✅
+  - Stage 6~15: 잠금 상태 (회색 배경 + Lock 아이콘 + 반투명 오버레이) ✅
+  - 뒤로가기 → 모드 선택 화면 (`/mode-select`) ✅
+  - 계절 배경 테마 적용 ✅
+  - 인증 가드 (비로그인 시 리다이렉트) ✅
+- **구현 상태**: UI 완료, 게임 연동 대기
+- **향후 계획**:
+  - 스테이지 클릭 시 해당 스테이지 게임 시작
+  - 스테이지 클리어 시 다음 스테이지 잠금 해제
+  - 스테이지별 난이도 / 보상 설정
 
 ---
 

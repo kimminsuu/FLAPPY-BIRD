@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Home, RotateCcw } from "lucide-react";
+import { Home, RotateCcw, ChevronRight, List } from "lucide-react";
 import { useSeason } from "@/lib/season-context";
 import { getBirdById } from "@/lib/birds";
 import { addUserCoins } from "@/components/ui/UserInfoBar";
@@ -20,6 +20,48 @@ import {
   type FloatingText,
   type ScreenFlash,
 } from "@/types/game";
+import type { StageConfig } from "@/types/stage";
+
+// ==================== 스테이지 최고 기록 헬퍼 ====================
+
+function getStageBest(username: string, stageId: number): number {
+  try {
+    const raw = localStorage.getItem(`flappy_stage_best_${username}`);
+    if (!raw) return 0;
+    const data: Record<string, number> = JSON.parse(raw);
+    return data[String(stageId)] ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setStageBest(username: string, stageId: number, percent: number): void {
+  try {
+    const key = `flappy_stage_best_${username}`;
+    const raw = localStorage.getItem(key);
+    const data: Record<string, number> = raw ? JSON.parse(raw) : {};
+    const prev = data[String(stageId)] ?? 0;
+    if (percent > prev) {
+      data[String(stageId)] = percent;
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+  } catch {
+    // localStorage 접근 실패 시 무시
+  }
+}
+
+// ==================== 스테이지 총 프레임 계산 ====================
+
+function calcStageTotalFrames(cfg: StageConfig, canvasWidth: number): number {
+  // 각 파이프의 실제 spacing을 합산
+  let spawnFrames = cfg.pipes[0]?.spacing ?? cfg.pipeSpacing; // 첫 파이프 스폰까지
+  for (let i = 1; i < cfg.pipes.length; i++) {
+    spawnFrames += cfg.pipes[i].spacing ?? cfg.pipeSpacing;
+  }
+  // 마지막 파이프가 새 위치까지 이동하는 시간
+  const pipeTravelFrames = Math.ceil(canvasWidth / cfg.pipeSpeed);
+  return spawnFrames + pipeTravelFrames;
+}
 
 // ==================== 게임 상태 (ref로 관리) ====================
 
@@ -41,6 +83,8 @@ interface GameStateRef {
   lastItemSpawnRealTime: number; // Date.now() 기준
   canvasWidth: number;
   canvasHeight: number;
+  nextPipeIndex: number; // 스테이지 모드: 다음 스폰할 파이프 인덱스
+  nextPipeFrame: number; // 스테이지 모드: 다음 파이프 스폰 프레임
 }
 
 function createInitialState(
@@ -72,12 +116,18 @@ function createInitialState(
     lastItemSpawnRealTime: 0,
     canvasWidth,
     canvasHeight,
+    nextPipeIndex: 0,
+    nextPipeFrame: 0,
   };
 }
 
 // ==================== 메인 컴포넌트 ====================
 
-export default function GamePage() {
+interface GamePageProps {
+  stageConfig?: StageConfig;
+}
+
+export default function GamePage({ stageConfig }: GamePageProps) {
   const router = useRouter();
   const { currentSeason } = useSeason();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,6 +141,7 @@ export default function GamePage() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [coinReward, setCoinReward] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   // 장착된 새 정보
   const equippedBirdId =
@@ -398,19 +449,51 @@ export default function GamePage() {
         }
 
         // 파이프 생성
-        if (state.frameCount % GAME_CONFIG.pipeSpawnInterval === 0) {
-          spawnPipe(state);
-        }
-
-        // 아이템 생성 (파이프 생성 직후)
-        if (state.frameCount % GAME_CONFIG.pipeSpawnInterval === 0) {
-          spawnItem(state);
+        if (stageConfig) {
+          // STAGE 모드: per-pipe spacing 지원
+          if (
+            state.nextPipeIndex < stageConfig.pipes.length &&
+            state.frameCount >= state.nextPipeFrame
+          ) {
+            const pipeDef = stageConfig.pipes[state.nextPipeIndex];
+            const playH = state.canvasHeight - GAME_CONFIG.groundHeight;
+            const margin = pipeDef.gapHeight / 2 + 40;
+            const gapY = margin + pipeDef.gapY * (playH - margin * 2);
+            state.pipes.push({
+              x: state.canvasWidth + 10,
+              gapY,
+              gapHeight: pipeDef.gapHeight,
+              passed: false,
+              width: GAME_CONFIG.pipeWidth,
+            });
+            state.nextPipeIndex++;
+            // 다음 파이프 스폰 프레임 계산
+            if (state.nextPipeIndex < stageConfig.pipes.length) {
+              const nextDef = stageConfig.pipes[state.nextPipeIndex];
+              state.nextPipeFrame =
+                state.frameCount + (nextDef.spacing ?? stageConfig.pipeSpacing);
+            }
+            // 아이템 생성
+            if (stageConfig.enableItems) {
+              spawnItem(state);
+            }
+          }
+        } else {
+          // RECORD 모드: 고정 간격
+          const spawnInterval = GAME_CONFIG.pipeSpawnInterval;
+          if (state.frameCount % spawnInterval === 0) {
+            spawnPipe(state);
+            spawnItem(state);
+          }
         }
 
         // 파이프 이동 + 통과 체크
+        const currentPipeSpeed = stageConfig
+          ? stageConfig.pipeSpeed
+          : GAME_CONFIG.pipeSpeed;
         for (let i = state.pipes.length - 1; i >= 0; i--) {
           const pipe = state.pipes[i];
-          pipe.x -= GAME_CONFIG.pipeSpeed;
+          pipe.x -= currentPipeSpeed;
 
           if (!pipe.passed && pipe.x + pipe.width < state.bird.x) {
             pipe.passed = true;
@@ -425,7 +508,7 @@ export default function GamePage() {
         // 아이템 이동
         for (let i = state.items.length - 1; i >= 0; i--) {
           const item = state.items[i];
-          item.x -= GAME_CONFIG.pipeSpeed;
+          item.x -= currentPipeSpeed;
 
           if (item.x + item.size < -10) {
             state.items.splice(i, 1);
@@ -537,14 +620,42 @@ export default function GamePage() {
           }
         }
 
+        // 스테이지 클리어 체크
+        if (
+          stageConfig &&
+          state.status === "playing" &&
+          state.score >= stageConfig.goalScore
+        ) {
+          state.status = "clear";
+          setProgress(100);
+          const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
+          if (username) setStageBest(username, stageConfig.id, 100);
+          const reward = state.score * GAME_CONFIG.coinRewardMultiplier;
+          addUserCoins(reward);
+          setCoinReward(reward);
+          setScore(state.score);
+          setGameStatus("clear");
+          return;
+        }
+
         // 게임오버 처리
         if (state.status === "gameover") {
-          if (state.score > state.highScore) {
-            state.highScore = state.score;
-            localStorage.setItem(
-              "flappy_high_score",
-              state.highScore.toString()
-            );
+          if (stageConfig) {
+            // 스테이지 모드: 프레임 기반 정확한 진행률 (per-pipe spacing 합산)
+            const totalFrames = calcStageTotalFrames(stageConfig, state.canvasWidth);
+            const finalPct = Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+            setProgress(finalPct);
+            const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
+            if (username) setStageBest(username, stageConfig.id, finalPct);
+          } else {
+            // RECORD 모드: 최고점수 저장
+            if (state.score > state.highScore) {
+              state.highScore = state.score;
+              localStorage.setItem(
+                "flappy_high_score",
+                state.highScore.toString()
+              );
+            }
           }
           const reward = state.score * GAME_CONFIG.coinRewardMultiplier;
           addUserCoins(reward);
@@ -838,7 +949,7 @@ export default function GamePage() {
         ctx.restore();
       }
 
-      // 점수 HUD
+      // 점수 HUD (스테이지 모드: 진행률%, 레코드 모드: 점수)
       ctx.save();
       ctx.fillStyle = "white";
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
@@ -846,8 +957,20 @@ export default function GamePage() {
       ctx.font = "bold 48px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.strokeText(state.score.toString(), W / 2, 50);
-      ctx.fillText(state.score.toString(), W / 2, 50);
+      if (stageConfig) {
+        const totalFrames = calcStageTotalFrames(stageConfig, W);
+        const exactPct = state.score >= stageConfig.goalScore
+          ? 100
+          : Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+        // HUD는 10% 단위로 표시
+        const hudPct = exactPct >= 100 ? 100 : Math.floor(exactPct / 10) * 10;
+        const hudText = `${hudPct}%`;
+        ctx.strokeText(hudText, W / 2, 50);
+        ctx.fillText(hudText, W / 2, 50);
+      } else {
+        ctx.strokeText(state.score.toString(), W / 2, 50);
+        ctx.fillText(state.score.toString(), W / 2, 50);
+      }
       ctx.restore();
 
       // wraith 카운트다운
@@ -870,6 +993,21 @@ export default function GamePage() {
         state.bird.y =
           state.canvasHeight * 0.4 + Math.sin(Date.now() / 300) * 10;
 
+        // 스테이지 번호 표시
+        if (stageConfig) {
+          ctx.save();
+          ctx.fillStyle = "rgba(255,255,255,0.9)";
+          ctx.strokeStyle = "rgba(0,0,0,0.4)";
+          ctx.lineWidth = 3;
+          ctx.font = "bold 22px sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const stageLabel = `Stage ${stageConfig.id} - ${stageConfig.name}`;
+          ctx.strokeText(stageLabel, W / 2, H * 0.54);
+          ctx.fillText(stageLabel, W / 2, H * 0.54);
+          ctx.restore();
+        }
+
         ctx.save();
         ctx.fillStyle = "white";
         ctx.strokeStyle = "rgba(0,0,0,0.4)";
@@ -884,7 +1022,7 @@ export default function GamePage() {
       }
 
       // 다음 프레임
-      if (state.status !== "gameover") {
+      if (state.status !== "gameover" && state.status !== "clear") {
         animFrameRef.current = requestAnimationFrame(() => gameLoop(ctx));
       }
     },
@@ -896,6 +1034,7 @@ export default function GamePage() {
       applyWraith,
       applyPoint,
       checkAABB,
+      stageConfig,
     ]
   );
 
@@ -974,14 +1113,6 @@ export default function GamePage() {
 
   const handleRestart = useCallback(() => {
     initGame();
-    setTimeout(() => {
-      const state = gameRef.current;
-      if (state) {
-        state.status = "playing";
-        setGameStatus("playing");
-        state.bird.velocity = GAME_CONFIG.jumpForce;
-      }
-    }, 100);
   }, [initGame]);
 
   const handleGoHome = useCallback(() => {
@@ -993,7 +1124,7 @@ export default function GamePage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.code === "Space" || e.code === "ArrowUp") {
         e.preventDefault();
-        if (gameStatus === "gameover") return;
+        if (gameStatus === "gameover" || gameStatus === "clear") return;
         handleTap();
       }
     };
@@ -1008,9 +1139,9 @@ export default function GamePage() {
       <canvas
         ref={canvasRef}
         className="w-full h-full block"
-        onClick={gameStatus !== "gameover" ? handleTap : undefined}
+        onClick={gameStatus !== "gameover" && gameStatus !== "clear" ? handleTap : undefined}
         onTouchStart={
-          gameStatus !== "gameover"
+          gameStatus !== "gameover" && gameStatus !== "clear"
             ? (e) => {
                 e.preventDefault();
                 handleTap();
@@ -1033,15 +1164,73 @@ export default function GamePage() {
             {/* 점수 */}
             <div className="p-6 space-y-4">
               <div className="text-center">
-                <p className="text-gray-500 text-sm mb-1">Score</p>
-                <p className="text-5xl font-bold text-gray-800">{score}</p>
+                <p className="text-gray-500 text-sm mb-1">
+                  {stageConfig ? "Progress" : "Score"}
+                </p>
+                <p className="text-5xl font-bold text-gray-800">
+                  {stageConfig ? `${progress}%` : score}
+                </p>
               </div>
 
+              {!stageConfig && (
+                <div className="text-center">
+                  <p className="text-gray-500 text-sm mb-1">Best</p>
+                  <p className="text-2xl font-bold text-yellow-500">
+                    {highScore}
+                  </p>
+                </div>
+              )}
+
+              {coinReward > 0 && (
+                <div className="text-center bg-yellow-50 rounded-xl py-2 px-4">
+                  <p className="text-yellow-700 font-bold text-sm">
+                    +{coinReward} Coins
+                  </p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={stageConfig ? () => router.push("/stage-select") : handleGoHome}
+                  className="flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  {stageConfig ? (
+                    <><List className="w-5 h-5" />Stages</>
+                  ) : (
+                    <><Home className="w-5 h-5" />Home</>
+                  )}
+                </button>
+                <button
+                  onClick={handleRestart}
+                  className="flex-1 py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                  Retry
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 스테이지 클리어 모달 */}
+      {gameStatus === "clear" && stageConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-3xl shadow-2xl w-80 overflow-hidden">
+            {/* 헤더 */}
+            <div className="bg-gradient-to-r from-emerald-400 to-cyan-500 py-5">
+              <h2 className="text-white text-2xl font-bold text-center">
+                Stage Clear!
+              </h2>
+            </div>
+
+            {/* 점수 */}
+            <div className="p-6 space-y-4">
               <div className="text-center">
-                <p className="text-gray-500 text-sm mb-1">Best</p>
-                <p className="text-2xl font-bold text-yellow-500">
-                  {highScore}
+                <p className="text-gray-500 text-sm mb-1">
+                  Stage {stageConfig.id} - {stageConfig.name}
                 </p>
+                <p className="text-5xl font-bold text-gray-800">100%</p>
               </div>
 
               {coinReward > 0 && (
@@ -1054,18 +1243,18 @@ export default function GamePage() {
 
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={handleGoHome}
+                  onClick={() => router.push("/stage-select")}
                   className="flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <Home className="w-5 h-5" />
-                  Home
+                  <List className="w-5 h-5" />
+                  Stages
                 </button>
                 <button
-                  onClick={handleRestart}
-                  className="flex-1 py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  onClick={() => router.push(`/stage/${stageConfig.id + 1}`)}
+                  className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
                 >
-                  <RotateCcw className="w-5 h-5" />
-                  Retry
+                  Next
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </div>

@@ -44,6 +44,8 @@
   - [x] HomeScreen (메인 메뉴, 로그인/로그아웃 연동)
   - [x] GameScreen (Canvas 게임, 물리엔진, 파이프, 아이템 시스템, 코인 보상)
   - [x] BirdSelectionScreen (등급별 격자, 장착 기능)
+  - [x] ModeSelectionScreen (RECORD / STAGE 모드 선택)
+  - [x] StageSelectScreen (스테이지 선택, 3x5 격자, 잠금/오픈)
 ### Next Up
 - [ ] 가챠(뽑기) 기능 UI
   - 코인 차감 로직
@@ -57,6 +59,13 @@
   - user_birds 테이블: 사용자별 보유 새 (user_id, bird_id, equipped 등)
 - [ ] 코인 시스템 DB 연동 (현재 localStorage 임시 구현)
 - [ ] (검토중) 10연차 할인 시스템 (1000 → 900코인)
+- [ ] 배포 (게임 개발 완료 후 진행)
+  - 아키텍처: Vercel + Supabase (서버리스)
+  - Supabase Auth 연동 (localStorage → Supabase Auth 이전)
+  - Supabase PostgreSQL DB 연동 (코인, 새 보유 데이터 등)
+  - localStorage 데이터 → DB 이전 (auth, coins, birds, equipped)
+  - Vercel 배포 설정 (git push 자동 배포)
+  - 사용자 증가 시 AWS (EC2 + RDS) 이관 검토
 
 ### Completed
 - [x] GitHub에 repository 생성 및 추가
@@ -94,17 +103,19 @@
 | 로그인 | `LoginScreen` | 로그인 화면 |
 | 홈 | `HomeScreen` | 메인 메뉴 (로그인 후) |
 | 인게임 | `GameScreen` | 메인 게임 플레이 화면 |
+| 모드 선택 | `ModeSelectionScreen` | 게임 모드 선택 (RECORD / STAGE) |
 | 새 선택 | `BirdSelectionScreen` | 캐릭터 선택 및 구매 화면 |
+| 스테이지 선택 | `StageSelectScreen` | 스테이지 모드 스테이지 선택 화면 |
 
 ### 화면 흐름 (Navigation Flow)
 ```
 LoginScreen
     ↓ (로그인 성공)
 HomeScreen ←→ BirdSelectionScreen
-    ↓
-GameScreen
-    ↓
-GameOverModal → HomeScreen
+    ↓ (START)
+ModeSelectionScreen
+    ├── RECORD MODE → GameScreen → GameOverModal → HomeScreen
+    └── STAGE MODE  → StageSelectScreen → GameScreen (추후 연동)
 ```
 
 ---
@@ -128,6 +139,8 @@ FLAPPY-BIRD/
 ├── app/                        # Next.js App Router (라우팅)
 │   ├── globals.css             # 전역 스타일
 │   ├── layout.tsx              # 루트 레이아웃
+│   ├── mode-select/page.tsx    # 모드 선택 페이지
+│   ├── stage-select/page.tsx   # 스테이지 선택 페이지
 │   ├── page.tsx                # 메인 페이지
 │   └── providers.tsx           # Context Providers
 │
@@ -141,6 +154,8 @@ FLAPPY-BIRD/
 │   ├── login-page.tsx          # 로그인 페이지
 │   ├── home-page.tsx           # 홈 페이지
 │   ├── bird-selection-page.tsx # 새 선택 페이지
+│   ├── mode-selection-page.tsx # 모드 선택 페이지
+│   ├── stage-select-page.tsx  # 스테이지 선택 페이지
 │   └── game-page.tsx           # 게임 페이지 (Canvas 기반)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)

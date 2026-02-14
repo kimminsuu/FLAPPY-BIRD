@@ -42,9 +42,19 @@ erDiagram
         datetime playedAt "플레이 일시"
     }
 
+    USER_STAGE_RECORD {
+        string id PK "고유 ID"
+        string userId FK "유저 ID"
+        int stageId "스테이지 번호"
+        int bestPercent "최고 진행률 (0~100)"
+        datetime clearedAt "클리어 일시 (nullable)"
+        datetime updatedAt "최종 갱신일"
+    }
+
     USER ||--o{ USER_BIRD : "owns"
     BIRD ||--o{ USER_BIRD : "owned by"
     USER ||--o{ GAME_SCORE : "plays"
+    USER ||--o{ USER_STAGE_RECORD : "plays"
 ```
 
 ## 엔터티 설명
@@ -55,11 +65,13 @@ erDiagram
 | `BIRD` | 새(캐릭터) 마스터 데이터 |
 | `USER_BIRD` | 사용자별 보유 새 (N:M 관계) |
 | `GAME_SCORE` | 게임 기록 (랭킹용) |
+| `USER_STAGE_RECORD` | 유저별 스테이지 최고 기록 (UNIQUE: userId + stageId) |
 
 ## 관계
 
 - **USER ↔ BIRD**: 다대다 (USER_BIRD 중간 테이블)
 - **USER → GAME_SCORE**: 일대다 (한 유저가 여러 게임 기록)
+- **USER → USER_STAGE_RECORD**: 일대다 (한 유저가 여러 스테이지 기록)
 
 ## 필드 상세
 
@@ -102,3 +114,15 @@ erDiagram
 | score | int | 게임 점수 |
 | coinsEarned | int | 획득한 코인 |
 | playedAt | datetime | 플레이 일시 |
+
+### USER_STAGE_RECORD
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| id | string | PK, UUID |
+| userId | string | FK → USER.id |
+| stageId | int | 스테이지 번호 |
+| bestPercent | int | 최고 진행률 (0~100) |
+| clearedAt | datetime | 클리어(100%) 달성 일시 (nullable) |
+| updatedAt | datetime | 최종 갱신일 |
+
+> **UNIQUE 제약**: (userId, stageId) 조합은 유일해야 합니다.
