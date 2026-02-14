@@ -20,6 +20,7 @@ import {
   type FloatingText,
   type ScreenFlash,
   type TeleportPortal,
+  type GravityZone,
 } from "@/types/game";
 import type { StageConfig } from "@/types/stage";
 
@@ -51,6 +52,26 @@ function setStageBest(username: string, stageId: number, percent: number): void 
   }
 }
 
+// ==================== 스테이지 총 프레임 계산 ====================
+
+/**
+ * 마지막 파이프가 새를 통과하는 시점까지의 총 프레임 수를 계산.
+ * - 파이프 0: nextPipeFrame=0이므로 frame 1에서 즉시 스폰 (spacing 미사용)
+ * - 파이프 1~N-1: pipes[i].spacing 만큼 이전 스폰으로부터 대기
+ * - 마지막 파이프 이동: (W+10+pipeWidth) - (W*0.25) = W*0.75 + 10 + pipeWidth
+ */
+function calcStageTotalFrames(cfg: StageConfig, canvasWidth: number): number {
+  // 마지막 파이프 스폰 프레임 (파이프 0은 frame ~1에서 즉시 스폰)
+  let lastSpawnFrame = 1;
+  for (let i = 1; i < cfg.pipes.length; i++) {
+    lastSpawnFrame += cfg.pipes[i].spacing ?? cfg.pipeSpacing;
+  }
+  // 마지막 파이프가 새 위치를 지나는 데 걸리는 프레임
+  const travelDist = canvasWidth * 0.75 + 10 + GAME_CONFIG.pipeWidth;
+  const travelFrames = Math.ceil(travelDist / cfg.pipeSpeed);
+  return lastSpawnFrame + travelFrames;
+}
+
 // ==================== 게임 상태 (ref로 관리) ====================
 
 interface GameStateRef {
@@ -76,7 +97,11 @@ interface GameStateRef {
   portals: TeleportPortal[];
   isTeleporting: boolean;
   teleportOutPortal: TeleportPortal | null;
-  teleportPipeIndex: number; // 텔레포트 중인 파이프의 pipes 배열 인덱스
+  teleportPipe: Pipe | null; // 텔레포트 중인 파이프 직접 참조
+  nextPipeId: number; // 파이프 고유 ID 카운터
+  nextTeleportPairId: number; // 포탈 페어 ID 카운터
+  isGravityReversed: boolean; // 현재 중력 반전 상태
+  gravityZones: GravityZone[]; // 반전 존 목록 (렌더링용)
 }
 
 function createInitialState(
@@ -113,7 +138,11 @@ function createInitialState(
     portals: [],
     isTeleporting: false,
     teleportOutPortal: null,
-    teleportPipeIndex: -1,
+    teleportPipe: null,
+    nextPipeId: 0,
+    nextTeleportPairId: 0,
+    isGravityReversed: false,
+    gravityZones: [],
   };
 }
 
@@ -218,6 +247,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
     }
 
     state.pipes.push({
+      id: state.nextPipeId++,
       x: canvasWidth + 10,
       gapY,
       gapHeight,
@@ -419,30 +449,56 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
         // 새 물리 (텔레포트 중 스킵)
         if (!state.isTeleporting) {
-          state.bird.velocity += GAME_CONFIG.gravity;
+          const grav = state.isGravityReversed ? -GAME_CONFIG.gravity : GAME_CONFIG.gravity;
+          state.bird.velocity += grav;
           state.bird.y += state.bird.velocity;
-          state.bird.rotation = Math.min(
-            90,
-            Math.max(-30, state.bird.velocity * 3)
-          );
 
-          // 천장 제한
-          if (state.bird.y < 0) {
-            state.bird.y = 0;
-            state.bird.velocity = 0;
-          }
+          if (state.isGravityReversed) {
+            // 반전 시: rotation 방향도 반전
+            state.bird.rotation = Math.min(
+              30,
+              Math.max(-90, -state.bird.velocity * 3)
+            );
 
-          // 바닥 충돌
-          if (
-            !state.isWraith &&
-            state.bird.y + birdH > playableHeight
-          ) {
-            state.status = "gameover";
-          }
-          // 바닥 아래로 내려가지 않도록 제한
-          if (state.bird.y + birdH > playableHeight) {
-            state.bird.y = playableHeight - birdH;
-            state.bird.velocity = 0;
+            // 반전 시 천장 충돌 = gameover (바닥처럼)
+            if (!state.isWraith && state.bird.y < 0) {
+              state.status = "gameover";
+            }
+            if (state.bird.y < 0) {
+              state.bird.y = 0;
+              state.bird.velocity = 0;
+            }
+
+            // 반전 시 바닥 = 제한 (천장처럼)
+            if (state.bird.y + birdH > playableHeight) {
+              state.bird.y = playableHeight - birdH;
+              state.bird.velocity = 0;
+            }
+          } else {
+            // 정상 중력
+            state.bird.rotation = Math.min(
+              90,
+              Math.max(-30, state.bird.velocity * 3)
+            );
+
+            // 천장 제한
+            if (state.bird.y < 0) {
+              state.bird.y = 0;
+              state.bird.velocity = 0;
+            }
+
+            // 바닥 충돌
+            if (
+              !state.isWraith &&
+              state.bird.y + birdH > playableHeight
+            ) {
+              state.status = "gameover";
+            }
+            // 바닥 아래로 내려가지 않도록 제한
+            if (state.bird.y + birdH > playableHeight) {
+              state.bird.y = playableHeight - birdH;
+              state.bird.velocity = 0;
+            }
           }
         }
 
@@ -458,19 +514,54 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             const margin = pipeDef.gapHeight / 2 + 40;
             const gapY = margin + pipeDef.gapY * (playH - margin * 2);
             const pipeX = state.canvasWidth + 10;
-            const pipeArrayIndex = state.pipes.length;
+            const pipeId = state.nextPipeId++;
             state.pipes.push({
+              id: pipeId,
               x: pipeX,
               gapY,
-              gapHeight: pipeDef.gapHeight, // 텔레포트 파이프도 처음엔 열린 상태
+              gapHeight: pipeDef.gapHeight,
               passed: false,
               width: GAME_CONFIG.pipeWidth,
               isTeleportPipe: !!pipeDef.teleport,
               originalGapHeight: pipeDef.teleport ? pipeDef.gapHeight : undefined,
             });
 
+            // 중력 반전 존 생성 (true 파이프 스폰 시 양쪽 경계를 즉시 확정)
+            if (pipeDef.reverseGravity === true && stageConfig) {
+              const curIdx = state.nextPipeIndex;
+              // startX = 이전 파이프와 이 파이프 사이 중간점
+              const startSpacing = pipeDef.spacing ?? stageConfig.pipeSpacing;
+              const startGapPx = startSpacing * stageConfig.pipeSpeed - GAME_CONFIG.pipeWidth;
+              const startX = pipeX - startGapPx / 2;
+
+              // false 파이프를 미리 찾아서 endX도 즉시 계산
+              let totalSpacingFrames = 0;
+              let foundFalse = false;
+              let endGapPx = 0;
+              for (let fi = curIdx + 1; fi < stageConfig.pipes.length; fi++) {
+                const futureDef = stageConfig.pipes[fi];
+                totalSpacingFrames += futureDef.spacing ?? stageConfig.pipeSpacing;
+                if (futureDef.reverseGravity === false) {
+                  const endSpacing = futureDef.spacing ?? stageConfig.pipeSpacing;
+                  endGapPx = endSpacing * stageConfig.pipeSpeed - GAME_CONFIG.pipeWidth;
+                  foundFalse = true;
+                  break;
+                }
+              }
+              let endX: number;
+              if (foundFalse) {
+                endX = pipeX - endGapPx / 2 + totalSpacingFrames * stageConfig.pipeSpeed;
+              } else {
+                // 존이 스테이지 끝까지 이어지는 경우: 마지막 파이프 너머까지 확장
+                endX = pipeX + totalSpacingFrames * stageConfig.pipeSpeed + GAME_CONFIG.pipeWidth + 200;
+              }
+
+              state.gravityZones.push({ startX, endX });
+            }
+
             // 텔레포트 포탈 생성
             if (pipeDef.teleport) {
+              const pairId = state.nextTeleportPairId++;
               const portalSize = 50;
               const inYPos = pipeDef.teleport.inY * playH;
               const outYPos = pipeDef.teleport.outY * playH;
@@ -480,7 +571,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
                 type: "in",
                 activated: false,
                 size: portalSize,
-                pipeIndex: pipeArrayIndex,
+                pairId,
+                pipeId,
               });
               state.portals.push({
                 x: pipeX + GAME_CONFIG.pipeWidth + 100,
@@ -488,7 +580,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
                 type: "out",
                 activated: false,
                 size: portalSize,
-                pipeIndex: pipeArrayIndex,
+                pairId,
+                pipeId,
               });
             }
 
@@ -565,6 +658,57 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
         }
 
+        // 중력 반전 존 이동 + 활성화 체크
+        {
+          const birdCenterX = state.bird.x + birdW / 2;
+          let nowReversed = false;
+          for (let i = state.gravityZones.length - 1; i >= 0; i--) {
+            const zone = state.gravityZones[i];
+            zone.startX -= currentPipeSpeed;
+            zone.endX -= currentPipeSpeed;
+            // 존이 화면 밖으로 완전히 나가면 제거
+            if (zone.endX < -100) {
+              state.gravityZones.splice(i, 1);
+              continue;
+            }
+            // 새가 존 내부인지 체크
+            if (birdCenterX >= zone.startX && birdCenterX <= zone.endX) {
+              nowReversed = true;
+            }
+          }
+          // 상태 변화 감지 → 진입/해제 이펙트
+          if (nowReversed !== state.isGravityReversed) {
+            state.isGravityReversed = nowReversed;
+            // 경계 통과 시 y속도 초기화 (급격한 가속 방지)
+            state.bird.velocity = 0;
+            // 보라색 플래시
+            state.screenFlash = {
+              color: nowReversed ? "rgba(100, 50, 180, 0.35)" : "rgba(100, 50, 180, 0.25)",
+              alpha: 1,
+              life: 12,
+            };
+            // 보라색 파티클
+            const bCX = state.bird.x + birdW / 2;
+            const bCY = state.bird.y + birdH / 2;
+            for (let k = 0; k < 14; k++) {
+              const angle = (Math.PI * 2 * k) / 14;
+              const speed = 1.5 + Math.random() * 2.5;
+              state.particles.push({
+                x: bCX,
+                y: bCY,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: 3 + Math.random() * 4,
+                color: Math.random() > 0.5 ? "#7C3AED" : "#A78BFA",
+                alpha: 1,
+                life: 25 + Math.random() * 15,
+                maxLife: 40,
+                type: "circle",
+              });
+            }
+          }
+        }
+
         // 텔레포트 IN 포탈 충돌 감지
         if (!state.isTeleporting) {
           const bx = state.bird.x + GAME_CONFIG.birdHitboxPadding;
@@ -580,12 +724,13 @@ export default function GamePage({ stageConfig }: GamePageProps) {
               // 텔레포트 활성화
               state.isTeleporting = true;
               portal.activated = true;
-              // OUT 포탈 찾기
+              // OUT 포탈 찾기 (고유 pairId로 매칭)
               const outPortal = state.portals.find(
-                (p) => p.type === "out" && p.pipeIndex === portal.pipeIndex
+                (p) => p.type === "out" && p.pairId === portal.pairId
               );
               state.teleportOutPortal = outPortal || null;
-              state.teleportPipeIndex = portal.pipeIndex;
+              // 파이프 직접 참조 (splice 후에도 안전)
+              state.teleportPipe = state.pipes.find((p) => p.id === portal.pipeId) || null;
 
               // IN 이펙트 파티클 (노란색 / 금색, 중심으로 수렴)
               for (let k = 0; k < 16; k++) {
@@ -622,13 +767,12 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             out.activated = true;
             state.teleportOutPortal = null;
 
-            // 막힌 파이프 자동 통과 처리
-            const tpPipe = state.pipes[state.teleportPipeIndex];
-            if (tpPipe && !tpPipe.passed) {
-              tpPipe.passed = true;
+            // 막힌 파이프 자동 통과 처리 (직접 참조)
+            if (state.teleportPipe && !state.teleportPipe.passed) {
+              state.teleportPipe.passed = true;
               state.score++;
             }
-            state.teleportPipeIndex = -1;
+            state.teleportPipe = null;
 
             // OUT 이펙트 파티클 (노란색 / 금색, 방사)
             const bCX = state.bird.x + birdW / 2;
@@ -768,9 +912,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           setProgress(100);
           const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
           if (username) setStageBest(username, stageConfig.id, 100);
-          const reward = state.score * GAME_CONFIG.coinRewardMultiplier;
-          addUserCoins(reward);
-          setCoinReward(reward);
+          setCoinReward(0);
           setScore(state.score);
           setGameStatus("clear");
           return;
@@ -779,8 +921,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         // 게임오버 처리
         if (state.status === "gameover") {
           if (stageConfig) {
-            // 스테이지 모드: 점수 기반 진행률
-            const finalPct = Math.min(99, Math.floor((state.score / stageConfig.goalScore) * 100));
+            // 스테이지 모드: 프레임 기반 진행률
+            const totalFrames = calcStageTotalFrames(stageConfig, state.canvasWidth);
+            const finalPct = Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
             setProgress(finalPct);
             const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
             if (username) setStageBest(username, stageConfig.id, finalPct);
@@ -794,8 +937,10 @@ export default function GamePage({ stageConfig }: GamePageProps) {
               );
             }
           }
-          const reward = state.score * GAME_CONFIG.coinRewardMultiplier;
-          addUserCoins(reward);
+          const reward = stageConfig
+            ? 0
+            : state.score * GAME_CONFIG.coinRewardMultiplier;
+          if (reward > 0) addUserCoins(reward);
           setCoinReward(reward);
           setScore(state.score);
           setHighScore(state.highScore);
@@ -834,6 +979,66 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       }
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, W, H);
+
+      // 중력 반전 존 오버레이
+      for (const zone of state.gravityZones) {
+        const zStartX = zone.startX;
+        const zEndX = zone.endX;
+        const zoneWidth = zEndX - zStartX;
+        if (zStartX > W || zEndX < 0) continue; // 화면 밖이면 스킵
+
+        // 보라색 반투명 오버레이
+        ctx.save();
+        ctx.fillStyle = "rgba(100, 50, 180, 0.12)";
+        const drawStartX = Math.max(0, zStartX);
+        const drawEndX = Math.min(W, zEndX);
+        ctx.fillRect(drawStartX, 0, drawEndX - drawStartX, playableHeight);
+
+        // 경계선: 세로 점선 (보라색)
+        ctx.strokeStyle = "rgba(120, 60, 200, 0.5)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        // 시작 경계선
+        if (zStartX > -10 && zStartX < W + 10) {
+          ctx.beginPath();
+          ctx.moveTo(zStartX, 0);
+          ctx.lineTo(zStartX, playableHeight);
+          ctx.stroke();
+        }
+        // 끝 경계선
+        if (zEndX > -10 && zEndX < W + 10) {
+          ctx.beginPath();
+          ctx.moveTo(zEndX, 0);
+          ctx.lineTo(zEndX, playableHeight);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+
+        // 경계선 옆 화살표 ↕
+        ctx.fillStyle = "rgba(120, 60, 200, 0.6)";
+        ctx.font = "bold 20px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if (zStartX > 0 && zStartX < W) {
+          ctx.fillText("\u2195", zStartX + 14, playableHeight * 0.15);
+          ctx.fillText("\u2195", zStartX + 14, playableHeight * 0.85);
+        }
+        if (zEndX > 0 && zEndX < W) {
+          ctx.fillText("\u2195", zEndX - 14, playableHeight * 0.15);
+          ctx.fillText("\u2195", zEndX - 14, playableHeight * 0.85);
+        }
+
+        // in 경계선 오른쪽 위 가장자리에 "REVERSE" 텍스트
+        if (zStartX + 8 > 0 && zStartX + 8 < W) {
+          ctx.fillStyle = "rgba(120, 60, 200, 0.45)";
+          ctx.font = "bold 13px sans-serif";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          ctx.fillText("REVERSE", zStartX + 8, 10);
+        }
+
+        ctx.restore();
+      }
 
       // 파이프
       for (const pipe of state.pipes) {
@@ -1177,6 +1382,10 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         const birdCY = state.bird.y + birdH / 2;
         ctx.translate(birdCX, birdCY);
         ctx.rotate((state.bird.rotation * Math.PI) / 180);
+        // 중력 반전 시 새 상하 뒤집기
+        if (state.isGravityReversed) {
+          ctx.scale(1, -1);
+        }
 
         if (state.isWraith) {
           ctx.globalAlpha = 0.4;
@@ -1232,14 +1441,20 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       if (stageConfig) {
+        const totalFrames = calcStageTotalFrames(stageConfig, W);
         const exactPct = state.score >= stageConfig.goalScore
           ? 100
-          : Math.min(99, Math.floor((state.score / stageConfig.goalScore) * 100));
+          : Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
         // HUD는 10% 단위로 표시
         const hudPct = exactPct >= 100 ? 100 : Math.floor(exactPct / 10) * 10;
         const hudText = `${hudPct}%`;
         ctx.strokeText(hudText, W / 2, 50);
         ctx.fillText(hudText, W / 2, 50);
+        // [DEBUG] 1% 단위 수치 (배포 시 제거)
+        ctx.font = "bold 20px sans-serif";
+        ctx.lineWidth = 2;
+        ctx.strokeText(`${exactPct}%`, W / 2 + 80, 58);
+        ctx.fillText(`${exactPct}%`, W / 2 + 80, 58);
       } else {
         ctx.strokeText(state.score.toString(), W / 2, 50);
         ctx.fillText(state.score.toString(), W / 2, 50);
@@ -1380,7 +1595,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       setGameStatus("playing");
       state.bird.velocity = GAME_CONFIG.jumpForce;
     } else if (state.status === "playing" && !state.isTeleporting) {
-      state.bird.velocity = GAME_CONFIG.jumpForce;
+      const jump = state.isGravityReversed ? -GAME_CONFIG.jumpForce : GAME_CONFIG.jumpForce;
+      state.bird.velocity = jump;
     }
   }, []);
 

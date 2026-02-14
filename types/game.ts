@@ -20,6 +20,7 @@ export interface BirdState {
 
 // 파이프
 export interface Pipe {
+  id: number; // 고유 ID (splice 후에도 안정적 참조)
   x: number;
   gapY: number; // gap 중심 y 좌표
   gapHeight: number; // gap 높이
@@ -71,6 +72,12 @@ export interface GameItem {
   size: number; // ~30px
 }
 
+// 중력 반전 존
+export interface GravityZone {
+  startX: number;  // 존 시작 x좌표 (스크롤과 함께 이동)
+  endX: number;    // 존 끝 x좌표 (-1이면 아직 미정)
+}
+
 // 텔레포트 포탈
 export interface TeleportPortal {
   x: number;
@@ -78,7 +85,8 @@ export interface TeleportPortal {
   type: "in" | "out";
   activated: boolean;
   size: number;
-  pipeIndex: number; // 연결된 파이프 인덱스
+  pairId: number; // IN/OUT 포탈 매칭용 고유 ID
+  pipeId: number; // 연결된 파이프의 고유 ID
 }
 
 // 전체 게임 상태
