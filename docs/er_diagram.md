@@ -10,7 +10,6 @@ erDiagram
         string id PK "유저 고유 ID"
         string username "사용자명"
         string password "비밀번호 (해시)"
-        string kakaoId UK "카카오 ID (nullable)"
         int coins "보유 코인"
         datetime createdAt "가입일"
         datetime updatedAt "수정일"
@@ -37,6 +36,8 @@ erDiagram
     GAME_SCORE {
         string id PK "고유 ID"
         string userId FK "유저 ID"
+        enum mode "게임 모드 (record/stage)"
+        int stageId "스테이지 번호 (stage 모드, nullable)"
         int score "점수"
         int coinsEarned "획득 코인"
         datetime playedAt "플레이 일시"
@@ -64,7 +65,7 @@ erDiagram
 | `USER` | 사용자 정보 (로그인, 코인 잔액) |
 | `BIRD` | 새(캐릭터) 마스터 데이터 |
 | `USER_BIRD` | 사용자별 보유 새 (N:M 관계) |
-| `GAME_SCORE` | 게임 기록 (랭킹용) |
+| `GAME_SCORE` | 게임 기록 (record/stage 모드 통합) |
 | `USER_STAGE_RECORD` | 유저별 스테이지 최고 기록 (UNIQUE: userId + stageId) |
 
 ## 관계
@@ -81,7 +82,6 @@ erDiagram
 | id | string | PK, UUID |
 | username | string | 사용자명 (unique) |
 | password | string | 비밀번호 (bcrypt 해시) |
-| kakaoId | string | 카카오 로그인 ID (nullable) |
 | coins | int | 보유 코인 (기본값: 0) |
 | createdAt | datetime | 가입일 |
 | updatedAt | datetime | 최종 수정일 |
@@ -111,6 +111,8 @@ erDiagram
 |------|------|------|
 | id | string | PK, UUID |
 | userId | string | FK → USER.id |
+| mode | enum | 게임 모드 (record / stage) |
+| stageId | int | 스테이지 번호 (stage 모드만, nullable) |
 | score | int | 게임 점수 |
 | coinsEarned | int | 획득한 코인 |
 | playedAt | datetime | 플레이 일시 |
