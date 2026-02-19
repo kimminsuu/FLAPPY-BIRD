@@ -1779,9 +1779,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
     <div className="fixed inset-0 overflow-hidden bg-black">
       <canvas
         ref={canvasRef}
-        className="w-full h-full block"
-        onClick={gameStatus !== "gameover" && gameStatus !== "clear" ? handleTap : undefined}
-        onTouchStart={
+        className="w-full h-full block touch-none"
+        onPointerDown={
           gameStatus !== "gameover" && gameStatus !== "clear"
             ? (e) => {
                 e.preventDefault();
