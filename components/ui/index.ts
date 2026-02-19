@@ -4,4 +4,3 @@ export { default as SeasonSelector } from "./SeasonSelector";
 export { default as UserInfoBar } from "./UserInfoBar";
 export type { Season } from "./SeasonalBackground";
 export { seasonThemes } from "./SeasonalBackground";
-export { getUserCoins, setUserCoins, addUserCoins, subtractUserCoins } from "./UserInfoBar";

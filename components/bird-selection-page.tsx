@@ -5,33 +5,18 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, Lock, Coins, Sparkles, X } from "lucide-react";
 import Image from "next/image";
 import { FlappyBird, SeasonalBackground, UserInfoBar } from "@/components/ui";
-import { getUserCoins, subtractUserCoins, addUserCoins } from "@/components/ui/UserInfoBar";
 import { useSeason } from "@/lib/season-context";
+import { useUser } from "@/lib/user-context";
+import {
+  getOwnedBirdIds,
+  getCoins,
+  subtractCoins,
+  addCoins,
+  equipBird,
+  addBird,
+} from "@/lib/user-service";
 import { BIRDS, getBirdsByRarity, performGacha, getGachaCost, canPerformGacha } from "@/lib/birds";
 import { Bird, BirdRarity, BIRD_RARITIES, BIRD_RARITY_INFO, GACHA_CONFIG, GachaResult } from "@/types/bird";
-
-const STORAGE_KEY_OWNED_BIRDS = "flappy_owned_birds";
-const STORAGE_KEY_EQUIPPED_BIRD = "flappy_equipped_bird";
-
-/** localStorage에서 보유 새 목록 읽기 */
-function loadOwnedBirds(): string[] {
-  if (typeof window === "undefined") return ["bird_common_1"];
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_OWNED_BIRDS);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch { /* fallback */ }
-  return ["bird_common_1"];
-}
-
-/** localStorage에 보유 새 목록 저장 */
-function saveOwnedBirds(birdIds: string[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY_OWNED_BIRDS, JSON.stringify(birdIds));
-  } catch { /* storage unavailable */ }
-}
 
 type GachaPhase = "idle" | "animating" | "result";
 
@@ -170,8 +155,10 @@ export default function BirdSelectionPage() {
   const scrollBarRef = useRef<HTMLDivElement>(null);
   const scrollThumbRef = useRef<HTMLDivElement>(null);
 
+  const { user, refreshUser, patchUser } = useUser();
+
   // 상태
-  const [ownedBirdIds, setOwnedBirdIds] = useState<string[]>(() => loadOwnedBirds());
+  const [ownedBirdIds, setOwnedBirdIds] = useState<string[]>(["bird_common_1"]);
   const [equippedBirdId, setEquippedBirdId] = useState("bird_common_1");
   const [selectedBirdId, setSelectedBirdId] = useState<string | null>(null);
   const [userCoins, setUserCoins] = useState<number>(0);
@@ -181,21 +168,18 @@ export default function BirdSelectionPage() {
   const [gachaPhase, setGachaPhase] = useState<GachaPhase>("idle");
   const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
 
-  // 초기화 (클라이언트에서만 실행)
+  // Supabase에서 초기 데이터 로드
   useEffect(() => {
-    // 보유 새 불러오기
-    setOwnedBirdIds(loadOwnedBirds());
-
-    // 장착된 새 불러오기
-    const savedEquipped = localStorage.getItem(STORAGE_KEY_EQUIPPED_BIRD);
-    const owned = loadOwnedBirds();
-    if (savedEquipped && owned.includes(savedEquipped)) {
-      setEquippedBirdId(savedEquipped);
-    }
-
-    // 코인 불러오기
-    setUserCoins(getUserCoins());
-  }, []);
+    if (!user) return;
+    Promise.all([
+      getOwnedBirdIds(user.id),
+      getCoins(user.id),
+    ]).then(([owned, coins]) => {
+      setOwnedBirdIds(owned.length > 0 ? owned : ["bird_common_1"]);
+      setEquippedBirdId(user.equipped_bird_id);
+      setUserCoins(coins);
+    });
+  }, [user]);
 
   // 스크롤바 상태
   const [thumbPosition, setThumbPosition] = useState(0);
@@ -302,11 +286,11 @@ export default function BirdSelectionPage() {
   };
 
   const handleEquip = () => {
-    if (selectedBirdId && ownedBirdIds.includes(selectedBirdId)) {
+    if (selectedBirdId && ownedBirdIds.includes(selectedBirdId) && user) {
       setEquippedBirdId(selectedBirdId);
       setSelectedBirdId(null);
-      // localStorage에 저장 (나중에 DB로 대체)
-      localStorage.setItem(STORAGE_KEY_EQUIPPED_BIRD, selectedBirdId);
+      equipBird(user.id, selectedBirdId);
+      patchUser({ equipped_bird_id: selectedBirdId });
     }
   };
 
@@ -315,18 +299,15 @@ export default function BirdSelectionPage() {
   };
 
   // 가챠 실행
-  const handleGacha = () => {
-    const currentCoins = getUserCoins();
-    if (!canPerformGacha(currentCoins)) {
-      return;
-    }
+  const handleGacha = async () => {
+    if (!user || !canPerformGacha(userCoins)) return;
 
-    // 코인 차감
-    const { success, newAmount } = subtractUserCoins(getGachaCost());
+    // 코인 차감 (Supabase)
+    const { success, newAmount } = await subtractCoins(user.id, getGachaCost());
     if (!success) return;
 
     setUserCoins(newAmount);
-    setCoinRefreshKey((prev) => prev + 1);
+    patchUser({ coins: newAmount });
 
     // 뽑기 실행
     const result = performGacha(ownedBirdIds);
@@ -334,19 +315,18 @@ export default function BirdSelectionPage() {
     setGachaPhase("animating");
 
     // 애니메이션 후 결과 표시
-    setTimeout(() => {
+    setTimeout(async () => {
       setGachaPhase("result");
 
-      // 신규 새면 보유 목록에 추가
       if (result.isNew) {
         const newOwnedBirds = [...ownedBirdIds, result.bird.id];
         setOwnedBirdIds(newOwnedBirds);
-        saveOwnedBirds(newOwnedBirds);
+        await addBird(user.id, result.bird.id);
       } else {
         // 중복이면 환급
-        const refundedAmount = addUserCoins(result.refundCoins);
+        const refundedAmount = await addCoins(user.id, result.refundCoins);
         setUserCoins(refundedAmount);
-        setCoinRefreshKey((prev) => prev + 1);
+        patchUser({ coins: refundedAmount });
       }
     }, 1500);
   };

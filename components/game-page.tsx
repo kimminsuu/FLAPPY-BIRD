@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { Home, RotateCcw, ChevronRight, List } from "lucide-react";
 import { useSeason } from "@/lib/season-context";
 import { getBirdById } from "@/lib/birds";
-import { addUserCoins } from "@/components/ui/UserInfoBar";
+import { useUser } from "@/lib/user-context";
+import {
+  addCoins,
+  updateHighScore,
+  updateStageBest,
+  getHighScore as fetchHighScore,
+  getEquippedBirdId,
+} from "@/lib/user-service";
 import type { BirdRarity } from "@/types/bird";
 import {
   GAME_CONFIG,
@@ -23,34 +30,6 @@ import {
   type GravityZone,
 } from "@/types/game";
 import type { StageConfig } from "@/types/stage";
-
-// ==================== 스테이지 최고 기록 헬퍼 ====================
-
-function getStageBest(username: string, stageId: number): number {
-  try {
-    const raw = localStorage.getItem(`flappy_stage_best_${username}`);
-    if (!raw) return 0;
-    const data: Record<string, number> = JSON.parse(raw);
-    return data[String(stageId)] ?? 0;
-  } catch {
-    return 0;
-  }
-}
-
-function setStageBest(username: string, stageId: number, percent: number): void {
-  try {
-    const key = `flappy_stage_best_${username}`;
-    const raw = localStorage.getItem(key);
-    const data: Record<string, number> = raw ? JSON.parse(raw) : {};
-    const prev = data[String(stageId)] ?? 0;
-    if (percent > prev) {
-      data[String(stageId)] = percent;
-      localStorage.setItem(key, JSON.stringify(data));
-    }
-  } catch {
-    // localStorage 접근 실패 시 무시
-  }
-}
 
 // ==================== 스테이지 총 프레임 계산 ====================
 
@@ -165,11 +144,16 @@ interface GamePageProps {
 export default function GamePage({ stageConfig }: GamePageProps) {
   const router = useRouter();
   const { currentSeason } = useSeason();
+  const { user, patchUser } = useUser();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameRef = useRef<GameStateRef | null>(null);
   const animFrameRef = useRef<number>(0);
   const birdImageRef = useRef<HTMLImageElement | null>(null);
   const birdAspectRef = useRef<number>(1); // height / width 비율
+  const userIdRef = useRef<string>(""); // 게임 루프 내에서 사용
+  const patchUserRef = useRef(patchUser);
+  patchUserRef.current = patchUser;
+  const userCoinsRef = useRef(0);
 
   // React 상태 (UI 표시용)
   const [gameStatus, setGameStatus] = useState<GameStatus>("ready");
@@ -179,21 +163,17 @@ export default function GamePage({ stageConfig }: GamePageProps) {
   const [progress, setProgress] = useState(0);
 
   // 장착된 새 정보
-  const equippedBirdId =
-    typeof window !== "undefined"
-      ? localStorage.getItem("flappy_equipped_bird") || "bird_common_1"
-      : "bird_common_1";
+  const equippedBirdId = user?.equipped_bird_id ?? "bird_common_1";
   const equippedBird = getBirdById(equippedBirdId);
   const birdRarity: BirdRarity = equippedBird?.rarity || "common";
 
-  // 최고점수 로드
+  // 유저 ref 동기화 + 최고점수 로드
   useEffect(() => {
-    const saved = localStorage.getItem("flappy_high_score");
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if (!Number.isNaN(parsed)) setHighScore(parsed);
-    }
-  }, []);
+    if (!user) return;
+    userIdRef.current = user.id;
+    userCoinsRef.current = user.coins;
+    fetchHighScore(user.id).then((hs) => setHighScore(hs));
+  }, [user]);
 
   // 새 이미지 로드
   useEffect(() => {
@@ -983,8 +963,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         ) {
           state.status = "clear";
           setProgress(100);
-          const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
-          if (username) setStageBest(username, stageConfig.id, 100);
+          if (userIdRef.current) updateStageBest(userIdRef.current, stageConfig.id, 100);
           setCoinReward(0);
           setScore(state.score);
           setGameStatus("clear");
@@ -998,22 +977,26 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             const totalDist = calcStageTotalScrollDist(stageConfig, state.canvasWidth);
             const finalPct = Math.min(99, Math.floor((state.scrollDistance / totalDist) * 100));
             setProgress(finalPct);
-            const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
-            if (username) setStageBest(username, stageConfig.id, finalPct);
+            if (userIdRef.current) updateStageBest(userIdRef.current, stageConfig.id, finalPct);
           } else {
             // RECORD 모드: 최고점수 저장
             if (state.score > state.highScore) {
               state.highScore = state.score;
-              localStorage.setItem(
-                "flappy_high_score",
-                state.highScore.toString()
-              );
+              if (userIdRef.current) updateHighScore(userIdRef.current, state.score);
             }
           }
           const reward = stageConfig
             ? 0
             : state.score * GAME_CONFIG.coinRewardMultiplier;
-          if (reward > 0) addUserCoins(reward);
+          if (reward > 0 && userIdRef.current) {
+            addCoins(userIdRef.current, reward);
+            const newCoins = userCoinsRef.current + reward;
+            userCoinsRef.current = newCoins;
+            patchUserRef.current({ coins: newCoins });
+          }
+          if (state.score > state.highScore) {
+            patchUserRef.current({ high_score: state.score });
+          }
           setCoinReward(reward);
           setScore(state.score);
           setHighScore(state.highScore);
@@ -1718,13 +1701,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
     const W = rect.width;
     const H = rect.height;
 
-    let hs = 0;
-    const saved = localStorage.getItem("flappy_high_score");
-    if (saved) {
-      const parsed = parseInt(saved, 10);
-      if (!Number.isNaN(parsed)) hs = parsed;
-    }
-    setHighScore(hs);
+    const hs = highScore;
 
     gameRef.current = createInitialState(W, H, birdRarity, hs);
     setGameStatus("ready");

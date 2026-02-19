@@ -1,6 +1,7 @@
 "use client";
 
 import { SeasonProvider } from "@/lib/season-context";
+import { UserProvider } from "@/lib/user-context";
 import { ReactNode } from "react";
 
 interface ProvidersProps {
@@ -8,5 +9,9 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children }: ProvidersProps) {
-  return <SeasonProvider>{children}</SeasonProvider>;
+  return (
+    <UserProvider>
+      <SeasonProvider>{children}</SeasonProvider>
+    </UserProvider>
+  );
 }

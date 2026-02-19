@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Bird, Power, LogOut } from "lucide-react";
+import { Play, Bird, Power, User, Pencil } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
@@ -12,22 +12,28 @@ import {
 } from "@/components/ui";
 import { useSeason } from "@/lib/season-context";
 import { getBirdById } from "@/lib/birds";
+import { useUser } from "@/lib/user-context";
+import { isUsernameAvailable, updateUsername } from "@/lib/user-service";
 
 export default function HomePage() {
   const router = useRouter();
   const { currentSeason, setCurrentSeason } = useSeason();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { user, refreshUser, patchUser } = useUser();
+
   const [equippedBirdId, setEquippedBirdId] = useState("bird_common_1");
 
-  // localStorage에서 장착된 새 불러오기
-  useEffect(() => {
-    const saved = localStorage.getItem("flappy_equipped_bird");
-    if (saved) {
-      setEquippedBirdId(saved);
-    }
-  }, []);
+  // 닉네임 변경 모달 상태
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [isChangingName, setIsChangingName] = useState(false);
 
-  // 장착된 새 정보
+  useEffect(() => {
+    if (user) {
+      setEquippedBirdId(user.equipped_bird_id);
+    }
+  }, [user]);
+
   const equippedBird = getBirdById(equippedBirdId);
 
   const handleStart = () => {
@@ -39,43 +45,81 @@ export default function HomePage() {
   };
 
   const handleExit = () => {
-    // TODO: 앱 종료 또는 로그인 화면으로 이동
     console.log("Exit");
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("flappy_auth_user");
-    router.replace("/");
+  // 닉네임 변경 모달 열기
+  const openNameModal = () => {
+    setNewName(user?.username ?? "");
+    setNameError("");
+    setShowNameModal(true);
+  };
+
+  // 닉네임 변경 처리
+  const handleChangeName = async () => {
+    setNameError("");
+    const trimmed = newName.trim();
+
+    if (!trimmed) {
+      setNameError("닉네임을 입력해주세요.");
+      return;
+    }
+    if (trimmed.length < 2) {
+      setNameError("닉네임은 2자 이상이어야 합니다.");
+      return;
+    }
+    if (trimmed.length > 12) {
+      setNameError("닉네임은 12자 이하여야 합니다.");
+      return;
+    }
+    if (trimmed === user?.username) {
+      setShowNameModal(false);
+      return;
+    }
+
+    setIsChangingName(true);
+    try {
+      const available = await isUsernameAvailable(trimmed);
+      if (!available) {
+        setNameError("이미 사용 중인 닉네임입니다.");
+        setIsChangingName(false);
+        return;
+      }
+
+      const success = await updateUsername(user!.id, trimmed);
+      if (!success) {
+        setNameError("변경에 실패했습니다.");
+        setIsChangingName(false);
+        return;
+      }
+
+      patchUser({ username: trimmed });
+      setShowNameModal(false);
+    } catch {
+      setNameError("오류가 발생했습니다.");
+    } finally {
+      setIsChangingName(false);
+    }
   };
 
   return (
     <SeasonalBackground season={currentSeason}>
       {/* 상단 헤더 */}
       <div className="relative z-20 px-4 pt-4 pb-2">
-        {/* 첫째 줄: 로그아웃 + 계절선택 */}
-        <div className="flex items-center justify-between mb-3">
-          <button
-            onClick={() => setShowLogoutModal(true)}
-            className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-xl border border-white/30 transition-all"
-            aria-label="로그아웃"
-          >
-            <Power className="w-5 h-5 text-white" />
-          </button>
+        <div className="flex items-center justify-end mb-3">
           <SeasonSelector
             currentSeason={currentSeason}
             onSeasonChange={setCurrentSeason}
           />
         </div>
 
-        {/* 둘째 줄: 유저 정보 */}
         <div className="flex justify-end">
-          <UserInfoBar />
+          <UserInfoBar onEditUsername={openNameModal} />
         </div>
       </div>
 
       {/* 메인 컨텐츠 */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-4">
-        {/* 장착된 새 아이콘 */}
         <div className="mb-4">
           {equippedBird?.imagePath === "svg" ? (
             <FlappyBird className="w-28 h-28 drop-shadow-lg" />
@@ -92,7 +136,6 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 타이틀 */}
         <h1
           className="text-5xl font-bold text-white mb-1 tracking-wider"
           style={{
@@ -104,16 +147,12 @@ export default function HomePage() {
         </h1>
         <p
           className="text-white/90 mb-12 text-lg"
-          style={{
-            textShadow: "1px 1px 2px rgba(0,0,0,0.3)",
-          }}
+          style={{ textShadow: "1px 1px 2px rgba(0,0,0,0.3)" }}
         >
           하늘을 날아라!
         </p>
 
-        {/* 메뉴 버튼 */}
         <div className="w-full max-w-xs space-y-3">
-          {/* START 버튼 - 가장 크고 눈에 띄게 */}
           <button
             onClick={handleStart}
             className="w-full py-4 bg-[#4CAF50] hover:bg-[#43A047] active:bg-[#388E3C] text-white text-xl font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
@@ -122,7 +161,6 @@ export default function HomePage() {
             START
           </button>
 
-          {/* SELECT BIRD 버튼 */}
           <button
             onClick={handleSelectBird}
             className="w-full py-3.5 bg-[#2196F3] hover:bg-[#1E88E5] active:bg-[#1976D2] text-white text-lg font-bold rounded-2xl transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3"
@@ -131,42 +169,68 @@ export default function HomePage() {
             SELECT BIRD
           </button>
 
-          {/* EXIT 버튼 */}
           <button
             onClick={handleExit}
             className="w-full py-3 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white text-base font-bold rounded-2xl transition-all backdrop-blur-sm border border-white/30 flex items-center justify-center gap-2"
           >
-            <LogOut className="w-5 h-5" />
+            <Power className="w-5 h-5" />
             EXIT
           </button>
         </div>
       </div>
 
-      {/* 로그아웃 확인 모달 */}
-      {showLogoutModal && (
+      {/* 닉네임 변경 모달 */}
+      {showNameModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl w-80 overflow-hidden">
-            <div className="bg-[#E53935] py-4">
+            <div className="bg-[#FF9800] py-4">
               <h2 className="text-white text-lg font-bold text-center">
-                로그아웃
+                닉네임 변경
               </h2>
             </div>
-            <div className="p-6">
-              <p className="text-gray-700 text-center mb-6">
-                정말 로그아웃하시겠습니까?
-              </p>
+            <div className="p-6 space-y-4">
+              {nameError && (
+                <div className="p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                  {nameError}
+                </div>
+              )}
+
+              <div className="relative">
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5"
+                  aria-hidden="true"
+                />
+                <input
+                  type="text"
+                  placeholder="새 닉네임"
+                  autoComplete="off"
+                  maxLength={12}
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  disabled={isChangingName}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleChangeName();
+                  }}
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent text-gray-700 disabled:bg-gray-100"
+                />
+              </div>
+
+              <p className="text-xs text-gray-400 text-center">2~12자</p>
+
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowLogoutModal(false)}
-                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all"
+                  onClick={() => setShowNameModal(false)}
+                  disabled={isChangingName}
+                  className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all disabled:opacity-50"
                 >
-                  아니오
+                  취소
                 </button>
                 <button
-                  onClick={handleLogout}
-                  className="flex-1 py-3 bg-[#E53935] hover:bg-[#D32F2F] active:bg-[#C62828] text-white font-bold rounded-xl transition-all"
+                  onClick={handleChangeName}
+                  disabled={isChangingName}
+                  className="flex-1 py-3 bg-[#FF9800] hover:bg-[#F57C00] active:bg-[#EF6C00] text-white font-bold rounded-xl transition-all disabled:opacity-50"
                 >
-                  예
+                  {isChangingName ? "확인 중..." : "변경"}
                 </button>
               </div>
             </div>

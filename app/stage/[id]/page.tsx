@@ -4,18 +4,19 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import GamePage from "@/components/game-page";
 import { getStageById } from "@/lib/stages";
+import { useUser } from "@/lib/user-context";
 import type { StageConfig } from "@/types/stage";
 
 export default function StageGameRoute() {
   const router = useRouter();
   const params = useParams();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
   const [stageConfig, setStageConfig] = useState<StageConfig | null>(null);
 
   useEffect(() => {
-    const authUser = localStorage.getItem("flappy_auth_user");
-    if (!authUser) {
+    if (isLoading) return;
+
+    if (!user) {
       router.replace("/");
       return;
     }
@@ -28,11 +29,9 @@ export default function StageGameRoute() {
     }
 
     setStageConfig(stage);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-  }, [router, params.id]);
+  }, [isLoading, user, router, params.id]);
 
-  if (isLoading || !isAuthenticated || !stageConfig) {
+  if (isLoading || !user || !stageConfig) {
     return null;
   }
 

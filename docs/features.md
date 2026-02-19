@@ -4,35 +4,34 @@
 
 ---
 
-## Feature 1: 로그인 시스템
+## Feature 1: 닉네임 설정 (로그인)
 
-- **설명**: 사용자 이름/비밀번호 기반 로그인
-- **관련 파일**: `components/login-page.tsx`
+- **설명**: 기기 UUID 기반 식별 + 닉네임 설정
+- **관련 파일**: `components/login-page.tsx`, `lib/device.ts`, `lib/user-service.ts`
 - **세부 기능**:
-  - 일반 로그인 (이름 + 비밀번호) ✅
-  - 자동 로그인 (토큰 저장) - 예정
-  - master 계정 로그인 (`admin` / `admin1!`) ✅
-  - 로그인 성공 시 `/home` 라우팅 ✅
-  - 인증 정보 localStorage 저장 ✅
-- **구현 상태**: 기본 로그인 플로우 완료, DB 연동 대기
-- **향후 계획**:
-  - 새 유저 생성 시 ERD 기반 user insert
-  - 기존 user 존재 시 handling
+  - 첫 실행 시 닉네임 입력 화면 표시
+  - 닉네임 중복 확인 (Supabase DB 조회)
+  - 기기 UUID 자동 생성 + localStorage 영구 보관
+  - 닉네임 + 기기 UUID로 Supabase에 유저 생성
+  - 재실행 시 기기 UUID로 자동 식별 → 홈 화면 진입
+  - 닉네임 변경 기능 (홈 화면 모달)
+- **구현 상태**: 완료 (Supabase DB 연동)
 
 ---
 
 ## Feature 1.5: 홈 화면
 
-- **설명**: 로그인 후 메인 메뉴 화면
+- **설명**: 메인 메뉴 화면
 - **관련 파일**: `components/home-page.tsx`, `app/home/page.tsx`
 - **세부 기능**:
-  - START 버튼 (모드 선택 화면으로 이동) ✅
-  - SELECT BIRD 버튼 (캐릭터 선택) ✅
-  - ~~RANKING 버튼~~ (제거됨)
-  - EXIT 버튼 ✅
-  - 로그아웃 버튼 + 확인 모달 ✅
-  - 비인증 상태 접근 시 로그인 페이지 리다이렉트 ✅
-- **구현 상태**: UI 완료, 각 버튼 라우팅 연결 예정
+  - START 버튼 (모드 선택 화면으로 이동)
+  - SELECT BIRD 버튼 (캐릭터 선택/가챠)
+  - EXIT 버튼
+  - 닉네임 변경 모달 (연필 아이콘 클릭)
+  - 장착된 새 이미지 표시
+  - UserInfoBar (닉네임 + 코인 잔액)
+  - 비인증 상태 접근 시 로그인 페이지 리다이렉트
+- **구현 상태**: 완료
 
 ---
 
@@ -41,11 +40,11 @@
 - **설명**: 게임 모드를 선택하는 화면 (RECORD MODE / STAGE MODE)
 - **관련 파일**: `components/mode-selection-page.tsx`, `app/mode-select/page.tsx`
 - **세부 기능**:
-  - RECORD MODE 선택 → 기존 게임 (`/game`) ✅
-  - STAGE MODE 선택 → 스테이지 선택 화면 (`/stage-select`) ✅
-  - 뒤로가기 → 홈 화면 (`/home`) ✅
-  - 계절 배경 테마 적용 ✅
-- **구현 상태**: UI 완료
+  - RECORD MODE 선택 → 기존 게임 (`/game`)
+  - STAGE MODE 선택 → 스테이지 선택 화면 (`/stage-select`)
+  - 뒤로가기 → 홈 화면 (`/home`)
+  - 계절 배경 테마 적용
+- **구현 상태**: 완료
 
 ---
 
@@ -54,17 +53,12 @@
 - **설명**: STAGE MODE에서 플레이할 스테이지를 선택하는 화면
 - **관련 파일**: `components/stage-select-page.tsx`, `app/stage-select/page.tsx`
 - **세부 기능**:
-  - 3행 x 5열 격자 레이아웃 (총 15스테이지) ✅
-  - Stage 1~6: 오픈 상태 (색상 그라데이션, 클릭 가능) ✅
-  - Stage 7~15: 잠금 상태 (회색 배경 + Lock 아이콘 + 반투명 오버레이) ✅
-  - 뒤로가기 → 모드 선택 화면 (`/mode-select`) ✅
-  - 계절 배경 테마 적용 ✅
-  - 인증 가드 (비로그인 시 리다이렉트) ✅
+  - 3행 x 5열 격자 레이아웃 (총 15스테이지)
+  - 잠금/오픈 상태 표시 (이전 스테이지 100% 클리어 시 해제)
+  - 최고 기록 (%) 표시
+  - 계절별 카드 스타일 적용
+  - 스테이지 기록 Supabase DB에서 로드
 - **구현 상태**: 완료
-  - 스테이지 클릭 시 해당 스테이지 게임 시작 ✅
-  - 스테이지 클리어 (100%) 시 다음 스테이지 잠금 해제 ✅
-  - 최고 기록 (%) 표시 ✅
-  - 계절별 카드 스타일 적용 ✅
 
 ---
 
@@ -73,17 +67,19 @@
 - **설명**: 미리 설계된 파이프 배치를 가진 스테이지별 게임
 - **관련 파일**: `components/game-page.tsx`, `lib/stages.ts`, `types/stage.ts`
 - **세부 기능**:
-  - 스테이지별 파이프 배치 (gapY, gapHeight, spacing) ✅
-  - 점수 기반 진행률 HUD (10% 단위) ✅
-  - 스테이지 클리어 모달 (100%, 코인 보상, Next 버튼) ✅
-  - 최고 기록 localStorage 저장 ✅
+  - 스테이지별 파이프 배치 (gapY, gapHeight, spacing)
+  - 점수 기반 진행률 HUD (10% 단위)
+  - 스테이지 클리어 모달 (100%, 코인 보상, Next 버튼)
+  - 최고 기록 Supabase DB 저장
 - **스테이지 목록**:
   - Stage 1 "초원": 15파이프, 넓은 간격, 입문용
   - Stage 2 "숲길": 25파이프, 간격/갭 점진 감소
   - Stage 3 "동굴": 25파이프, 텔레포트 기믹 (IN/OUT 포탈 + 닫히는 파이프)
   - Stage 4 "심연": 30파이프, 텔레포트 10개 연속, 좁은 갭/간격
-  - Stage 5 "역장": 30파이프, 중력 반전 존 4개 (반전 존 안에서 조작)
-  - Stage 6 "혼돈": 25파이프, 텔레포트 + 중력 반전 혼합 (3개 존, 존 안 텔레포트)
+  - Stage 5 "역장": 30파이프, 중력 반전 존 4개
+  - Stage 6 "혼돈": 25파이프, 텔레포트 + 중력 반전 혼합 (3개 존)
+  - Stage 7 "가속": Speed Ring 기믹 (Slow/Fast 링, 속도 변화)
+  - Stage 8 "질주": Speed Ring 고밀도
 - **텔레포트 기믹** (Stage 3~):
   - IN 포탈 진입 → 새 사라짐 (물리/충돌/탭 중지)
   - 막힌 파이프 자동 통과 + 점수 반영
@@ -95,6 +91,11 @@
   - 존 안에서 중력 방향 반전 (탭하면 아래로, 자연 상승)
   - 보라색 경계선 + 존 내부 시각 이펙트
   - Stage 6: 반전 존 안에서 텔레포트 동시 사용
+- **Speed Ring 기믹** (Stage 7~):
+  - Slow Ring (연두색): 파이프 속도 감소
+  - Fast Ring (빨간색): 파이프 속도 증가
+  - 효과 지속 시간 + HUD 카운트다운 표시
+  - 거리 기반 파이프 스폰 (속도 변화에도 간격 일정)
 
 ---
 
@@ -103,20 +104,21 @@
 - **설명**: Flappy Bird 스타일의 메인 게임 플레이
 - **관련 파일**: `components/game-page.tsx`, `types/game.ts`
 - **세부 기능**:
-  - 새(캐릭터) 조작 (탭/클릭으로 점프) ✅
-  - 파이프 장애물 생성 및 충돌 감지 ✅
-  - 실시간 점수 표시 ✅
-  - 게임 오버 처리 ✅
-  - 3D 파이프 렌더링 + 계절 테마 색상 ✅
-  - 등급별 아이템 시스템 (break, wraith, point) ✅
-  - 코인 보상 시스템 ✅
+  - 새(캐릭터) 조작 (탭/클릭으로 점프)
+  - 파이프 장애물 생성 및 충돌 감지
+  - 실시간 점수 표시
+  - 게임 오버 처리
+  - 3D 파이프 렌더링 + 계절 테마 색상
+  - 등급별 아이템 시스템 (break, wraith, point)
+  - 코인 보상 시스템 (Supabase DB 저장)
+  - 최고 점수 갱신 (Supabase DB)
 
 ---
 
 ## Feature 3: 새(캐릭터) 뽑기 시스템
 
 - **설명**: 코인으로 랜덤 뽑기를 통해 새 캐릭터 획득
-- **관련 파일**: `types/bird.ts`, `lib/birds.ts`
+- **관련 파일**: `components/bird-selection-page.tsx`, `types/bird.ts`, `lib/birds.ts`
 
 ### 뽑기 시스템 (가챠)
 
@@ -136,14 +138,18 @@
 
 ### 등급별 UI 색상
 
-카드 테두리, 배지, 이펙트 등에 사용
-
 | 등급 | 색상 | HEX |
 |------|------|-----|
 | COMMON | Gray | #6B7280 |
 | RARE | Blue | #3B82F6 |
 | EPIC | Purple | #8B5CF6 |
 | UNIQUE | Gold | #F59E0B |
+
+### 가챠 UI
+- 뽑기 애니메이션 (1.5초): 카드 뒷면 + 빛나는 효과
+- 결과 카드: 등급 색상 테두리 + NEW!/중복 배지
+- "확인" / "한 번 더!" 버튼
+- 코인 차감/환급 실시간 반영
 
 ### 새 ID 규칙
 
@@ -173,13 +179,6 @@
 | 새 정렬 | **가운데 정렬** |
 | 새 크기/여백 | `bird_common_2.png` 기준 |
 
-#### 이미지 업로드 시 처리 순서
-
-1. 배경이 투명한지 검증 (불투명 시 사용자에게 확인)
-2. 새의 바운딩 박스 추출
-3. `bird_common_2.png` 기준 크기로 스케일 (비율 유지)
-4. 160x110 투명 캔버스에 가운데 배치
-
 ### 이미지 경로
 
 ```
@@ -190,7 +189,7 @@ images/birds/
 └── unique/    # UNIQUE 등급
 ```
 
-- **구현 상태**: 타입/로직 완료, UI 구현 예정
+- **구현 상태**: 완료 (Supabase DB 연동)
 
 ---
 
@@ -198,7 +197,7 @@ images/birds/
 
 - **설명**: 사용자가 선택 가능한 계절별 배경 테마 (전역 적용)
 - **관련 파일**: `components/ui/SeasonalBackground.tsx`, `components/ui/SeasonSelector.tsx`, `lib/season-context.tsx`
-- **구현 방식**: React Context (`SeasonProvider`) + localStorage 영속화
+- **구현 방식**: React Context (`SeasonProvider`) + Supabase DB 저장 (localStorage fallback)
 - **적용 범위**: 모든 화면에서 동일한 계절 테마 공유
 
 ### 테마 종류

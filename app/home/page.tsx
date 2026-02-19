@@ -1,25 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import HomePage from "@/components/home-page";
+import { useUser } from "@/lib/user-context";
 
 export default function HomeRoute() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading } = useUser();
 
   useEffect(() => {
-    const authUser = localStorage.getItem("flappy_auth_user");
-    if (!authUser) {
+    if (!isLoading && !user) {
       router.replace("/");
-    } else {
-      setIsAuthenticated(true);
     }
-    setIsLoading(false);
-  }, [router]);
+  }, [isLoading, user, router]);
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading || !user) {
     return null;
   }
 
