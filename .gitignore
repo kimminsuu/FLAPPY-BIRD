@@ -32,6 +32,9 @@ out/
 .next/
 .nuxt/
 
+# Capacitor native projects
+android/
+
 # Temp
 *.tmp
 *.temp

@@ -45,7 +45,7 @@
 - [ ] 배포 작업 (Phase별 진행)
   - [x] Phase 1: Supabase DB 구축 (테이블, 시드, RLS, 마이그레이션)
   - [x] Phase 2: 프론트엔드 DB 연동 (localStorage → Supabase 전환)
-  - [ ] Phase 3: Vercel 웹 배포
+  - [x] Phase 3: Vercel 웹 배포 (https://flappy-bird-nyey.vercel.app/)
   - [ ] Phase 4: 모바일 앱 패키징 (Capacitor)
 
 ### Next Up
@@ -125,7 +125,7 @@
 5. 계절 테마 DB 저장 (`lib/season-context.tsx`) — DB 우선, localStorage fallback
 6. 모든 화면에서 localStorage 제거 → Supabase DB 사용
 
-### Phase 3: Vercel 웹 배포 (예정)
+### Phase 3: Vercel 웹 배포 (완료)
 1. Vercel 프로젝트 연결
 2. 환경변수 설정 (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)
 3. 프로덕션 빌드 + 배포 검증

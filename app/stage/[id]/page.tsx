@@ -1,39 +1,9 @@
-"use client";
+import StageGameClient from "./StageGameClient";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
-import GamePage from "@/components/game-page";
-import { getStageById } from "@/lib/stages";
-import { useUser } from "@/lib/user-context";
-import type { StageConfig } from "@/types/stage";
+export function generateStaticParams() {
+  return Array.from({ length: 15 }, (_, i) => ({ id: String(i + 1) }));
+}
 
 export default function StageGameRoute() {
-  const router = useRouter();
-  const params = useParams();
-  const { user, isLoading } = useUser();
-  const [stageConfig, setStageConfig] = useState<StageConfig | null>(null);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (!user) {
-      router.replace("/");
-      return;
-    }
-
-    const stageId = Number(params.id);
-    const stage = getStageById(stageId);
-    if (!stage) {
-      router.replace("/stage-select");
-      return;
-    }
-
-    setStageConfig(stage);
-  }, [isLoading, user, router, params.id]);
-
-  if (isLoading || !user || !stageConfig) {
-    return null;
-  }
-
-  return <GamePage stageConfig={stageConfig} />;
+  return <StageGameClient />;
 }
