@@ -265,6 +265,142 @@ export const STAGES: StageConfig[] = [
       { gapY: 0.36, gapHeight: 130, spacing: 165 },                              // △0.27
     ],
   },
+  {
+    id: 7,
+    name: "가속",
+    pipeSpacing: 220,
+    pipeSpeed: 2,
+    goalScore: 35,
+    enableItems: false,
+    // 링 배치 규칙:
+    //   SLOW 링 후 → 4~6개 파이프 지난 뒤 다음 링
+    //   FAST 링 후 → 6~8개 파이프 지난 뒤 다음 링
+    //   순서 자유 (연속 같은 타입 가능)
+    //   slow ÷1.5, fast ×1.3
+    //   gapHeight 175→140, spacing 180→155
+    pipes: [
+      // 워밍업 (1~2)
+      { gapY: 0.45, gapHeight: 175 },
+      { gapY: 0.52, gapHeight: 174, spacing: 180 },
+      // ★ 파이프 3: SLOW
+      { gapY: 0.48, gapHeight: 173, spacing: 179, speedRing: "slow" },
+      // 4~7: 버퍼 4개 (after slow, 4개 gap)
+      { gapY: 0.55, gapHeight: 172, spacing: 178 },
+      { gapY: 0.40, gapHeight: 171, spacing: 178 },
+      { gapY: 0.58, gapHeight: 170, spacing: 177 },
+      { gapY: 0.42, gapHeight: 169, spacing: 176 },
+      // ★ 파이프 8: SLOW (+5, after slow 4개 gap ✓)
+      { gapY: 0.52, gapHeight: 168, spacing: 175, speedRing: "slow" },
+      // 9~12: 버퍼 4개 (after slow, 4개 gap)
+      { gapY: 0.38, gapHeight: 167, spacing: 175 },
+      { gapY: 0.60, gapHeight: 166, spacing: 174 },
+      { gapY: 0.35, gapHeight: 165, spacing: 173 },
+      { gapY: 0.55, gapHeight: 164, spacing: 172 },
+      // ★ 파이프 13: FAST (+5, after slow 4개 gap ✓)
+      { gapY: 0.42, gapHeight: 163, spacing: 172, speedRing: "fast" },
+      // 14~19: 버퍼 6개 (after fast, 6개 gap)
+      { gapY: 0.60, gapHeight: 162, spacing: 171 },
+      { gapY: 0.35, gapHeight: 161, spacing: 170 },
+      { gapY: 0.58, gapHeight: 160, spacing: 169 },
+      { gapY: 0.40, gapHeight: 159, spacing: 169 },
+      { gapY: 0.62, gapHeight: 158, spacing: 168 },
+      { gapY: 0.38, gapHeight: 156, spacing: 167 },
+      // ★ 파이프 20: SLOW (+7, after fast 6개 gap ✓)
+      { gapY: 0.55, gapHeight: 155, spacing: 166, speedRing: "slow" },
+      // 21~24: 버퍼 4개 (after slow, 4개 gap)
+      { gapY: 0.33, gapHeight: 154, spacing: 166 },
+      { gapY: 0.60, gapHeight: 153, spacing: 165 },
+      { gapY: 0.40, gapHeight: 152, spacing: 164 },
+      { gapY: 0.58, gapHeight: 151, spacing: 163 },
+      // ★ 파이프 25: SLOW (+5, after slow 4개 gap ✓)
+      { gapY: 0.42, gapHeight: 150, spacing: 163, speedRing: "slow" },
+      // 26~29: 버퍼 4개 (after slow, 4개 gap)
+      { gapY: 0.62, gapHeight: 149, spacing: 162 },
+      { gapY: 0.35, gapHeight: 148, spacing: 161 },
+      { gapY: 0.55, gapHeight: 147, spacing: 160 },
+      { gapY: 0.40, gapHeight: 146, spacing: 160 },
+      // ★ 파이프 30: FAST (+5, after slow 4개 gap ✓)
+      { gapY: 0.50, gapHeight: 145, spacing: 159, speedRing: "fast" },
+      // 31~35: 마무리 5개 (fast 후 버퍼)
+      { gapY: 0.58, gapHeight: 144, spacing: 158 },
+      { gapY: 0.35, gapHeight: 143, spacing: 157 },
+      { gapY: 0.52, gapHeight: 142, spacing: 157 },
+      { gapY: 0.45, gapHeight: 141, spacing: 156 },
+      { gapY: 0.50, gapHeight: 140, spacing: 155 },
+    ],
+  },
+  {
+    id: 8,
+    name: "융합",
+    pipeSpacing: 220,
+    pipeSpeed: 2,
+    goalScore: 35,
+    enableItems: false,
+    // 기믹 혼합: slow/fast 링 + 텔레포트 + 중력 반전
+    // gapHeight 170→140, spacing 175→150
+    // 링 규칙: SLOW 후 4~6개, FAST 후 6~8개
+    pipes: [
+      // ── 구간 1: 워밍업 + SLOW 링 (1~5) ──
+      { gapY: 0.45, gapHeight: 170 },
+      { gapY: 0.52, gapHeight: 169, spacing: 175 },
+      // ★ 파이프 3: SLOW (첫 기믹: 속도 느려짐)
+      { gapY: 0.48, gapHeight: 168, spacing: 174, speedRing: "slow" },
+      { gapY: 0.55, gapHeight: 167, spacing: 174 },
+      { gapY: 0.40, gapHeight: 167, spacing: 173 },
+
+      // ── 구간 2: 텔레포트 (6~10) ──
+      { gapY: 0.58, gapHeight: 166, spacing: 172 },
+      // 파이프 7: 텔레포트 (아래→위)
+      { gapY: 0.50, gapHeight: 165, spacing: 172, teleport: { inY: 0.70, outY: 0.25 } },
+      // ★ 파이프 8: SLOW (+5, after slow 4개 gap ✓)
+      { gapY: 0.42, gapHeight: 164, spacing: 171, speedRing: "slow" },
+      { gapY: 0.60, gapHeight: 163, spacing: 170 },
+      { gapY: 0.35, gapHeight: 163, spacing: 170 },
+
+      // ── 구간 3: 중력 반전 존 1 (11~16) ──
+      { gapY: 0.55, gapHeight: 162, spacing: 169 },
+      // 파이프 12: 반전 시작
+      { gapY: 0.48, gapHeight: 161, spacing: 168, reverseGravity: true },
+      // ★ 파이프 13: FAST (+5, after slow 4개 gap ✓)
+      { gapY: 0.52, gapHeight: 160, spacing: 168, speedRing: "fast" },
+      { gapY: 0.45, gapHeight: 159, spacing: 167 },
+      { gapY: 0.50, gapHeight: 158, spacing: 166 },
+      // 파이프 16: 반전 해제
+      { gapY: 0.48, gapHeight: 158, spacing: 166, reverseGravity: false },
+
+      // ── 구간 4: 회복 + 텔레포트 (17~21) ──
+      { gapY: 0.55, gapHeight: 157, spacing: 165 },
+      { gapY: 0.38, gapHeight: 156, spacing: 164 },
+      // 파이프 19: 텔레포트 (위→아래)
+      { gapY: 0.50, gapHeight: 155, spacing: 164, teleport: { inY: 0.28, outY: 0.3 } },
+      // ★ 파이프 20: SLOW (+7, after fast 6개 gap ✓)
+      { gapY: 0.42, gapHeight: 154, spacing: 163, speedRing: "slow" },
+      { gapY: 0.60, gapHeight: 153, spacing: 162 },
+
+      // ── 구간 5: 중력 반전 존 2 + SLOW 링 (22~28) ──
+      { gapY: 0.35, gapHeight: 153, spacing: 162 },
+      { gapY: 0.55, gapHeight: 152, spacing: 161 },
+      // 파이프 24: 반전 시작
+      { gapY: 0.48, gapHeight: 151, spacing: 160, reverseGravity: true },
+      // ★ 파이프 25: SLOW (+5, after slow 4개 gap ✓)
+      { gapY: 0.52, gapHeight: 150, spacing: 160, speedRing: "slow" },
+      { gapY: 0.45, gapHeight: 149, spacing: 159 },
+      // 파이프 27: 반전 해제
+      { gapY: 0.50, gapHeight: 148, spacing: 158, reverseGravity: false },
+      { gapY: 0.58, gapHeight: 147, spacing: 157 },
+
+      // ── 구간 6: 텔레포트 + FAST 피날레 (29~35) ──
+      { gapY: 0.38, gapHeight: 147, spacing: 157 },
+      // ★ 파이프 30: FAST (+5, after slow 4개 gap ✓)
+      { gapY: 0.55, gapHeight: 146, spacing: 156, speedRing: "fast" },
+      // 파이프 31: 텔레포트 (아래→위, fast 중 통과)
+      { gapY: 0.50, gapHeight: 145, spacing: 155, teleport: { inY: 0.68, outY: 0.28 } },
+      { gapY: 0.42, gapHeight: 144, spacing: 154 },
+      { gapY: 0.58, gapHeight: 143, spacing: 153 },
+      { gapY: 0.45, gapHeight: 141, spacing: 152 },
+      { gapY: 0.50, gapHeight: 140, spacing: 150 },
+    ],
+  },
 ];
 
 export function getStageById(id: number): StageConfig | undefined {

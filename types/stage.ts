@@ -11,6 +11,7 @@ export interface StagePipeConfig {
     outY: number; // OUT 포탈 y (0~1 비율)
   };
   reverseGravity?: boolean; // true: 이 파이프부터 중력 반전 시작, false: 해제
+  speedRing?: "slow" | "fast"; // 이 파이프 갭에 스피드 링 배치
 }
 
 export interface StageConfig {

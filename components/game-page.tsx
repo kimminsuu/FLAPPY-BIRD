@@ -55,21 +55,19 @@ function setStageBest(username: string, stageId: number, percent: number): void 
 // ==================== 스테이지 총 프레임 계산 ====================
 
 /**
- * 마지막 파이프가 새를 통과하는 시점까지의 총 프레임 수를 계산.
- * - 파이프 0: nextPipeFrame=0이므로 frame 1에서 즉시 스폰 (spacing 미사용)
- * - 파이프 1~N-1: pipes[i].spacing 만큼 이전 스폰으로부터 대기
- * - 마지막 파이프 이동: (W+10+pipeWidth) - (W*0.25) = W*0.75 + 10 + pipeWidth
+ * 마지막 파이프가 새를 통과하는 시점까지의 총 스크롤 거리(px)를 계산.
+ * - spacing × pipeSpeed = 파이프 간 픽셀 거리 (속도 변해도 일정)
+ * - 마지막 파이프 이동 거리: (W+10+pipeWidth) - (W*0.25)
  */
-function calcStageTotalFrames(cfg: StageConfig, canvasWidth: number): number {
-  // 마지막 파이프 스폰 프레임 (파이프 0은 frame ~1에서 즉시 스폰)
-  let lastSpawnFrame = 1;
+function calcStageTotalScrollDist(cfg: StageConfig, canvasWidth: number): number {
+  // 마지막 파이프 스폰까지의 누적 스크롤 거리
+  let lastSpawnDist = cfg.pipeSpeed; // 파이프 0: 즉시 스폰 (1프레임 분)
   for (let i = 1; i < cfg.pipes.length; i++) {
-    lastSpawnFrame += cfg.pipes[i].spacing ?? cfg.pipeSpacing;
+    lastSpawnDist += (cfg.pipes[i].spacing ?? cfg.pipeSpacing) * cfg.pipeSpeed;
   }
-  // 마지막 파이프가 새 위치를 지나는 데 걸리는 프레임
+  // 마지막 파이프가 새 위치를 지나는 데 필요한 거리
   const travelDist = canvasWidth * 0.75 + 10 + GAME_CONFIG.pipeWidth;
-  const travelFrames = Math.ceil(travelDist / cfg.pipeSpeed);
-  return lastSpawnFrame + travelFrames;
+  return lastSpawnDist + travelDist;
 }
 
 // ==================== 게임 상태 (ref로 관리) ====================
@@ -93,7 +91,9 @@ interface GameStateRef {
   canvasWidth: number;
   canvasHeight: number;
   nextPipeIndex: number; // 스테이지 모드: 다음 스폰할 파이프 인덱스
-  nextPipeFrame: number; // 스테이지 모드: 다음 파이프 스폰 프레임
+  nextPipeFrame: number; // 스테이지 모드: 다음 파이프 스폰 프레임 (레코드 모드 호환)
+  scrollDistance: number; // 스테이지 모드: 누적 스크롤 거리 (px)
+  nextPipeScrollDist: number; // 스테이지 모드: 다음 파이프 스폰 거리 (px)
   portals: TeleportPortal[];
   isTeleporting: boolean;
   teleportOutPortal: TeleportPortal | null;
@@ -102,6 +102,10 @@ interface GameStateRef {
   nextTeleportPairId: number; // 포탈 페어 ID 카운터
   isGravityReversed: boolean; // 현재 중력 반전 상태
   gravityZones: GravityZone[]; // 반전 존 목록 (렌더링용)
+  playStartTime: number; // 플레이 시작 시각 (Date.now())
+  speedState: "slow" | "fast" | null; // 현재 스피드 상태
+  speedEndTime: number; // 효과 종료 시각 (Date.now 기준)
+  speedTimeLeft: number; // UI 표시용 (초 단위)
 }
 
 function createInitialState(
@@ -135,6 +139,8 @@ function createInitialState(
     canvasHeight,
     nextPipeIndex: 0,
     nextPipeFrame: 0,
+    scrollDistance: 0,
+    nextPipeScrollDist: 0,
     portals: [],
     isTeleporting: false,
     teleportOutPortal: null,
@@ -143,6 +149,10 @@ function createInitialState(
     nextTeleportPairId: 0,
     isGravityReversed: false,
     gravityZones: [],
+    playStartTime: 0,
+    speedState: null,
+    speedEndTime: 0,
+    speedTimeLeft: 0,
   };
 }
 
@@ -447,11 +457,18 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       if (state.status === "playing") {
         state.frameCount++;
 
+        // 글로벌 스피드 배수 (유튜브 배속처럼 게임 전체에 적용)
+        const speedMul = state.speedState === "fast"
+          ? GAME_CONFIG.speedRingFastMultiplier
+          : state.speedState === "slow"
+            ? 1 / GAME_CONFIG.speedRingSlowDivisor
+            : 1;
+
         // 새 물리 (텔레포트 중 스킵)
         if (!state.isTeleporting) {
           const grav = state.isGravityReversed ? -GAME_CONFIG.gravity : GAME_CONFIG.gravity;
-          state.bird.velocity += grav;
-          state.bird.y += state.bird.velocity;
+          state.bird.velocity += grav * speedMul;
+          state.bird.y += state.bird.velocity * speedMul;
 
           if (state.isGravityReversed) {
             // 반전 시: rotation 방향도 반전
@@ -502,12 +519,21 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
         }
 
+        // 파이프 속도 계산 (스피드 링 배수 포함)
+        const basePipeSpeed = stageConfig
+          ? stageConfig.pipeSpeed
+          : GAME_CONFIG.pipeSpeed;
+        const currentPipeSpeed = basePipeSpeed * speedMul;
+
         // 파이프 생성
         if (stageConfig) {
-          // STAGE 모드: per-pipe spacing 지원
+          // 누적 스크롤 거리 업데이트 (speedMul 반영 → 속도 변해도 파이프 간격 일정)
+          state.scrollDistance += currentPipeSpeed;
+
+          // STAGE 모드: 거리 기반 스폰 (속도 변해도 파이프 간 화면 거리 동일)
           if (
             state.nextPipeIndex < stageConfig.pipes.length &&
-            state.frameCount >= state.nextPipeFrame
+            state.scrollDistance >= state.nextPipeScrollDist
           ) {
             const pipeDef = stageConfig.pipes[state.nextPipeIndex];
             const playH = state.canvasHeight - GAME_CONFIG.groundHeight;
@@ -524,6 +550,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
               width: GAME_CONFIG.pipeWidth,
               isTeleportPipe: !!pipeDef.teleport,
               originalGapHeight: pipeDef.teleport ? pipeDef.gapHeight : undefined,
+              speedRing: pipeDef.speedRing,
             });
 
             // 중력 반전 존 생성 (true 파이프 스폰 시 양쪽 경계를 즉시 확정)
@@ -586,11 +613,12 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             }
 
             state.nextPipeIndex++;
-            // 다음 파이프 스폰 프레임 계산
+            // 다음 파이프 스폰 거리 계산 (spacing × basePipeSpeed = 픽셀 거리)
             if (state.nextPipeIndex < stageConfig.pipes.length) {
               const nextDef = stageConfig.pipes[state.nextPipeIndex];
-              state.nextPipeFrame =
-                state.frameCount + (nextDef.spacing ?? stageConfig.pipeSpacing);
+              const spacingFrames = nextDef.spacing ?? stageConfig.pipeSpacing;
+              state.nextPipeScrollDist =
+                state.scrollDistance + spacingFrames * stageConfig.pipeSpeed;
             }
             // 아이템 생성
             if (stageConfig.enableItems) {
@@ -607,9 +635,6 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         }
 
         // 파이프 이동 + 통과 체크
-        const currentPipeSpeed = stageConfig
-          ? stageConfig.pipeSpeed
-          : GAME_CONFIG.pipeSpeed;
         for (let i = state.pipes.length - 1; i >= 0; i--) {
           const pipe = state.pipes[i];
           pipe.x -= currentPipeSpeed;
@@ -617,6 +642,42 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           if (!pipe.passed && pipe.x + pipe.width < state.bird.x) {
             pipe.passed = true;
             state.score++;
+
+            // 스피드 링 효과 적용
+            if (pipe.speedRing) {
+              state.speedState = pipe.speedRing;
+              state.speedEndTime = Date.now() + GAME_CONFIG.speedRingDuration * 1000;
+              state.speedTimeLeft = GAME_CONFIG.speedRingDuration;
+
+              // 이펙트
+              const bCX = state.bird.x + birdW / 2;
+              const bCY = state.bird.y + birdH / 2;
+              const color1 = pipe.speedRing === "slow" ? "#86EFAC" : "#FCA5A5";
+              const color2 = pipe.speedRing === "slow" ? "#4ADE80" : "#EF4444";
+              for (let k = 0; k < 14; k++) {
+                const angle = (Math.PI * 2 * k) / 14;
+                const speed = 1.5 + Math.random() * 2.5;
+                state.particles.push({
+                  x: bCX,
+                  y: bCY,
+                  vx: Math.cos(angle) * speed,
+                  vy: Math.sin(angle) * speed,
+                  size: 3 + Math.random() * 4,
+                  color: Math.random() > 0.5 ? color1 : color2,
+                  alpha: 1,
+                  life: 25 + Math.random() * 15,
+                  maxLife: 40,
+                  type: "circle",
+                });
+              }
+              state.screenFlash = {
+                color: pipe.speedRing === "slow"
+                  ? "rgba(74, 222, 128, 0.3)"
+                  : "rgba(239, 68, 68, 0.3)",
+                alpha: 1,
+                life: 12,
+              };
+            }
           }
 
           if (pipe.x + pipe.width < -10) {
@@ -902,6 +963,18 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
         }
 
+        // 스피드 링 타이머 (실제 시간 기반)
+        if (state.speedState) {
+          const msLeft = state.speedEndTime - Date.now();
+          if (msLeft <= 0) {
+            state.speedState = null;
+            state.speedTimeLeft = 0;
+          } else {
+            state.speedTimeLeft = Math.ceil(msLeft / 1000);
+          }
+        }
+
+
         // 스테이지 클리어 체크
         if (
           stageConfig &&
@@ -921,9 +994,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         // 게임오버 처리
         if (state.status === "gameover") {
           if (stageConfig) {
-            // 스테이지 모드: 프레임 기반 진행률
-            const totalFrames = calcStageTotalFrames(stageConfig, state.canvasWidth);
-            const finalPct = Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+            // 스테이지 모드: 스크롤 거리 기반 진행률
+            const totalDist = calcStageTotalScrollDist(stageConfig, state.canvasWidth);
+            const finalPct = Math.min(99, Math.floor((state.scrollDistance / totalDist) * 100));
             setProgress(finalPct);
             const username = (() => { try { return JSON.parse(localStorage.getItem("flappy_auth_user") || "{}").username || ""; } catch { return ""; } })();
             if (username) setStageBest(username, stageConfig.id, finalPct);
@@ -1167,6 +1240,86 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         }
       }
 
+      // 스피드 링 렌더링 (파이프 갭 중앙, 세로로 긴 타원)
+      for (const pipe of state.pipes) {
+        if (!pipe.speedRing || pipe.passed) continue;
+        ctx.save();
+        const ringX = pipe.x + pipe.width / 2;
+        const ringY = pipe.gapY;
+        const pulse = 1 + Math.sin(Date.now() / 200) * 0.08;
+        const rW = 14 * pulse;  // 가로 좁게
+        const rH = 36 * pulse;  // 세로 길게
+        const thickness = 7;
+        const innerRW = rW - thickness * 0.5;
+        const innerRH = rH - thickness;
+
+        ctx.translate(ringX, ringY);
+
+        // 글로우
+        const glowColor = pipe.speedRing === "slow"
+          ? "rgba(74, 222, 128, 0.2)"
+          : "rgba(239, 68, 68, 0.2)";
+        const glowGrad = ctx.createRadialGradient(0, 0, rW * 0.3, 0, 0, rW * 1.3);
+        glowGrad.addColorStop(0, glowColor);
+        glowGrad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW * 1.3, rH * 1.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 링 본체 (도넛)
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW, rH, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, innerRW, innerRH, 0, 0, Math.PI * 2, true);
+        ctx.closePath();
+        if (pipe.speedRing === "slow") {
+          const grad = ctx.createLinearGradient(-rW, -rH, rW, rH);
+          grad.addColorStop(0, "#86EFAC");
+          grad.addColorStop(0.5, "#4ADE80");
+          grad.addColorStop(1, "#22C55E");
+          ctx.fillStyle = grad;
+        } else {
+          const grad = ctx.createLinearGradient(-rW, -rH, rW, rH);
+          grad.addColorStop(0, "#FCA5A5");
+          grad.addColorStop(0.5, "#EF4444");
+          grad.addColorStop(1, "#DC2626");
+          ctx.fillStyle = grad;
+        }
+        ctx.fill();
+
+        // 링 하이라이트
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        ctx.ellipse(0, -rH * 0.1, rW * 0.85, rH * 0.7, 0, Math.PI * 1.1, Math.PI * 1.9);
+        ctx.ellipse(0, -rH * 0.1, innerRW * 0.85, innerRH * 0.7, 0, Math.PI * 1.9, Math.PI * 1.1, true);
+        ctx.closePath();
+        ctx.fill();
+
+        // 테두리
+        ctx.strokeStyle = pipe.speedRing === "slow"
+          ? "rgba(22, 163, 74, 0.5)"
+          : "rgba(185, 28, 28, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rW, rH, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // SLOW / FAST 라벨
+        const label = pipe.speedRing === "slow" ? "SLOW" : "FAST";
+        ctx.fillStyle = pipe.speedRing === "slow"
+          ? "rgba(34, 197, 94, 0.9)"
+          : "rgba(239, 68, 68, 0.9)";
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 2;
+        ctx.font = "bold 11px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.strokeText(label, 0, rH + 4);
+        ctx.fillText(label, 0, rH + 4);
+
+        ctx.restore();
+      }
+
       // 포탈 렌더링
       const now = Date.now();
       for (const portal of state.portals) {
@@ -1408,6 +1561,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         ctx.restore();
       }
 
+
       // 화면 플래시
       if (state.screenFlash) {
         ctx.save();
@@ -1441,10 +1595,10 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       if (stageConfig) {
-        const totalFrames = calcStageTotalFrames(stageConfig, W);
+        const totalDist = calcStageTotalScrollDist(stageConfig, W);
         const exactPct = state.score >= stageConfig.goalScore
           ? 100
-          : Math.min(99, Math.floor((state.frameCount / totalFrames) * 100));
+          : Math.min(99, Math.floor((state.scrollDistance / totalDist) * 100));
         // HUD는 10% 단위로 표시
         const hudPct = exactPct >= 100 ? 100 : Math.floor(exactPct / 10) * 10;
         const hudText = `${hudPct}%`;
@@ -1473,6 +1627,26 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           W / 2,
           105
         );
+        ctx.restore();
+      }
+
+      // 스피드 링 상태 HUD (새 왼쪽 위)
+      if (state.speedState && state.speedTimeLeft > 0) {
+        ctx.save();
+        const hudX = state.bird.x - 10;
+        const hudY = state.bird.y - 30;
+        const emoji = state.speedState === "slow" ? "\u{1F422}" : "\u26A1";
+        const color = state.speedState === "slow"
+          ? "rgba(34, 197, 94, 0.9)"
+          : "rgba(239, 68, 68, 0.9)";
+        ctx.fillStyle = color;
+        ctx.strokeStyle = "rgba(0,0,0,0.4)";
+        ctx.lineWidth = 2;
+        ctx.font = "bold 18px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.strokeText(`${emoji} ${state.speedTimeLeft}s`, hudX, hudY);
+        ctx.fillText(`${emoji} ${state.speedTimeLeft}s`, hudX, hudY);
         ctx.restore();
       }
 
@@ -1594,6 +1768,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       state.status = "playing";
       setGameStatus("playing");
       state.bird.velocity = GAME_CONFIG.jumpForce;
+      state.playStartTime = Date.now();
     } else if (state.status === "playing" && !state.isTeleporting) {
       const jump = state.isGravityReversed ? -GAME_CONFIG.jumpForce : GAME_CONFIG.jumpForce;
       state.bird.velocity = jump;

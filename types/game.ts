@@ -28,6 +28,7 @@ export interface Pipe {
   width: number;
   isTeleportPipe?: boolean; // 텔레포트 파이프 여부
   originalGapHeight?: number; // 닫히는 애니메이션용 원래 갭 높이
+  speedRing?: "slow" | "fast"; // 스피드 링 타입
 }
 
 // 파티클
@@ -118,6 +119,9 @@ export const GAME_CONFIG = {
   itemSize: 30,
   wraithDuration: 3, // 초
   coinRewardMultiplier: 1, // 점수 = 보상 코인
+  speedRingDuration: 3, // 스피드 링 효과 지속 시간 (초)
+  speedRingSlowDivisor: 1.5, // slow 링: 속도 ÷1.5
+  speedRingFastMultiplier: 1.25, // fast 링: 속도 ×1.25
 } as const;
 
 // 등급별 아이템 생성 주기 (초, 0이면 아이템 없음)
