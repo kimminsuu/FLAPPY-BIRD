@@ -307,7 +307,7 @@ export default function SeasonalBackground({
   const theme = seasonThemes[season];
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden">
+    <div className="min-h-dvh w-screen flex flex-col relative overflow-hidden">
       {/* 하늘 배경 */}
       <div
         className="absolute inset-0"
