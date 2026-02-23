@@ -1,3 +1,10 @@
+/**
+ * Context Providers + 앱 컨테이너
+ * - Capacitor SystemBars 풀스크린 모드
+ * - JS 기반 2:1 비율 컨테이너 (가로 모드, 검정 여백)
+ * - UserProvider + SeasonProvider 래핑
+ */
+
 "use client";
 
 import { SeasonProvider } from "@/lib/season-context";

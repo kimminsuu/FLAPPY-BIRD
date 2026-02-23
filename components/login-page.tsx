@@ -1,3 +1,10 @@
+/**
+ * 닉네임 설정 페이지 (첫 실행 시)
+ * - 닉네임 입력 (2~12자, 중복 검사)
+ * - 기기 UUID 생성 + Supabase 유저 생성
+ * - 계절 테마 선택
+ */
+
 "use client";
 
 import { useState } from "react";

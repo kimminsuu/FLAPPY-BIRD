@@ -1,3 +1,9 @@
+/**
+ * 모드 선택 페이지
+ * - RECORD MODE: 무한 모드 → /game
+ * - STAGE MODE: 스테이지 모드 → /stage-select
+ */
+
 "use client";
 
 import { useRouter } from "next/navigation";

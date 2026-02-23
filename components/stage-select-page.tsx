@@ -1,3 +1,10 @@
+/**
+ * 스테이지 선택 페이지
+ * - 5x3 격자로 Stage 1~15 표시
+ * - 잠금/해제 상태, 최고 진행률(%) 표시
+ * - 이전 스테이지 클리어 시 다음 스테이지 해제
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";

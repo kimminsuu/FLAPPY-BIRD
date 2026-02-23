@@ -1,3 +1,9 @@
+/**
+ * 계절 테마 선택 드롭다운
+ * - 봄/여름/가을/겨울 선택
+ * - useSeason 훅으로 앱 전체 테마 변경 + DB 저장
+ */
+
 "use client";
 
 import { useState } from "react";

@@ -1,3 +1,10 @@
+/**
+ * 루트 레이아웃
+ * - HTML 메타데이터 (타이틀, 뷰포트, 언어)
+ * - Providers 래퍼 (UserProvider + SeasonProvider)
+ * - 전역 CSS 임포트
+ */
+
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";

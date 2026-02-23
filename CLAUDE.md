@@ -215,55 +215,64 @@ FLAPPY-BIRD/
 │   └── ISSUE_TEMPLATE/
 │
 ├── app/                        # Next.js App Router (라우팅)
-│   ├── globals.css             # 전역 스타일
-│   ├── layout.tsx              # 루트 레이아웃
-│   ├── bird-selection/page.tsx # 새 선택 페이지 라우트
-│   ├── game/page.tsx           # 게임 페이지 라우트
-│   ├── home/page.tsx           # 홈 페이지 라우트
-│   ├── mode-select/page.tsx    # 모드 선택 페이지 라우트
-│   ├── stage-select/page.tsx   # 스테이지 선택 페이지 라우트
-│   ├── stage/[id]/page.tsx     # 스테이지별 게임 라우트
-│   ├── page.tsx                # 메인 페이지 (로그인/홈 분기)
-│   └── providers.tsx           # Context Providers (UserProvider + SeasonProvider)
+│   ├── globals.css             # 전역 스타일 (Tailwind 임포트, 커스텀 유틸리티 클래스)
+│   ├── layout.tsx              # 루트 레이아웃 (HTML 메타, 폰트, viewport 설정)
+│   ├── page.tsx                # 메인 엔트리 (로그인 여부에 따라 LoginPage/HomePage 분기)
+│   ├── providers.tsx           # Context Providers (User+Season) + 2:1 비율 컨테이너 + 풀스크린
+│   ├── bird-selection/page.tsx # 새 선택 페이지 라우트 (BirdSelectionPage 렌더링)
+│   ├── game/page.tsx           # 레코드 모드 게임 라우트 (GamePage 렌더링)
+│   ├── home/page.tsx           # 홈 페이지 라우트 (HomePage 렌더링)
+│   ├── mode-select/page.tsx    # 모드 선택 라우트 (ModeSelectionPage 렌더링)
+│   ├── stage-select/page.tsx   # 스테이지 선택 라우트 (StageSelectPage 렌더링)
+│   └── stage/[id]/             # 스테이지 모드 동적 라우트
+│       ├── page.tsx            # 스테이지 게임 서버 컴포넌트 (params 전달)
+│       └── StageGameClient.tsx # 스테이지 게임 클라이언트 컴포넌트 (stageId → GamePage)
 │
 ├── components/                 # UI 컴포넌트 (Frontend)
 │   ├── ui/                     # 공통 UI 컴포넌트
-│   │   ├── FlappyBird.tsx      # 새 아이콘 SVG
-│   │   ├── SeasonalBackground.tsx # 계절 배경 테마
-│   │   ├── SeasonSelector.tsx  # 배경 선택 드롭다운
-│   │   ├── UserInfoBar.tsx     # 유저 정보 (이름 + 코인)
-│   │   └── index.ts            # 컴포넌트 Export
-│   ├── login-page.tsx          # 닉네임 설정 페이지
-│   ├── home-page.tsx           # 홈 페이지 (닉네임 변경 모달 포함)
-│   ├── bird-selection-page.tsx # 새 선택 + 가챠 페이지
-│   ├── mode-selection-page.tsx # 모드 선택 페이지
-│   ├── stage-select-page.tsx   # 스테이지 선택 페이지
-│   └── game-page.tsx           # 게임 페이지 (Canvas 기반)
+│   │   ├── FlappyBird.tsx      # 새 SVG 아이콘 (props: size, color, wingAngle)
+│   │   ├── SeasonalBackground.tsx # 계절별 배경 (봄/여름/가을/겨울 테마 + 잔디/구름)
+│   │   ├── SeasonSelector.tsx  # 배경 계절 선택 드롭다운
+│   │   ├── UserInfoBar.tsx     # 유저 정보 바 (닉네임 + 코인 잔액 표시)
+│   │   └── index.ts            # UI 컴포넌트 배럴 익스포트
+│   ├── login-page.tsx          # 닉네임 설정 화면 (첫 실행 시, UUID+닉네임으로 DB 유저 생성)
+│   ├── home-page.tsx           # 홈 화면 (메인 메뉴, 닉네임 변경 모달, 장착 새 표시)
+│   ├── bird-selection-page.tsx # 새 선택 화면 (등급별 격자, 장착/해제, 가챠 뽑기)
+│   ├── mode-selection-page.tsx # 모드 선택 화면 (RECORD/STAGE 모드 카드)
+│   ├── stage-select-page.tsx   # 스테이지 선택 화면 (잠금/해제 상태, 최고 기록 표시)
+│   └── game-page.tsx           # 게임 엔진 (Canvas 렌더링, 물리엔진, 아이템, 코인 보상, 기믹)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
-│   ├── birds.ts                # 새 데이터, 매핑, 가챠 로직
-│   ├── stages.ts               # 스테이지 데이터 (파이프 배치, 기믹)
-│   ├── supabase.ts             # Supabase 클라이언트 초기화
-│   ├── device.ts               # 기기 UUID 생성/관리
-│   ├── user-context.tsx        # UserProvider + useUser hook
-│   ├── user-service.ts         # Supabase CRUD (유저, 코인, 새, 점수, 스테이지)
-│   └── season-context.tsx      # SeasonProvider + useSeason hook
+│   ├── birds.ts                # 새 마스터 데이터 (37종), 등급별 매핑, 가챠 확률 로직
+│   ├── stages.ts               # 스테이지 데이터 (8개 스테이지, 파이프 배치, 기믹 설정)
+│   ├── supabase.ts             # Supabase 클라이언트 초기화 (환경변수 URL/Key)
+│   ├── device.ts               # 기기 UUID 생성/관리 (localStorage 영구 보관)
+│   ├── user-context.tsx        # 유저 상태 관리 Context (기기 UUID 자동 로드, CRUD)
+│   ├── user-service.ts         # Supabase CRUD 서비스 (유저, 코인, 새, 점수, 스테이지)
+│   └── season-context.tsx      # 계절 테마 Context (DB 우선, localStorage fallback)
 │
 ├── types/                      # TypeScript 타입 정의
-│   ├── bird.ts                 # 새 관련 타입 정의
-│   ├── game.ts                 # 게임 관련 타입 정의 (Pipe, TeleportPortal 등)
-│   └── stage.ts                # 스테이지 관련 타입 정의 (StagePipeConfig, StageConfig)
+│   ├── bird.ts                 # 새 타입 (BirdData, Rarity, UserBird 등)
+│   ├── game.ts                 # 게임 타입 + GAME_CONFIG 상수 (물리엔진, 크기, 보상)
+│   └── stage.ts                # 스테이지 타입 (StagePipeConfig, StageConfig, 기믹 타입)
+│
+├── scripts/                    # 빌드/유틸 스크립트
+│   └── generate-icons.mjs      # 앱 아이콘 생성 (SVG→PNG, 5개 밀도별 mipmap)
 │
 ├── supabase/                   # Supabase 마이그레이션
-│   └── migration.sql           # 테이블 생성 + RLS + 시드 데이터
+│   └── migration.sql           # 테이블 생성 + RLS 정책 + BIRD 시드 데이터
 │
-├── public/                     # 정적 파일 (Next.js)
-│   └── images/                 # 이미지 리소스
-│       └── birds/              # 새 이미지
-│           ├── common/         # COMMON 등급
-│           ├── rare/           # RARE 등급
-│           ├── epic/           # EPIC 등급
-│           └── unique/         # UNIQUE 등급
+├── public/                     # 정적 파일
+│   └── images/
+│       ├── birds/              # 새 이미지 (등급별)
+│       │   ├── common/         # COMMON 등급
+│       │   ├── rare/           # RARE 등급
+│       │   ├── epic/           # EPIC 등급
+│       │   └── unique/         # UNIQUE 등급
+│       └── game_explanation/   # 게임 설명 스크린샷
+│
+├── android/                    # Capacitor Android 프로젝트
+├── capacitor.config.ts         # Capacitor 설정 (풀스크린, 스플래시, 서버 URL)
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json

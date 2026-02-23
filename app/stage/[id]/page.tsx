@@ -1,3 +1,9 @@
+/**
+ * 스테이지 모드 게임 라우트 (/stage/[id])
+ * - generateStaticParams로 Stage 1~15 정적 생성
+ * - StageGameClient에 stageId 전달
+ */
+
 import StageGameClient from "./StageGameClient";
 
 export function generateStaticParams() {

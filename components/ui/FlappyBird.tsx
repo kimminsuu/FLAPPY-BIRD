@@ -1,3 +1,9 @@
+/**
+ * FlappyBird SVG 아이콘 컴포넌트
+ * - bird_common_1 "플래피" 기본 새 렌더링
+ * - className으로 크기 조절 가능
+ */
+
 interface FlappyBirdProps {
   className?: string;
 }

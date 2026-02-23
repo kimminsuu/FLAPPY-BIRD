@@ -1,3 +1,7 @@
+/**
+ * UI 컴포넌트 배럴 익스포트
+ */
+
 export { default as FlappyBird } from "./FlappyBird";
 export { default as SeasonalBackground } from "./SeasonalBackground";
 export { default as SeasonSelector } from "./SeasonSelector";

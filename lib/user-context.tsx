@@ -1,3 +1,10 @@
+/**
+ * 유저 상태 관리 (React Context)
+ * - 기기 UUID로 DB 유저 자동 로드
+ * - user, isLoading, refreshUser(), patchUser() 제공
+ * - UserProvider로 앱 전체에서 useUser() 사용 가능
+ */
+
 "use client";
 
 import {

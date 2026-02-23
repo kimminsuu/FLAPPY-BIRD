@@ -1,3 +1,9 @@
+/**
+ * 메인 진입 페이지 (/)
+ * - 로그인 상태 확인 → /home 리다이렉트
+ * - 미로그인 → LoginPage 렌더링
+ */
+
 "use client";
 
 import { useEffect } from "react";

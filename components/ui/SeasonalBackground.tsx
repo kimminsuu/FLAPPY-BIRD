@@ -1,3 +1,10 @@
+/**
+ * 계절별 배경 테마 컴포넌트
+ * - 봄(벚꽃)/여름(비)/가을(낙엽)/겨울(눈) 파티클 애니메이션
+ * - 하늘 그라데이션 + 잔디 + 구름
+ * - 시드 기반 랜덤으로 일관된 파티클 배치
+ */
+
 import { ReactNode, useMemo } from "react";
 
 export type Season = "spring" | "summer" | "autumn" | "winter";

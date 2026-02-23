@@ -1,3 +1,9 @@
+/**
+ * 유저 정보 표시 바
+ * - 닉네임 (User 아이콘) + 코인 잔액 (Coins 아이콘)
+ * - 선택적 닉네임 편집 버튼
+ */
+
 "use client";
 
 import { User, Coins, Pencil } from "lucide-react";

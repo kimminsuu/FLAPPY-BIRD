@@ -1,3 +1,9 @@
+/**
+ * 스테이지 게임 클라이언트 컴포넌트
+ * - stageId로 StageConfig 로드 → GamePage에 전달
+ * - 유효하지 않은 스테이지 → /stage-select 리다이렉트
+ */
+
 "use client";
 
 import { useEffect, useState } from "react";

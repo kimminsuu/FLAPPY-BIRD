@@ -1,3 +1,11 @@
+/**
+ * 새 선택 + 가챠(뽑기) 페이지
+ * - 등급별(COMMON/RARE/EPIC/UNIQUE) 3행 격자 레이아웃
+ * - 터치 스와이프 좌우 스크롤
+ * - 가챠 뽑기 (100코인, 중복 시 50코인 환급)
+ * - 새 장착/해제
+ */
+
 "use client";
 
 import { useState, useRef, useEffect } from "react";

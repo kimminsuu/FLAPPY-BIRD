@@ -1,3 +1,10 @@
+/**
+ * 전역 스타일시트
+ * - Tailwind CSS 기본 설정
+ * - 풀스크린 레이아웃 (가로 모드, 검정 배경 + 중앙 정렬)
+ * - 가챠 애니메이션 키프레임 (flip-in, spin-slow, cherry-fall)
+ */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

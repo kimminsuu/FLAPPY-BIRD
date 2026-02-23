@@ -1,3 +1,10 @@
+/**
+ * 홈 화면 (메인 메뉴)
+ * - 장착된 새 표시, 게임 시작/새 선택 버튼
+ * - 닉네임 변경 모달
+ * - 유저 정보 (이름 + 코인), 계절 테마 선택
+ */
+
 "use client";
 
 import { useState, useEffect } from "react";

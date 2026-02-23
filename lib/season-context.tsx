@@ -1,3 +1,10 @@
+/**
+ * 계절 테마 상태 관리 (React Context)
+ * - currentSeason + setCurrentSeason 제공
+ * - 우선순위: DB user.season > localStorage > 기본값 "summer"
+ * - 변경 시 localStorage + DB 동시 저장
+ */
+
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";

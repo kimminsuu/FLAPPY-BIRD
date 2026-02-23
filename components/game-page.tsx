@@ -1,3 +1,12 @@
+/**
+ * 게임 엔진 (Canvas 기반)
+ * - 레코드 모드 (무한) / 스테이지 모드 (정해진 파이프)
+ * - 물리 엔진: 중력, 점프, 충돌 감지
+ * - 기믹: 텔레포트 포탈, 중력 반전 존, 스피드 링
+ * - 아이템: break(파이프 파괴), wraith(무적), point(+5점)
+ * - 파티클/이펙트, HUD, 게임오버/클리어 모달
+ */
+
 "use client";
 
 import { useRef, useEffect, useState, useCallback } from "react";
