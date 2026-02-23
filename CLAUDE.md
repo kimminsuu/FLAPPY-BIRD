@@ -210,7 +210,9 @@ ModeSelectionScreen
 
 ```
 FLAPPY-BIRD/
-├── .github/                    # GitHub 템플릿
+├── .github/                    # GitHub 설정
+│   ├── workflows/
+│   │   └── ci.yml              # GitHub Actions CI (lint → build)
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── ISSUE_TEMPLATE/
 │
@@ -262,6 +264,12 @@ FLAPPY-BIRD/
 ├── supabase/                   # Supabase 마이그레이션
 │   └── migration.sql           # 테이블 생성 + RLS 정책 + BIRD 시드 데이터
 │
+├── docs/                       # 프로젝트 문서
+│   ├── er_diagram.md           # ER 다이어그램
+│   ├── features.md             # 기능 명세서
+│   ├── cost_estimation.md      # 비용 산정
+│   └── daily_work/             # 일일 작업 로그
+│
 ├── public/                     # 정적 파일
 │   └── images/
 │       ├── birds/              # 새 이미지 (등급별)
@@ -273,6 +281,7 @@ FLAPPY-BIRD/
 │
 ├── android/                    # Capacitor Android 프로젝트
 ├── capacitor.config.ts         # Capacitor 설정 (풀스크린, 스플래시, 서버 URL)
+├── eslint.config.mjs           # ESLint 9 flat config (next/core-web-vitals)
 ├── package.json
 ├── tailwind.config.ts
 ├── tsconfig.json
