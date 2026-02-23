@@ -45,7 +45,7 @@ function StageCard({ stage, isUnlocked, stageStyle, bestPercent, onClick }: Stag
       onClick={onClick}
       disabled={!isUnlocked}
       className={`
-        relative flex-shrink-0 w-28 h-36 rounded-2xl transition-all duration-200
+        relative flex-shrink-0 w-16 h-20 rounded-xl transition-all duration-200
         flex flex-col items-center justify-center
         ${isUnlocked
           ? `bg-gradient-to-br ${stageStyle.gradient} shadow-lg hover:shadow-xl hover:scale-105 active:scale-95`
@@ -56,7 +56,7 @@ function StageCard({ stage, isUnlocked, stageStyle, bestPercent, onClick }: Stag
       {isUnlocked ? (
         <>
           <span
-            className="text-3xl font-black text-white"
+            className="text-xl font-black text-white"
             style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}
           >
             {stage}
@@ -64,8 +64,8 @@ function StageCard({ stage, isUnlocked, stageStyle, bestPercent, onClick }: Stag
 
           {bestPercent > 0 && (
             <div className={`
-              absolute bottom-2 left-1/2 -translate-x-1/2
-              px-2 py-0.5 rounded-full text-xs font-bold
+              absolute bottom-1 left-1/2 -translate-x-1/2
+              px-1.5 py-0.5 rounded-full text-[10px] font-bold
               ${bestPercent >= 100
                 ? "bg-yellow-400 text-yellow-900"
                 : "bg-white/30 text-white"
@@ -83,8 +83,8 @@ function StageCard({ stage, isUnlocked, stageStyle, bestPercent, onClick }: Stag
           )}
         </>
       ) : (
-        <div className="w-16 h-16 flex items-center justify-center bg-gray-300 rounded-full">
-          <Lock className="w-8 h-8 text-gray-500" />
+        <div className="w-10 h-10 flex items-center justify-center bg-gray-300 rounded-full">
+          <Lock className="w-5 h-5 text-gray-500" />
         </div>
       )}
 
@@ -132,27 +132,27 @@ export default function StageSelectPage() {
 
   return (
     <SeasonalBackground season={currentSeason}>
-      <div className="relative z-20 flex items-center justify-between px-4 pt-4 pb-2">
+      <div className="relative z-20 flex items-center justify-between px-3 pt-2 pb-1">
         <button
           onClick={() => router.push("/mode-select")}
-          className="p-2.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-xl border border-white/30 transition-all"
+          className="p-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
           aria-label="뒤로가기"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-4 h-4 text-white" />
         </button>
         <h1
-          className="text-2xl font-bold text-white"
+          className="text-lg font-bold text-white"
           style={{ textShadow: "2px 2px 4px rgba(0,0,0,0.3)" }}
         >
           STAGE SELECT
         </h1>
-        <div className="w-10" />
+        <div className="w-8" />
       </div>
 
-      <div className="relative z-10 flex-1 flex items-center justify-center px-4">
-        <div className="flex flex-col gap-3">
+      <div className="relative z-10 flex-1 flex items-center justify-center px-3">
+        <div className="flex flex-col gap-1.5">
           {rows.map((rowStages, rowIndex) => (
-            <div key={rowIndex} className="flex gap-3 justify-center">
+            <div key={rowIndex} className="flex gap-1.5 justify-center">
               {rowStages.map((stage) => (
                 <StageCard
                   key={stage}

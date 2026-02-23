@@ -397,10 +397,10 @@ export default function GamePage({ stageConfig }: GamePageProps) {
     // "+5" 플로팅 텍스트
     state.floatingTexts.push({
       x: bx,
-      y: by - 20,
+      y: by - 15,
       text: "+5",
       color: "#FBBF24",
-      fontSize: 28,
+      fontSize: 20,
       alpha: 1,
       life: 50,
       vy: -1.5,
@@ -569,7 +569,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             // 텔레포트 포탈 생성
             if (pipeDef.teleport) {
               const pairId = state.nextTeleportPairId++;
-              const portalSize = 50;
+              const portalSize = 35;
               const inYPos = pipeDef.teleport.inY * playH;
               const outYPos = pipeDef.teleport.outY * playH;
               state.portals.push({
@@ -1072,7 +1072,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
         // 경계선 옆 화살표 ↕
         ctx.fillStyle = "rgba(120, 60, 200, 0.6)";
-        ctx.font = "bold 20px sans-serif";
+        ctx.font = "bold 14px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         if (zStartX > 0 && zStartX < W) {
@@ -1087,7 +1087,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         // in 경계선 오른쪽 위 가장자리에 "REVERSE" 텍스트
         if (zStartX + 8 > 0 && zStartX + 8 < W) {
           ctx.fillStyle = "rgba(120, 60, 200, 0.45)";
-          ctx.font = "bold 13px sans-serif";
+          ctx.font = "bold 10px sans-serif";
           ctx.textAlign = "left";
           ctx.textBaseline = "top";
           ctx.fillText("REVERSE", zStartX + 8, 10);
@@ -1103,8 +1103,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         const bottomH = playableHeight - bottomY;
         const pw = pipe.width;
         const px = pipe.x;
-        const capH = 30;
-        const capOverhang = 5;
+        const capH = 20;
+        const capOverhang = 4;
 
         // --- 파이프 몸체 그리기 헬퍼 ---
         const drawPipeBody = (x: number, y: number, w: number, h: number) => {
@@ -1121,20 +1121,20 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
           // 왼쪽 하이라이트 줄
           ctx.fillStyle = "rgba(255,255,255,0.18)";
-          ctx.fillRect(x + 4, y, 6, h);
+          ctx.fillRect(x + 3, y, 4, h);
           ctx.fillStyle = "rgba(255,255,255,0.08)";
-          ctx.fillRect(x + 12, y, 3, h);
+          ctx.fillRect(x + 8, y, 2, h);
 
           // 오른쪽 그림자 줄
           ctx.fillStyle = "rgba(0,0,0,0.12)";
-          ctx.fillRect(x + w - 8, y, 5, h);
+          ctx.fillRect(x + w - 6, y, 4, h);
           ctx.fillStyle = "rgba(0,0,0,0.06)";
-          ctx.fillRect(x + w - 14, y, 3, h);
+          ctx.fillRect(x + w - 10, y, 2, h);
 
           // 수평 세그먼트 라인 (마디)
           ctx.strokeStyle = "rgba(0,0,0,0.07)";
           ctx.lineWidth = 1;
-          const segmentHeight = 28;
+          const segmentHeight = 20;
           const startSeg = Math.ceil(y / segmentHeight) * segmentHeight;
           for (let sy = startSeg; sy < y + h; sy += segmentHeight) {
             ctx.beginPath();
@@ -1230,9 +1230,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         const ringX = pipe.x + pipe.width / 2;
         const ringY = pipe.gapY;
         const pulse = 1 + Math.sin(Date.now() / 200) * 0.08;
-        const rW = 14 * pulse;  // 가로 좁게
-        const rH = 36 * pulse;  // 세로 길게
-        const thickness = 7;
+        const rW = 10 * pulse;  // 가로 좁게
+        const rH = 26 * pulse;  // 세로 길게
+        const thickness = 5;
         const innerRW = rW - thickness * 0.5;
         const innerRH = rH - thickness;
 
@@ -1574,7 +1574,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       ctx.fillStyle = "white";
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
       ctx.lineWidth = 4;
-      ctx.font = "bold 48px sans-serif";
+      ctx.font = "bold 28px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       if (stageConfig) {
@@ -1585,16 +1585,16 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         // HUD는 10% 단위로 표시
         const hudPct = exactPct >= 100 ? 100 : Math.floor(exactPct / 10) * 10;
         const hudText = `${hudPct}%`;
-        ctx.strokeText(hudText, W / 2, 50);
-        ctx.fillText(hudText, W / 2, 50);
+        ctx.strokeText(hudText, W / 2, 16);
+        ctx.fillText(hudText, W / 2, 16);
         // [DEBUG] 1% 단위 수치 (배포 시 제거)
-        ctx.font = "bold 20px sans-serif";
+        ctx.font = "bold 14px sans-serif";
         ctx.lineWidth = 2;
-        ctx.strokeText(`${exactPct}%`, W / 2 + 80, 58);
-        ctx.fillText(`${exactPct}%`, W / 2 + 80, 58);
+        ctx.strokeText(`${exactPct}%`, W / 2 + 60, 22);
+        ctx.fillText(`${exactPct}%`, W / 2 + 60, 22);
       } else {
-        ctx.strokeText(state.score.toString(), W / 2, 50);
-        ctx.fillText(state.score.toString(), W / 2, 50);
+        ctx.strokeText(state.score.toString(), W / 2, 16);
+        ctx.fillText(state.score.toString(), W / 2, 16);
       }
       ctx.restore();
 
@@ -1602,13 +1602,13 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       if (state.isWraith && state.wraithTimeLeft > 0) {
         ctx.save();
         ctx.fillStyle = "rgba(168, 85, 247, 0.8)";
-        ctx.font = "bold 28px sans-serif";
+        ctx.font = "bold 18px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "top";
         ctx.fillText(
           `\u{1F47B} ${state.wraithTimeLeft}s`,
           W / 2,
-          105
+          48
         );
         ctx.restore();
       }
@@ -1616,8 +1616,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       // 스피드 링 상태 HUD (새 왼쪽 위)
       if (state.speedState && state.speedTimeLeft > 0) {
         ctx.save();
-        const hudX = state.bird.x - 10;
-        const hudY = state.bird.y - 30;
+        const hudX = state.bird.x - 8;
+        const hudY = state.bird.y - 22;
         const emoji = state.speedState === "slow" ? "\u{1F422}" : "\u26A1";
         const color = state.speedState === "slow"
           ? "rgba(34, 197, 94, 0.9)"
@@ -1625,7 +1625,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         ctx.fillStyle = color;
         ctx.strokeStyle = "rgba(0,0,0,0.4)";
         ctx.lineWidth = 2;
-        ctx.font = "bold 18px sans-serif";
+        ctx.font = "bold 13px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "bottom";
         ctx.strokeText(`${emoji} ${state.speedTimeLeft}s`, hudX, hudY);
@@ -1644,12 +1644,12 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           ctx.fillStyle = "rgba(255,255,255,0.9)";
           ctx.strokeStyle = "rgba(0,0,0,0.4)";
           ctx.lineWidth = 3;
-          ctx.font = "bold 22px sans-serif";
+          ctx.font = "bold 16px sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           const stageLabel = `Stage ${stageConfig.id} - ${stageConfig.name}`;
-          ctx.strokeText(stageLabel, W / 2, H * 0.54);
-          ctx.fillText(stageLabel, W / 2, H * 0.54);
+          ctx.strokeText(stageLabel, W / 2, H * 0.52);
+          ctx.fillText(stageLabel, W / 2, H * 0.52);
           ctx.restore();
         }
 
@@ -1657,7 +1657,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         ctx.fillStyle = "white";
         ctx.strokeStyle = "rgba(0,0,0,0.4)";
         ctx.lineWidth = 3;
-        ctx.font = "bold 30px sans-serif";
+        ctx.font = "bold 20px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         const tapText = "Tap to Start";
@@ -1776,7 +1776,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
   // ==================== JSX ====================
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-black">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       <canvas
         ref={canvasRef}
         className="w-full h-full block touch-none"
@@ -1792,59 +1792,57 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
       {/* 게임오버 모달 */}
       {gameStatus === "gameover" && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-3xl shadow-2xl w-80 overflow-hidden">
-            {/* 헤더 */}
-            <div className="bg-gradient-to-r from-red-500 to-orange-500 py-5">
-              <h2 className="text-white text-2xl font-bold text-center">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl w-64 overflow-hidden">
+            <div className="bg-gradient-to-r from-red-500 to-orange-500 py-2">
+              <h2 className="text-white text-lg font-bold text-center">
                 Game Over
               </h2>
             </div>
 
-            {/* 점수 */}
-            <div className="p-6 space-y-4">
+            <div className="p-3 space-y-2">
               <div className="text-center">
-                <p className="text-gray-500 text-sm mb-1">
+                <p className="text-gray-500 text-xs mb-0.5">
                   {stageConfig ? "Progress" : "Score"}
                 </p>
-                <p className="text-5xl font-bold text-gray-800">
+                <p className="text-2xl font-bold text-gray-800">
                   {stageConfig ? `${progress}%` : score}
                 </p>
               </div>
 
               {!stageConfig && (
                 <div className="text-center">
-                  <p className="text-gray-500 text-sm mb-1">Best</p>
-                  <p className="text-2xl font-bold text-yellow-500">
+                  <p className="text-gray-500 text-xs mb-0.5">Best</p>
+                  <p className="text-lg font-bold text-yellow-500">
                     {highScore}
                   </p>
                 </div>
               )}
 
               {coinReward > 0 && (
-                <div className="text-center bg-yellow-50 rounded-xl py-2 px-4">
-                  <p className="text-yellow-700 font-bold text-sm">
+                <div className="text-center bg-yellow-50 rounded-lg py-1 px-3">
+                  <p className="text-yellow-700 font-bold text-xs">
                     +{coinReward} Coins
                   </p>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={stageConfig ? () => router.push("/stage-select") : handleGoHome}
-                  className="flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
                   {stageConfig ? (
-                    <><List className="w-5 h-5" />Stages</>
+                    <><List className="w-4 h-4" />Stages</>
                   ) : (
-                    <><Home className="w-5 h-5" />Home</>
+                    <><Home className="w-4 h-4" />Home</>
                   )}
                 </button>
                 <button
                   onClick={handleRestart}
-                  className="flex-1 py-3.5 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-4 h-4" />
                   Retry
                 </button>
               </div>
@@ -1855,46 +1853,44 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
       {/* 스테이지 클리어 모달 */}
       {gameStatus === "clear" && stageConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-3xl shadow-2xl w-80 overflow-hidden">
-            {/* 헤더 */}
-            <div className="bg-gradient-to-r from-emerald-400 to-cyan-500 py-5">
-              <h2 className="text-white text-2xl font-bold text-center">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl w-64 overflow-hidden">
+            <div className="bg-gradient-to-r from-emerald-400 to-cyan-500 py-2">
+              <h2 className="text-white text-lg font-bold text-center">
                 Stage Clear!
               </h2>
             </div>
 
-            {/* 점수 */}
-            <div className="p-6 space-y-4">
+            <div className="p-3 space-y-2">
               <div className="text-center">
-                <p className="text-gray-500 text-sm mb-1">
+                <p className="text-gray-500 text-xs mb-0.5">
                   Stage {stageConfig.id} - {stageConfig.name}
                 </p>
-                <p className="text-5xl font-bold text-gray-800">100%</p>
+                <p className="text-2xl font-bold text-gray-800">100%</p>
               </div>
 
               {coinReward > 0 && (
-                <div className="text-center bg-yellow-50 rounded-xl py-2 px-4">
-                  <p className="text-yellow-700 font-bold text-sm">
+                <div className="text-center bg-yellow-50 rounded-lg py-1 px-3">
+                  <p className="text-yellow-700 font-bold text-xs">
                     +{coinReward} Coins
                   </p>
                 </div>
               )}
 
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   onClick={() => router.push("/stage-select")}
-                  className="flex-1 py-3.5 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
-                  <List className="w-5 h-5" />
+                  <List className="w-4 h-4" />
                   Stages
                 </button>
                 <button
                   onClick={() => router.push(`/stage/${stageConfig.id + 1}`)}
-                  className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
                   Next
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               </div>
             </div>

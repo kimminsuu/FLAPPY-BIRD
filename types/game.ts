@@ -107,16 +107,16 @@ export interface GameState {
 // 게임 설정 상수
 export const GAME_CONFIG = {
   gravity: 0.08,
-  jumpForce: -3,
+  jumpForce: -2.6,
   pipeSpeed: 2,
-  pipeSpawnInterval: 176, // 프레임 (135 * 1.3)
-  pipeGapMin: 140,
-  pipeGapMax: 180,
-  pipeWidth: 72, // 60 * 1.2
-  groundHeight: 96,
-  birdWidth: 68, // 45 * 1.5
-  birdHitboxPadding: 4, // 히트박스를 시각보다 약간 작게
-  itemSize: 30,
+  pipeSpawnInterval: 160, // 프레임 (가로 모드 축소 반영)
+  pipeGapMin: 105,
+  pipeGapMax: 135,
+  pipeWidth: 48, // 가로 모드 축소
+  groundHeight: 48, // 가로 모드 축소
+  birdWidth: 40, // 가로 모드 축소
+  birdHitboxPadding: 3, // 히트박스를 시각보다 약간 작게
+  itemSize: 20,
   wraithDuration: 3, // 초
   coinRewardMultiplier: 1, // 점수 = 보상 코인
   speedRingDuration: 3, // 스피드 링 효과 지속 시간 (초)

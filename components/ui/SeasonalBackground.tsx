@@ -307,7 +307,7 @@ export default function SeasonalBackground({
   const theme = seasonThemes[season];
 
   return (
-    <div className="min-h-dvh w-screen flex flex-col relative overflow-hidden">
+    <div className="w-full h-full flex flex-col relative overflow-hidden">
       {/* 하늘 배경 */}
       <div
         className="absolute inset-0"
@@ -326,13 +326,13 @@ export default function SeasonalBackground({
       {children}
 
       {/* 잔디 배경 */}
-      <div className="absolute bottom-0 left-0 right-0 h-24" aria-hidden="true">
+      <div className="absolute bottom-0 left-0 right-0 h-10" aria-hidden="true">
         <div
-          className="absolute bottom-0 left-0 right-0 h-20"
+          className="absolute bottom-0 left-0 right-0 h-8"
           style={{ background: theme.grass }}
         />
         <div
-          className="absolute bottom-16 left-0 right-0 h-8"
+          className="absolute bottom-6 left-0 right-0 h-4"
           style={{ background: theme.grassTop }}
         />
       </div>

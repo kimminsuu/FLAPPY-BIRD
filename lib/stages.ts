@@ -8,397 +8,388 @@ export const STAGES: StageConfig[] = [
   {
     id: 1,
     name: "초원",
-    pipeSpacing: 310,
+    pipeSpacing: 298,
     pipeSpeed: 2,
     goalScore: 15,
     enableItems: false,
     pipes: [
-      { gapY: 0.45, gapHeight: 200 },
-      { gapY: 0.50, gapHeight: 200 },
-      { gapY: 0.42, gapHeight: 200 },
-      { gapY: 0.55, gapHeight: 195 },
-      { gapY: 0.38, gapHeight: 195 },
-      { gapY: 0.50, gapHeight: 195 },
-      { gapY: 0.46, gapHeight: 190 },
-      { gapY: 0.58, gapHeight: 190 },
-      { gapY: 0.40, gapHeight: 190 },
-      { gapY: 0.52, gapHeight: 190 },
-      { gapY: 0.35, gapHeight: 185 },
-      { gapY: 0.48, gapHeight: 185 },
-      { gapY: 0.55, gapHeight: 185 },
-      { gapY: 0.42, gapHeight: 185 },
-      { gapY: 0.50, gapHeight: 185 },
+      { gapY: 0.45, gapHeight: 150 },
+      { gapY: 0.50, gapHeight: 150 },
+      { gapY: 0.42, gapHeight: 150 },
+      { gapY: 0.55, gapHeight: 146 },
+      { gapY: 0.38, gapHeight: 146 },
+      { gapY: 0.50, gapHeight: 146 },
+      { gapY: 0.46, gapHeight: 143 },
+      { gapY: 0.58, gapHeight: 143 },
+      { gapY: 0.40, gapHeight: 143 },
+      { gapY: 0.52, gapHeight: 143 },
+      { gapY: 0.35, gapHeight: 139 },
+      { gapY: 0.48, gapHeight: 139 },
+      { gapY: 0.55, gapHeight: 139 },
+      { gapY: 0.42, gapHeight: 139 },
+      { gapY: 0.50, gapHeight: 139 },
     ],
   },
   {
     id: 2,
     name: "숲길",
-    pipeSpacing: 250,
+    pipeSpacing: 238,
     pipeSpeed: 2,
     goalScore: 25,
     enableItems: false,
     pipes: [
-      // 초반 (250~230, gap 160~157, y변화 소)
-      { gapY: 0.45, gapHeight: 160 },
-      { gapY: 0.50, gapHeight: 159, spacing: 246 },
-      { gapY: 0.42, gapHeight: 158, spacing: 242 },
-      { gapY: 0.52, gapHeight: 158, spacing: 238 },
-      { gapY: 0.40, gapHeight: 157, spacing: 234 },
-      // 중반 진입 (230~200, gap 156~150, y변화 중)
-      { gapY: 0.58, gapHeight: 156, spacing: 230 },
-      { gapY: 0.35, gapHeight: 155, spacing: 225 },
-      { gapY: 0.60, gapHeight: 154, spacing: 220 },
-      { gapY: 0.38, gapHeight: 153, spacing: 215 },
-      { gapY: 0.55, gapHeight: 152, spacing: 210 },
-      // 중반 (205~180, gap 150~146, y변화 대 ~1/4)
-      { gapY: 0.28, gapHeight: 150, spacing: 205 },
-      { gapY: 0.58, gapHeight: 150, spacing: 200 },  // △0.30
-      { gapY: 0.32, gapHeight: 149, spacing: 195 },  // △0.26
-      { gapY: 0.62, gapHeight: 148, spacing: 190 },  // △0.30
-      { gapY: 0.38, gapHeight: 147, spacing: 185 },  // △0.24
-      // 후반 (178~160, gap 146~142, y변화 대 ~1/3)
-      { gapY: 0.70, gapHeight: 146, spacing: 178 },  // △0.32
-      { gapY: 0.35, gapHeight: 145, spacing: 174 },  // △0.35
-      { gapY: 0.68, gapHeight: 144, spacing: 170 },  // △0.33
-      { gapY: 0.32, gapHeight: 144, spacing: 166 },  // △0.36
-      { gapY: 0.65, gapHeight: 143, spacing: 162 },  // △0.33
-      // 마무리 (158~150, gap 142~140, y변화 극대 ~1/3)
-      { gapY: 0.30, gapHeight: 142, spacing: 158 },  // △0.35
-      { gapY: 0.65, gapHeight: 141, spacing: 155 },   // △0.35
-      { gapY: 0.33, gapHeight: 141, spacing: 153 },   // △0.32
-      { gapY: 0.60, gapHeight: 140, spacing: 151 },   // △0.27
-      { gapY: 0.45, gapHeight: 140, spacing: 150 },
+      // 초반 (gap 120~118, y변화 소)
+      { gapY: 0.45, gapHeight: 120 },
+      { gapY: 0.50, gapHeight: 119, spacing: 234 },
+      { gapY: 0.42, gapHeight: 119, spacing: 230 },
+      { gapY: 0.52, gapHeight: 119, spacing: 226 },
+      { gapY: 0.40, gapHeight: 118, spacing: 222 },
+      // 중반 진입 (gap 117~114, y변화 중)
+      { gapY: 0.58, gapHeight: 117, spacing: 218 },
+      { gapY: 0.35, gapHeight: 116, spacing: 213 },
+      { gapY: 0.60, gapHeight: 116, spacing: 208 },
+      { gapY: 0.38, gapHeight: 115, spacing: 203 },
+      { gapY: 0.55, gapHeight: 114, spacing: 198 },
+      // 중반 (gap 113~110, y변화 대 ~1/4)
+      { gapY: 0.28, gapHeight: 113, spacing: 193 },
+      { gapY: 0.58, gapHeight: 113, spacing: 188 },
+      { gapY: 0.32, gapHeight: 112, spacing: 183 },
+      { gapY: 0.62, gapHeight: 111, spacing: 178 },
+      { gapY: 0.38, gapHeight: 110, spacing: 173 },
+      // 후반 (gap 110~107, y변화 대 ~1/3)
+      { gapY: 0.70, gapHeight: 110, spacing: 166 },
+      { gapY: 0.35, gapHeight: 109, spacing: 162 },
+      { gapY: 0.68, gapHeight: 108, spacing: 158 },
+      { gapY: 0.32, gapHeight: 108, spacing: 154 },
+      { gapY: 0.65, gapHeight: 107, spacing: 150 },
+      // 마무리 (gap 107~105, y변화 극대 ~1/3)
+      { gapY: 0.30, gapHeight: 107, spacing: 146 },
+      { gapY: 0.65, gapHeight: 106, spacing: 143 },
+      { gapY: 0.33, gapHeight: 106, spacing: 141 },
+      { gapY: 0.60, gapHeight: 105, spacing: 139 },
+      { gapY: 0.45, gapHeight: 105, spacing: 138 },
     ],
   },
   {
     id: 3,
     name: "동굴",
-    pipeSpacing: 240,
+    pipeSpacing: 228,
     pipeSpeed: 2,
     goalScore: 25,
     enableItems: false,
     pipes: [
-      // 초반 (spacing 240, gap 160~155)
-      { gapY: 0.45, gapHeight: 160 },
-      { gapY: 0.50, gapHeight: 158, spacing: 235 },
-      { gapY: 0.40, gapHeight: 157, spacing: 230 },
-      { gapY: 0.55, gapHeight: 156, spacing: 225 },
+      // 초반 (gap 120~116)
+      { gapY: 0.45, gapHeight: 120 },
+      { gapY: 0.50, gapHeight: 119, spacing: 223 },
+      { gapY: 0.40, gapHeight: 118, spacing: 218 },
+      { gapY: 0.55, gapHeight: 117, spacing: 213 },
       // 5번: 첫 번째 텔레포트
-      { gapY: 0.50, gapHeight: 155, spacing: 220, teleport: { inY: 0.70, outY: 0.25 } },
-      { gapY: 0.42, gapHeight: 155, spacing: 215 },
-      { gapY: 0.58, gapHeight: 154, spacing: 210 },
-      { gapY: 0.35, gapHeight: 153, spacing: 205 },
-      { gapY: 0.55, gapHeight: 152, spacing: 200 },
-      { gapY: 0.40, gapHeight: 151, spacing: 195 },
+      { gapY: 0.50, gapHeight: 116, spacing: 208, teleport: { inY: 0.70, outY: 0.25 } },
+      { gapY: 0.42, gapHeight: 116, spacing: 203 },
+      { gapY: 0.58, gapHeight: 116, spacing: 198 },
+      { gapY: 0.35, gapHeight: 115, spacing: 193 },
+      { gapY: 0.55, gapHeight: 114, spacing: 188 },
+      { gapY: 0.40, gapHeight: 113, spacing: 183 },
       // 11번: 두 번째 텔레포트
-      { gapY: 0.50, gapHeight: 150, spacing: 190, teleport: { inY: 0.30, outY: 0.72 } },
-      { gapY: 0.60, gapHeight: 150, spacing: 185 },
-      { gapY: 0.35, gapHeight: 149, spacing: 182 },
-      { gapY: 0.62, gapHeight: 148, spacing: 178 },
-      { gapY: 0.38, gapHeight: 148, spacing: 175 },
-      { gapY: 0.55, gapHeight: 147, spacing: 172 },
-      { gapY: 0.32, gapHeight: 147, spacing: 170 },
+      { gapY: 0.50, gapHeight: 113, spacing: 178, teleport: { inY: 0.30, outY: 0.72 } },
+      { gapY: 0.60, gapHeight: 113, spacing: 173 },
+      { gapY: 0.35, gapHeight: 112, spacing: 170 },
+      { gapY: 0.62, gapHeight: 111, spacing: 166 },
+      { gapY: 0.38, gapHeight: 111, spacing: 163 },
+      { gapY: 0.55, gapHeight: 110, spacing: 160 },
+      { gapY: 0.32, gapHeight: 110, spacing: 158 },
       // 18번: 세 번째 텔레포트
-      { gapY: 0.50, gapHeight: 146, spacing: 168, teleport: { inY: 0.65, outY: 0.30 } },
-      { gapY: 0.58, gapHeight: 146, spacing: 165 },
-      { gapY: 0.30, gapHeight: 145, spacing: 163 },
-      { gapY: 0.65, gapHeight: 145, spacing: 162 },
-      { gapY: 0.35, gapHeight: 145, spacing: 160 },
+      { gapY: 0.50, gapHeight: 110, spacing: 156, teleport: { inY: 0.65, outY: 0.30 } },
+      { gapY: 0.58, gapHeight: 110, spacing: 153 },
+      { gapY: 0.30, gapHeight: 109, spacing: 151 },
+      { gapY: 0.65, gapHeight: 109, spacing: 150 },
+      { gapY: 0.35, gapHeight: 109, spacing: 148 },
       // 23번: 네 번째 텔레포트
-      { gapY: 0.50, gapHeight: 145, spacing: 160, teleport: { inY: 0.75, outY: 0.30 } },
-      { gapY: 0.42, gapHeight: 145, spacing: 160 },
-      { gapY: 0.50, gapHeight: 145, spacing: 160 },
+      { gapY: 0.50, gapHeight: 109, spacing: 148, teleport: { inY: 0.75, outY: 0.30 } },
+      { gapY: 0.42, gapHeight: 109, spacing: 148 },
+      { gapY: 0.50, gapHeight: 109, spacing: 148 },
     ],
   },
   {
     id: 4,
     name: "심연",
-    pipeSpacing: 220,
+    pipeSpacing: 208,
     pipeSpeed: 2,
     goalScore: 30,
     enableItems: false,
     pipes: [
-      // 초반 워밍업 (spacing 220~210, gap 150~147)
-      { gapY: 0.45, gapHeight: 150 },
-      { gapY: 0.52, gapHeight: 148, spacing: 215 },
+      // 초반 워밍업
+      { gapY: 0.45, gapHeight: 113 },
+      { gapY: 0.52, gapHeight: 111, spacing: 203 },
       // 첫 텔레포트 (아래→위)
-      { gapY: 0.50, gapHeight: 147, spacing: 210, teleport: { inY: 0.68, outY: 0.22 } },
-      { gapY: 0.60, gapHeight: 146, spacing: 205 },
-      { gapY: 0.25, gapHeight: 145, spacing: 200 }, // △0.35
+      { gapY: 0.50, gapHeight: 110, spacing: 198, teleport: { inY: 0.68, outY: 0.22 } },
+      { gapY: 0.60, gapHeight: 110, spacing: 193 },
+      { gapY: 0.25, gapHeight: 109, spacing: 188 },
       // 두 번째 텔레포트 (위→아래)
-      { gapY: 0.50, gapHeight: 144, spacing: 195, teleport: { inY: 0.28, outY: 0.76 } },
-      { gapY: 0.70, gapHeight: 143, spacing: 190 },
-      { gapY: 0.30, gapHeight: 142, spacing: 185 }, // △0.40
+      { gapY: 0.50, gapHeight: 108, spacing: 183, teleport: { inY: 0.28, outY: 0.76 } },
+      { gapY: 0.70, gapHeight: 107, spacing: 178 },
+      { gapY: 0.30, gapHeight: 107, spacing: 173 },
       // 세 번째 텔레포트 (아래→위)
-      { gapY: 0.50, gapHeight: 142, spacing: 180, teleport: { inY: 0.75, outY: 0.20 } },
-      { gapY: 0.32, gapHeight: 141, spacing: 178 },
-      { gapY: 0.72, gapHeight: 140, spacing: 175 }, // △0.40
+      { gapY: 0.50, gapHeight: 107, spacing: 168, teleport: { inY: 0.75, outY: 0.20 } },
+      { gapY: 0.32, gapHeight: 106, spacing: 166 },
+      { gapY: 0.72, gapHeight: 105, spacing: 163 },
       // 네 번째 텔레포트 (위→아래)
-      { gapY: 0.50, gapHeight: 140, spacing: 172, teleport: { inY: 0.25, outY: 0.78 } },
-      { gapY: 0.68, gapHeight: 139, spacing: 170 },
-      { gapY: 0.28, gapHeight: 138, spacing: 168 }, // △0.40
+      { gapY: 0.50, gapHeight: 105, spacing: 160, teleport: { inY: 0.25, outY: 0.78 } },
+      { gapY: 0.68, gapHeight: 104, spacing: 158 },
+      { gapY: 0.28, gapHeight: 104, spacing: 156 },
       // 다섯 번째 텔레포트 (아래→위)
-      { gapY: 0.50, gapHeight: 138, spacing: 165, teleport: { inY: 0.72, outY: 0.22 } },
-      { gapY: 0.30, gapHeight: 137, spacing: 163 },
-      { gapY: 0.70, gapHeight: 136, spacing: 160 }, // △0.40
+      { gapY: 0.50, gapHeight: 104, spacing: 153, teleport: { inY: 0.72, outY: 0.22 } },
+      { gapY: 0.30, gapHeight: 103, spacing: 151 },
+      { gapY: 0.70, gapHeight: 102, spacing: 148 },
       // 여섯 번째 텔레포트 (위→아래)
-      { gapY: 0.50, gapHeight: 136, spacing: 158, teleport: { inY: 0.70, outY: 0.78 } },
-      { gapY: 0.72, gapHeight: 135, spacing: 156 },
-      { gapY: 0.30, gapHeight: 135, spacing: 155 }, // △0.42
+      { gapY: 0.50, gapHeight: 102, spacing: 146, teleport: { inY: 0.70, outY: 0.78 } },
+      { gapY: 0.72, gapHeight: 101, spacing: 144 },
+      { gapY: 0.30, gapHeight: 101, spacing: 143 },
       // 일곱 번째 텔레포트 (아래→위)
-      { gapY: 0.50, gapHeight: 134, spacing: 153, teleport: { inY: 0.30, outY: 0.20 } },
-      { gapY: 0.28, gapHeight: 134, spacing: 152 },
-      { gapY: 0.68, gapHeight: 133, spacing: 150 }, // △0.40
+      { gapY: 0.50, gapHeight: 101, spacing: 141, teleport: { inY: 0.30, outY: 0.20 } },
+      { gapY: 0.28, gapHeight: 101, spacing: 140 },
+      { gapY: 0.68, gapHeight: 100, spacing: 138 },
       // 여덟 번째 텔레포트 (위→아래)
-      { gapY: 0.50, gapHeight: 133, spacing: 150, teleport: { inY: 0.70, outY: 0.78 } },
-      { gapY: 0.72, gapHeight: 132, spacing: 150 },
+      { gapY: 0.50, gapHeight: 100, spacing: 138, teleport: { inY: 0.70, outY: 0.78 } },
+      { gapY: 0.72, gapHeight: 99, spacing: 138 },
       // 아홉 번째 텔레포트 (아래→위, 극한)
-      { gapY: 0.50, gapHeight: 132, spacing: 150, teleport: { inY: 0.80, outY: 0.18 } },
-      { gapY: 0.25, gapHeight: 131, spacing: 150 },
-      { gapY: 0.68, gapHeight: 130, spacing: 150 }, // △0.43
+      { gapY: 0.50, gapHeight: 99, spacing: 138, teleport: { inY: 0.80, outY: 0.18 } },
+      { gapY: 0.25, gapHeight: 98, spacing: 138 },
+      { gapY: 0.68, gapHeight: 98, spacing: 138 },
       // 열 번째 텔레포트 (마지막, 위→아래)
-      { gapY: 0.50, gapHeight: 130, spacing: 150, teleport: { inY: 0.35, outY: 0.78 } },
-      { gapY: 0.78, gapHeight: 130, spacing: 150 },
+      { gapY: 0.50, gapHeight: 98, spacing: 138, teleport: { inY: 0.35, outY: 0.78 } },
+      { gapY: 0.78, gapHeight: 98, spacing: 138 },
     ],
   },
   {
     id: 5,
     name: "역장",
-    pipeSpacing: 280,
+    pipeSpacing: 268,
     pipeSpeed: 2,
     goalScore: 30,
     enableItems: false,
     pipes: [
       // 일반 (파이프 1~2)
-      { gapY: 0.45, gapHeight: 180 },
-      { gapY: 0.50, gapHeight: 178, spacing: 270 },
-      // ── 반전 존 1 (파이프 3~7, easy: 5파이프, 넓은 갭) ──
-      { gapY: 0.48, gapHeight: 175, spacing: 265, reverseGravity: true },
-      { gapY: 0.50, gapHeight: 173, spacing: 270 },
-      { gapY: 0.52, gapHeight: 170, spacing: 270 },
-      { gapY: 0.48, gapHeight: 168, spacing: 265 },
-      { gapY: 0.50, gapHeight: 166, spacing: 265 },
-      { gapY: 0.45, gapHeight: 165, spacing: 260, reverseGravity: false },
+      { gapY: 0.45, gapHeight: 135 },
+      { gapY: 0.50, gapHeight: 134, spacing: 258 },
+      // ── 반전 존 1 (easy: 5파이프, 넓은 갭) ──
+      { gapY: 0.48, gapHeight: 131, spacing: 253, reverseGravity: true },
+      { gapY: 0.50, gapHeight: 130, spacing: 258 },
+      { gapY: 0.52, gapHeight: 128, spacing: 258 },
+      { gapY: 0.48, gapHeight: 126, spacing: 253 },
+      { gapY: 0.50, gapHeight: 125, spacing: 253 },
+      { gapY: 0.45, gapHeight: 124, spacing: 248, reverseGravity: false },
       // 일반 (파이프 9)
-      { gapY: 0.52, gapHeight: 165, spacing: 250 },
-      // ── 반전 존 2 (파이프 10~13, medium: 4파이프, 갭 감소) ──
-      { gapY: 0.50, gapHeight: 162, spacing: 245, reverseGravity: true },
-      { gapY: 0.47, gapHeight: 160, spacing: 250 },
-      { gapY: 0.53, gapHeight: 158, spacing: 245 },
-      { gapY: 0.48, gapHeight: 155, spacing: 240 },
-      { gapY: 0.55, gapHeight: 155, spacing: 240, reverseGravity: false },
+      { gapY: 0.52, gapHeight: 124, spacing: 238 },
+      // ── 반전 존 2 (medium: 4파이프, 갭 감소) ──
+      { gapY: 0.50, gapHeight: 122, spacing: 233, reverseGravity: true },
+      { gapY: 0.47, gapHeight: 120, spacing: 238 },
+      { gapY: 0.53, gapHeight: 119, spacing: 233 },
+      { gapY: 0.48, gapHeight: 116, spacing: 228 },
+      { gapY: 0.55, gapHeight: 116, spacing: 228, reverseGravity: false },
       // 일반 (파이프 15~16)
-      { gapY: 0.42, gapHeight: 158, spacing: 235 },
-      { gapY: 0.55, gapHeight: 155, spacing: 230 },
-      // ── 반전 존 3 (파이프 17~20, medium+: 4파이프, 갭 더 감소) ──
-      { gapY: 0.50, gapHeight: 153, spacing: 230, reverseGravity: true },
-      { gapY: 0.46, gapHeight: 150, spacing: 240 },
-      { gapY: 0.54, gapHeight: 148, spacing: 235 },
-      { gapY: 0.48, gapHeight: 145, spacing: 230 },
-      { gapY: 0.42, gapHeight: 148, spacing: 225, reverseGravity: false },
+      { gapY: 0.42, gapHeight: 119, spacing: 223 },
+      { gapY: 0.55, gapHeight: 116, spacing: 218 },
+      // ── 반전 존 3 (medium+: 4파이프) ──
+      { gapY: 0.50, gapHeight: 115, spacing: 218, reverseGravity: true },
+      { gapY: 0.46, gapHeight: 113, spacing: 228 },
+      { gapY: 0.54, gapHeight: 111, spacing: 223 },
+      { gapY: 0.48, gapHeight: 109, spacing: 218 },
+      { gapY: 0.42, gapHeight: 111, spacing: 213, reverseGravity: false },
       // 일반 (파이프 22~23)
-      { gapY: 0.55, gapHeight: 150, spacing: 225 },
-      { gapY: 0.40, gapHeight: 148, spacing: 220 },
-      // ── 반전 존 4 (파이프 24~28, hard: 5파이프, 좁은 갭) ──
-      { gapY: 0.50, gapHeight: 145, spacing: 220, reverseGravity: true },
-      { gapY: 0.45, gapHeight: 143, spacing: 230 },
-      { gapY: 0.55, gapHeight: 140, spacing: 225 },
-      { gapY: 0.42, gapHeight: 138, spacing: 220 },
-      { gapY: 0.52, gapHeight: 136, spacing: 220 },
-      { gapY: 0.48, gapHeight: 140, spacing: 215, reverseGravity: false },
+      { gapY: 0.55, gapHeight: 113, spacing: 213 },
+      { gapY: 0.40, gapHeight: 111, spacing: 208 },
+      // ── 반전 존 4 (hard: 5파이프, 좁은 갭) ──
+      { gapY: 0.50, gapHeight: 109, spacing: 208, reverseGravity: true },
+      { gapY: 0.45, gapHeight: 107, spacing: 218 },
+      { gapY: 0.55, gapHeight: 105, spacing: 213 },
+      { gapY: 0.42, gapHeight: 104, spacing: 208 },
+      { gapY: 0.52, gapHeight: 102, spacing: 208 },
+      { gapY: 0.48, gapHeight: 105, spacing: 203, reverseGravity: false },
       // 마무리 (파이프 30)
-      { gapY: 0.50, gapHeight: 145, spacing: 215 },
+      { gapY: 0.50, gapHeight: 109, spacing: 203 },
     ],
   },
   {
     id: 6,
     name: "혼돈",
-    pipeSpacing: 210,
+    pipeSpacing: 198,
     pipeSpeed: 2,
     goalScore: 25,
     enableItems: false,
     pipes: [
       // 파이프 1~2: 일반 (워밍업)
-      { gapY: 0.42, gapHeight: 155 },
-      { gapY: 0.58, gapHeight: 153, spacing: 205 },                              // △0.16
+      { gapY: 0.42, gapHeight: 116 },
+      { gapY: 0.58, gapHeight: 115, spacing: 193 },
       // 파이프 3: 텔레포트
-      { gapY: 0.35, gapHeight: 152, spacing: 200, teleport: { inY: 0.70, outY: 0.25 } }, // △0.23
+      { gapY: 0.35, gapHeight: 114, spacing: 188, teleport: { inY: 0.70, outY: 0.25 } },
       // 파이프 4: 일반
-      { gapY: 0.60, gapHeight: 150, spacing: 195 },                              // △0.25
-      // ── 존 1 (파이프 5~8, 반전 + 텔레포트) ──
-      { gapY: 0.35, gapHeight: 148, spacing: 190, reverseGravity: true },        // △0.25
+      { gapY: 0.60, gapHeight: 113, spacing: 183 },
+      // ── 존 1 (반전 + 텔레포트) ──
+      { gapY: 0.35, gapHeight: 111, spacing: 178, reverseGravity: true },
       // 파이프 6: 텔레포트 (반전 존 안)
-      { gapY: 0.60, gapHeight: 147, spacing: 190, teleport: { inY: 0.30, outY: 0.72 } }, // △0.25
+      { gapY: 0.60, gapHeight: 110, spacing: 178, teleport: { inY: 0.30, outY: 0.72 } },
       // 파이프 7~8: 일반 (반전 존 안)
-      { gapY: 0.38, gapHeight: 146, spacing: 185 },                              // △0.22
-      { gapY: 0.62, gapHeight: 145, spacing: 185 },                              // △0.24
+      { gapY: 0.38, gapHeight: 110, spacing: 173 },
+      { gapY: 0.62, gapHeight: 109, spacing: 173 },
       // ── 존 1 끝 ──
-      { gapY: 0.40, gapHeight: 144, spacing: 180, reverseGravity: false },       // △0.22
+      { gapY: 0.40, gapHeight: 108, spacing: 168, reverseGravity: false },
       // 파이프 10~11: 일반
-      { gapY: 0.65, gapHeight: 143, spacing: 200 },                              // △0.25
-      { gapY: 0.35, gapHeight: 142, spacing: 195 },                              // △0.30
+      { gapY: 0.65, gapHeight: 107, spacing: 188 },
+      { gapY: 0.35, gapHeight: 107, spacing: 183 },
       // 파이프 12: 텔레포트
-      { gapY: 0.62, gapHeight: 141, spacing: 195, teleport: { inY: 0.65, outY: 0.28 } }, // △0.27
+      { gapY: 0.62, gapHeight: 106, spacing: 183, teleport: { inY: 0.65, outY: 0.28 } },
       // 파이프 13~14: 일반
-      { gapY: 0.38, gapHeight: 140, spacing: 190 },                              // △0.24
-      { gapY: 0.65, gapHeight: 139, spacing: 190 },                              // △0.27
-      // ── 존 2 (파이프 15~18, 반전 + 텔레포트) ──
-      { gapY: 0.38, gapHeight: 138, spacing: 185, reverseGravity: true },        // △0.27
+      { gapY: 0.38, gapHeight: 105, spacing: 178 },
+      { gapY: 0.65, gapHeight: 104, spacing: 178 },
+      // ── 존 2 (반전 + 텔레포트) ──
+      { gapY: 0.38, gapHeight: 104, spacing: 173, reverseGravity: true },
       // 파이프 16: 텔레포트 (반전 존 안)
-      { gapY: 0.63, gapHeight: 137, spacing: 185, teleport: { inY: 0.28, outY: 0.75 } }, // △0.25
+      { gapY: 0.63, gapHeight: 103, spacing: 173, teleport: { inY: 0.28, outY: 0.75 } },
       // 파이프 17~18: 일반 (반전 존 안)
-      { gapY: 0.35, gapHeight: 136, spacing: 180 },                              // △0.28
-      { gapY: 0.60, gapHeight: 135, spacing: 180 },                              // △0.25
+      { gapY: 0.35, gapHeight: 102, spacing: 168 },
+      { gapY: 0.60, gapHeight: 101, spacing: 168 },
       // ── 존 2 끝 ──
-      { gapY: 0.35, gapHeight: 135, spacing: 175, reverseGravity: false },       // △0.25
+      { gapY: 0.35, gapHeight: 101, spacing: 163, reverseGravity: false },
       // 파이프 20: 일반
-      { gapY: 0.62, gapHeight: 134, spacing: 180 },                              // △0.27
+      { gapY: 0.62, gapHeight: 101, spacing: 168 },
       // 파이프 21: 텔레포트
-      { gapY: 0.35, gapHeight: 133, spacing: 175, teleport: { inY: 0.72, outY: 0.25 } }, // △0.27
+      { gapY: 0.35, gapHeight: 100, spacing: 163, teleport: { inY: 0.72, outY: 0.25 } },
       // 파이프 22: 일반
-      { gapY: 0.63, gapHeight: 132, spacing: 175 },                              // △0.28
-      // ── 존 3 (파이프 23~25, 반전 + 텔레포트, 끝까지) ──
-      { gapY: 0.37, gapHeight: 131, spacing: 170, reverseGravity: true },        // △0.26
+      { gapY: 0.63, gapHeight: 99, spacing: 163 },
+      // ── 존 3 (반전 + 텔레포트, 끝까지) ──
+      { gapY: 0.37, gapHeight: 98, spacing: 158, reverseGravity: true },
       // 파이프 24: 텔레포트 (반전 존 안)
-      { gapY: 0.63, gapHeight: 130, spacing: 170, teleport: { inY: 0.25, outY: 0.50 } }, // △0.26
+      { gapY: 0.63, gapHeight: 98, spacing: 158, teleport: { inY: 0.25, outY: 0.50 } },
       // 파이프 25: 일반 (반전 존 안, 마지막)
-      { gapY: 0.36, gapHeight: 130, spacing: 165 },                              // △0.27
+      { gapY: 0.36, gapHeight: 98, spacing: 153 },
     ],
   },
   {
     id: 7,
     name: "가속",
-    pipeSpacing: 220,
+    pipeSpacing: 208,
     pipeSpeed: 2,
     goalScore: 35,
     enableItems: false,
-    // 링 배치 규칙:
-    //   SLOW 링 후 → 4~6개 파이프 지난 뒤 다음 링
-    //   FAST 링 후 → 6~8개 파이프 지난 뒤 다음 링
-    //   순서 자유 (연속 같은 타입 가능)
-    //   slow ÷1.5, fast ×1.3
-    //   gapHeight 175→140, spacing 180→155
     pipes: [
       // 워밍업 (1~2)
-      { gapY: 0.45, gapHeight: 175 },
-      { gapY: 0.52, gapHeight: 174, spacing: 180 },
+      { gapY: 0.45, gapHeight: 131 },
+      { gapY: 0.52, gapHeight: 131, spacing: 168 },
       // ★ 파이프 3: SLOW
-      { gapY: 0.48, gapHeight: 173, spacing: 179, speedRing: "slow" },
-      // 4~7: 버퍼 4개 (after slow, 4개 gap)
-      { gapY: 0.55, gapHeight: 172, spacing: 178 },
-      { gapY: 0.40, gapHeight: 171, spacing: 178 },
-      { gapY: 0.58, gapHeight: 170, spacing: 177 },
-      { gapY: 0.42, gapHeight: 169, spacing: 176 },
-      // ★ 파이프 8: SLOW (+5, after slow 4개 gap ✓)
-      { gapY: 0.52, gapHeight: 168, spacing: 175, speedRing: "slow" },
-      // 9~12: 버퍼 4개 (after slow, 4개 gap)
-      { gapY: 0.38, gapHeight: 167, spacing: 175 },
-      { gapY: 0.60, gapHeight: 166, spacing: 174 },
-      { gapY: 0.35, gapHeight: 165, spacing: 173 },
-      { gapY: 0.55, gapHeight: 164, spacing: 172 },
-      // ★ 파이프 13: FAST (+5, after slow 4개 gap ✓)
-      { gapY: 0.42, gapHeight: 163, spacing: 172, speedRing: "fast" },
-      // 14~19: 버퍼 6개 (after fast, 6개 gap)
-      { gapY: 0.60, gapHeight: 162, spacing: 171 },
-      { gapY: 0.35, gapHeight: 161, spacing: 170 },
-      { gapY: 0.58, gapHeight: 160, spacing: 169 },
-      { gapY: 0.40, gapHeight: 159, spacing: 169 },
-      { gapY: 0.62, gapHeight: 158, spacing: 168 },
-      { gapY: 0.38, gapHeight: 156, spacing: 167 },
-      // ★ 파이프 20: SLOW (+7, after fast 6개 gap ✓)
-      { gapY: 0.55, gapHeight: 155, spacing: 166, speedRing: "slow" },
-      // 21~24: 버퍼 4개 (after slow, 4개 gap)
-      { gapY: 0.33, gapHeight: 154, spacing: 166 },
-      { gapY: 0.60, gapHeight: 153, spacing: 165 },
-      { gapY: 0.40, gapHeight: 152, spacing: 164 },
-      { gapY: 0.58, gapHeight: 151, spacing: 163 },
-      // ★ 파이프 25: SLOW (+5, after slow 4개 gap ✓)
-      { gapY: 0.42, gapHeight: 150, spacing: 163, speedRing: "slow" },
-      // 26~29: 버퍼 4개 (after slow, 4개 gap)
-      { gapY: 0.62, gapHeight: 149, spacing: 162 },
-      { gapY: 0.35, gapHeight: 148, spacing: 161 },
-      { gapY: 0.55, gapHeight: 147, spacing: 160 },
-      { gapY: 0.40, gapHeight: 146, spacing: 160 },
-      // ★ 파이프 30: FAST (+5, after slow 4개 gap ✓)
-      { gapY: 0.50, gapHeight: 145, spacing: 159, speedRing: "fast" },
-      // 31~35: 마무리 5개 (fast 후 버퍼)
-      { gapY: 0.58, gapHeight: 144, spacing: 158 },
-      { gapY: 0.35, gapHeight: 143, spacing: 157 },
-      { gapY: 0.52, gapHeight: 142, spacing: 157 },
-      { gapY: 0.45, gapHeight: 141, spacing: 156 },
-      { gapY: 0.50, gapHeight: 140, spacing: 155 },
+      { gapY: 0.48, gapHeight: 130, spacing: 167, speedRing: "slow" },
+      // 4~7: 버퍼 4개
+      { gapY: 0.55, gapHeight: 129, spacing: 166 },
+      { gapY: 0.40, gapHeight: 128, spacing: 166 },
+      { gapY: 0.58, gapHeight: 128, spacing: 165 },
+      { gapY: 0.42, gapHeight: 127, spacing: 164 },
+      // ★ 파이프 8: SLOW
+      { gapY: 0.52, gapHeight: 126, spacing: 163, speedRing: "slow" },
+      // 9~12: 버퍼 4개
+      { gapY: 0.38, gapHeight: 125, spacing: 163 },
+      { gapY: 0.60, gapHeight: 125, spacing: 162 },
+      { gapY: 0.35, gapHeight: 124, spacing: 161 },
+      { gapY: 0.55, gapHeight: 123, spacing: 160 },
+      // ★ 파이프 13: FAST
+      { gapY: 0.42, gapHeight: 122, spacing: 160, speedRing: "fast" },
+      // 14~19: 버퍼 6개
+      { gapY: 0.60, gapHeight: 122, spacing: 159 },
+      { gapY: 0.35, gapHeight: 121, spacing: 158 },
+      { gapY: 0.58, gapHeight: 120, spacing: 157 },
+      { gapY: 0.40, gapHeight: 119, spacing: 157 },
+      { gapY: 0.62, gapHeight: 119, spacing: 156 },
+      { gapY: 0.38, gapHeight: 117, spacing: 155 },
+      // ★ 파이프 20: SLOW
+      { gapY: 0.55, gapHeight: 116, spacing: 154, speedRing: "slow" },
+      // 21~24: 버퍼 4개
+      { gapY: 0.33, gapHeight: 116, spacing: 154 },
+      { gapY: 0.60, gapHeight: 115, spacing: 153 },
+      { gapY: 0.40, gapHeight: 114, spacing: 152 },
+      { gapY: 0.58, gapHeight: 113, spacing: 151 },
+      // ★ 파이프 25: SLOW
+      { gapY: 0.42, gapHeight: 113, spacing: 151, speedRing: "slow" },
+      // 26~29: 버퍼 4개
+      { gapY: 0.62, gapHeight: 112, spacing: 150 },
+      { gapY: 0.35, gapHeight: 111, spacing: 149 },
+      { gapY: 0.55, gapHeight: 110, spacing: 148 },
+      { gapY: 0.40, gapHeight: 110, spacing: 148 },
+      // ★ 파이프 30: FAST
+      { gapY: 0.50, gapHeight: 109, spacing: 147, speedRing: "fast" },
+      // 31~35: 마무리 5개
+      { gapY: 0.58, gapHeight: 108, spacing: 146 },
+      { gapY: 0.35, gapHeight: 107, spacing: 145 },
+      { gapY: 0.52, gapHeight: 107, spacing: 145 },
+      { gapY: 0.45, gapHeight: 106, spacing: 144 },
+      { gapY: 0.50, gapHeight: 105, spacing: 143 },
     ],
   },
   {
     id: 8,
     name: "융합",
-    pipeSpacing: 220,
+    pipeSpacing: 208,
     pipeSpeed: 2,
     goalScore: 35,
     enableItems: false,
-    // 기믹 혼합: slow/fast 링 + 텔레포트 + 중력 반전
-    // gapHeight 170→140, spacing 175→150
-    // 링 규칙: SLOW 후 4~6개, FAST 후 6~8개
     pipes: [
       // ── 구간 1: 워밍업 + SLOW 링 (1~5) ──
-      { gapY: 0.45, gapHeight: 170 },
-      { gapY: 0.52, gapHeight: 169, spacing: 175 },
-      // ★ 파이프 3: SLOW (첫 기믹: 속도 느려짐)
-      { gapY: 0.48, gapHeight: 168, spacing: 174, speedRing: "slow" },
-      { gapY: 0.55, gapHeight: 167, spacing: 174 },
-      { gapY: 0.40, gapHeight: 167, spacing: 173 },
+      { gapY: 0.45, gapHeight: 128 },
+      { gapY: 0.52, gapHeight: 127, spacing: 163 },
+      // ★ 파이프 3: SLOW
+      { gapY: 0.48, gapHeight: 126, spacing: 162, speedRing: "slow" },
+      { gapY: 0.55, gapHeight: 125, spacing: 162 },
+      { gapY: 0.40, gapHeight: 125, spacing: 161 },
 
       // ── 구간 2: 텔레포트 (6~10) ──
-      { gapY: 0.58, gapHeight: 166, spacing: 172 },
+      { gapY: 0.58, gapHeight: 125, spacing: 160 },
       // 파이프 7: 텔레포트 (아래→위)
-      { gapY: 0.50, gapHeight: 165, spacing: 172, teleport: { inY: 0.70, outY: 0.25 } },
-      // ★ 파이프 8: SLOW (+5, after slow 4개 gap ✓)
-      { gapY: 0.42, gapHeight: 164, spacing: 171, speedRing: "slow" },
-      { gapY: 0.60, gapHeight: 163, spacing: 170 },
-      { gapY: 0.35, gapHeight: 163, spacing: 170 },
+      { gapY: 0.50, gapHeight: 124, spacing: 160, teleport: { inY: 0.70, outY: 0.25 } },
+      // ★ 파이프 8: SLOW
+      { gapY: 0.42, gapHeight: 123, spacing: 159, speedRing: "slow" },
+      { gapY: 0.60, gapHeight: 122, spacing: 158 },
+      { gapY: 0.35, gapHeight: 122, spacing: 158 },
 
       // ── 구간 3: 중력 반전 존 1 (11~16) ──
-      { gapY: 0.55, gapHeight: 162, spacing: 169 },
+      { gapY: 0.55, gapHeight: 122, spacing: 157 },
       // 파이프 12: 반전 시작
-      { gapY: 0.48, gapHeight: 161, spacing: 168, reverseGravity: true },
-      // ★ 파이프 13: FAST (+5, after slow 4개 gap ✓)
-      { gapY: 0.52, gapHeight: 160, spacing: 168, speedRing: "fast" },
-      { gapY: 0.45, gapHeight: 159, spacing: 167 },
-      { gapY: 0.50, gapHeight: 158, spacing: 166 },
+      { gapY: 0.48, gapHeight: 121, spacing: 156, reverseGravity: true },
+      // ★ 파이프 13: FAST
+      { gapY: 0.52, gapHeight: 120, spacing: 156, speedRing: "fast" },
+      { gapY: 0.45, gapHeight: 119, spacing: 155 },
+      { gapY: 0.50, gapHeight: 119, spacing: 154 },
       // 파이프 16: 반전 해제
-      { gapY: 0.48, gapHeight: 158, spacing: 166, reverseGravity: false },
+      { gapY: 0.48, gapHeight: 119, spacing: 154, reverseGravity: false },
 
       // ── 구간 4: 회복 + 텔레포트 (17~21) ──
-      { gapY: 0.55, gapHeight: 157, spacing: 165 },
-      { gapY: 0.38, gapHeight: 156, spacing: 164 },
+      { gapY: 0.55, gapHeight: 118, spacing: 153 },
+      { gapY: 0.38, gapHeight: 117, spacing: 152 },
       // 파이프 19: 텔레포트 (위→아래)
-      { gapY: 0.50, gapHeight: 155, spacing: 164, teleport: { inY: 0.28, outY: 0.3 } },
-      // ★ 파이프 20: SLOW (+7, after fast 6개 gap ✓)
-      { gapY: 0.42, gapHeight: 154, spacing: 163, speedRing: "slow" },
-      { gapY: 0.60, gapHeight: 153, spacing: 162 },
+      { gapY: 0.50, gapHeight: 116, spacing: 152, teleport: { inY: 0.28, outY: 0.3 } },
+      // ★ 파이프 20: SLOW
+      { gapY: 0.42, gapHeight: 116, spacing: 151, speedRing: "slow" },
+      { gapY: 0.60, gapHeight: 115, spacing: 150 },
 
       // ── 구간 5: 중력 반전 존 2 + SLOW 링 (22~28) ──
-      { gapY: 0.35, gapHeight: 153, spacing: 162 },
-      { gapY: 0.55, gapHeight: 152, spacing: 161 },
+      { gapY: 0.35, gapHeight: 115, spacing: 150 },
+      { gapY: 0.55, gapHeight: 114, spacing: 149 },
       // 파이프 24: 반전 시작
-      { gapY: 0.48, gapHeight: 151, spacing: 160, reverseGravity: true },
-      // ★ 파이프 25: SLOW (+5, after slow 4개 gap ✓)
-      { gapY: 0.52, gapHeight: 150, spacing: 160, speedRing: "slow" },
-      { gapY: 0.45, gapHeight: 149, spacing: 159 },
+      { gapY: 0.48, gapHeight: 113, spacing: 148, reverseGravity: true },
+      // ★ 파이프 25: SLOW
+      { gapY: 0.52, gapHeight: 113, spacing: 148, speedRing: "slow" },
+      { gapY: 0.45, gapHeight: 112, spacing: 147 },
       // 파이프 27: 반전 해제
-      { gapY: 0.50, gapHeight: 148, spacing: 158, reverseGravity: false },
-      { gapY: 0.58, gapHeight: 147, spacing: 157 },
+      { gapY: 0.50, gapHeight: 111, spacing: 146, reverseGravity: false },
+      { gapY: 0.58, gapHeight: 110, spacing: 145 },
 
       // ── 구간 6: 텔레포트 + FAST 피날레 (29~35) ──
-      { gapY: 0.38, gapHeight: 147, spacing: 157 },
-      // ★ 파이프 30: FAST (+5, after slow 4개 gap ✓)
-      { gapY: 0.55, gapHeight: 146, spacing: 156, speedRing: "fast" },
+      { gapY: 0.38, gapHeight: 110, spacing: 145 },
+      // ★ 파이프 30: FAST
+      { gapY: 0.55, gapHeight: 110, spacing: 144, speedRing: "fast" },
       // 파이프 31: 텔레포트 (아래→위, fast 중 통과)
-      { gapY: 0.50, gapHeight: 145, spacing: 155, teleport: { inY: 0.68, outY: 0.28 } },
-      { gapY: 0.42, gapHeight: 144, spacing: 154 },
-      { gapY: 0.58, gapHeight: 143, spacing: 153 },
-      { gapY: 0.45, gapHeight: 141, spacing: 152 },
-      { gapY: 0.50, gapHeight: 140, spacing: 150 },
+      { gapY: 0.50, gapHeight: 109, spacing: 143, teleport: { inY: 0.68, outY: 0.28 } },
+      { gapY: 0.42, gapHeight: 108, spacing: 142 },
+      { gapY: 0.58, gapHeight: 107, spacing: 141 },
+      { gapY: 0.45, gapHeight: 106, spacing: 140 },
+      { gapY: 0.50, gapHeight: 105, spacing: 138 },
     ],
   },
 ];
