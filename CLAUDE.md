@@ -322,7 +322,7 @@ npm run start
 ### CI/CD (GitHub Actions)
 - **워크플로우**: `.github/workflows/ci.yml`
 - **트리거**: `dev`, `main` 브랜치 push + PR
-- **파이프라인**: `npm ci` → `npm run build` (ESLint 설정 추가 시 lint 단계 복원)
+- **파이프라인**: `npm ci` → `npm run lint` → `npm run build`
 - **Vercel**: `main` 브랜치 push 시 자동 배포 (별도 설정 완료)
 
 ---
