@@ -4,6 +4,15 @@
  */
 
 import { supabase } from "./supabase";
+import {
+  canClaimToday,
+  getNextRewardDay,
+  getRewardDef,
+  getTodayKST,
+  pickRandomBird,
+  BIRD_FALLBACK_COINS,
+  type ClaimResult,
+} from "./daily-rewards";
 
 // ==================== 타입 ====================
 
@@ -15,6 +24,8 @@ export interface DbUser {
   high_score: number;
   equipped_bird_id: string;
   season: string;
+  reward_day: number; // 마지막 수령 보상 일차 (0=미수령, 1~7)
+  last_reward_date: string | null; // 마지막 수령 날짜 (KST 'YYYY-MM-DD')
   created_at: string;
   updated_at: string;
 }
@@ -289,4 +300,87 @@ export async function updateSeason(
     .from("user")
     .update({ season, updated_at: new Date().toISOString() })
     .eq("id", userId);
+}
+
+// ==================== 일일 보상 ====================
+
+/** 일일 보상 수령 */
+export async function claimDailyReward(
+  userId: string
+): Promise<ClaimResult> {
+  // 1. 유저 조회
+  const { data: user } = await supabase
+    .from("user")
+    .select("reward_day, last_reward_date, coins")
+    .eq("id", userId)
+    .single();
+
+  if (!user) return { claimed: false };
+
+  // 2. 오늘 이미 수령했으면 종료
+  if (!canClaimToday(user.last_reward_date)) {
+    return { claimed: false };
+  }
+
+  // 3. 다음 보상 일차
+  const nextDay = getNextRewardDay(user.reward_day);
+  const reward = getRewardDef(nextDay);
+
+  // 4. 보상 처리
+  if (reward.type === "coins") {
+    const amount = reward.coins!;
+    await addCoins(userId, amount);
+
+    await supabase
+      .from("user")
+      .update({
+        reward_day: nextDay,
+        last_reward_date: getTodayKST(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    return { claimed: true, day: nextDay, type: "coins", coins: amount };
+  }
+
+  // bird 보상
+  const ownedIds = await getOwnedBirdIds(userId);
+  const bird = pickRandomBird(reward.rarity!, ownedIds);
+
+  if (bird) {
+    // 미보유 새 지급
+    await addBird(userId, bird.id);
+
+    await supabase
+      .from("user")
+      .update({
+        reward_day: nextDay,
+        last_reward_date: getTodayKST(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId);
+
+    return { claimed: true, day: nextDay, type: "bird", bird };
+  }
+
+  // 모두 보유 → 코인 대체
+  const fallbackCoins = BIRD_FALLBACK_COINS[reward.rarity!] ?? 500;
+  await addCoins(userId, fallbackCoins);
+
+  await supabase
+    .from("user")
+    .update({
+      reward_day: nextDay,
+      last_reward_date: getTodayKST(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", userId);
+
+  return {
+    claimed: true,
+    day: nextDay,
+    type: "bird",
+    coins: fallbackCoins,
+    isFallback: true,
+  };
 }

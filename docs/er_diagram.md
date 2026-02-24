@@ -14,6 +14,8 @@ erDiagram
         int high_score "레코드 모드 최고 점수 (캐시)"
         string equipped_bird_id FK "장착 중인 새 ID"
         string season "계절 테마 (spring/summer/autumn/winter)"
+        int reward_day "일일보상 마지막 수령 일차 (0~7)"
+        string last_reward_date "마지막 수령 날짜 (KST YYYY-MM-DD)"
         datetime created_at "생성일"
         datetime updated_at "수정일"
     }
@@ -118,6 +120,8 @@ erDiagram
 | high_score | INTEGER | NOT NULL, DEFAULT 0 | 레코드 모드 최고 점수 (캐시) |
 | equipped_bird_id | TEXT | FK → bird.id, NOT NULL, DEFAULT 'bird_common_1' | 장착 중인 새 |
 | season | TEXT | NOT NULL, DEFAULT 'spring' | 계절 테마 |
+| reward_day | INTEGER | NOT NULL, DEFAULT 0 | 일일보상 마지막 수령 일차 (0=미수령, 1~7) |
+| last_reward_date | TEXT | NULLABLE, DEFAULT NULL | 마지막 수령 날짜 (KST 'YYYY-MM-DD') |
 | created_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | 생성일 |
 | updated_at | TIMESTAMPTZ | NOT NULL, DEFAULT now() | 최종 수정일 |
 

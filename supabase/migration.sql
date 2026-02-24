@@ -139,3 +139,9 @@ INSERT INTO bird (id, name, name_ko, rarity, description, image_path, is_default
   ('bird_unique_7', 'Bicycle', '자전거', 'unique', 'A purple bicycle with a happy rider.', '/images/birds/unique/bird_unique_7.png', false),
   ('bird_unique_8', 'Motorcycle', '오토바이', 'unique', 'A cool motorcycle with flames.', '/images/birds/unique/bird_unique_8.png', false),
   ('bird_unique_9', 'Sailboat', '요트', 'unique', 'A peaceful sailboat on the sea.', '/images/birds/unique/bird_unique_9.png', false);
+
+-- ============================================================
+-- Daily Reward 컬럼 추가
+-- ============================================================
+ALTER TABLE "user" ADD COLUMN reward_day INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "user" ADD COLUMN last_reward_date TEXT DEFAULT NULL;

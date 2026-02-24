@@ -3,6 +3,7 @@
  * - 장착된 새 표시, 게임 시작/새 선택 버튼
  * - 닉네임 변경 모달
  * - 게임 전체 설명 (i) 버튼 + 모달
+ * - 일일 보상 모달 (홈 진입 시 미수령 보상 자동 팝업)
  * - 유저 정보 (이름 + 코인), 계절 테마 선택
  */
 
@@ -11,7 +12,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Bird, Power, User, Pencil, Info } from "lucide-react";
+import { Play, Bird, Power, User, Pencil, Info, Gift } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
@@ -21,7 +22,9 @@ import {
 import { useSeason } from "@/lib/season-context";
 import { getBirdById } from "@/lib/birds";
 import { useUser } from "@/lib/user-context";
-import { isUsernameAvailable, updateUsername } from "@/lib/user-service";
+import { isUsernameAvailable, updateUsername, claimDailyReward, getOwnedBirdIds } from "@/lib/user-service";
+import { canClaimToday } from "@/lib/daily-rewards";
+import DailyRewardModal from "@/components/daily-reward-modal";
 
 export default function HomePage() {
   const router = useRouter();
@@ -33,6 +36,9 @@ export default function HomePage() {
   // 게임 설명 모달 상태
   const [showGameInfo, setShowGameInfo] = useState(false);
 
+  // 일일 보상 모달 상태
+  const [showDailyReward, setShowDailyReward] = useState(false);
+
   // 닉네임 변경 모달 상태
   const [showNameModal, setShowNameModal] = useState(false);
   const [newName, setNewName] = useState("");
@@ -42,6 +48,10 @@ export default function HomePage() {
   useEffect(() => {
     if (user) {
       setEquippedBirdId(user.equipped_bird_id);
+      // 일일 보상 수령 가능 여부 체크
+      if (canClaimToday(user.last_reward_date)) {
+        setShowDailyReward(true);
+      }
     }
   }, [user]);
 
@@ -57,6 +67,26 @@ export default function HomePage() {
 
   const handleExit = () => {
     console.log("Exit");
+  };
+
+  // 일일 보상 수령 처리
+  const handleClaimDailyReward = async () => {
+    if (!user) return { claimed: false as const };
+    const result = await claimDailyReward(user.id);
+    if (result.claimed) {
+      // 낙관적 업데이트: 코인, reward_day, last_reward_date
+      const updates: Record<string, unknown> = {
+        reward_day: result.day,
+        last_reward_date: new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      };
+      if (result.coins) {
+        updates.coins = (user.coins ?? 0) + result.coins;
+      }
+      patchUser(updates);
+      // DB 동기화
+      await refreshUser();
+    }
+    return result;
   };
 
   // 닉네임 변경 모달 열기
@@ -134,6 +164,16 @@ export default function HomePage() {
         <div className="flex justify-end">
           <UserInfoBar onEditUsername={openNameModal} />
         </div>
+
+        <div className="flex justify-end mt-1">
+          <button
+            onClick={() => setShowDailyReward(true)}
+            className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-orange-400/80 to-yellow-400/80 hover:from-orange-400 hover:to-yellow-400 active:from-orange-500 active:to-yellow-500 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
+          >
+            <Gift className="w-3.5 h-3.5 text-white" />
+            <span className="text-white text-[10px] font-bold">일일보상</span>
+          </button>
+        </div>
       </div>
 
       {/* 메인 컨텐츠 */}
@@ -197,6 +237,16 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* 일일 보상 모달 */}
+      {showDailyReward && user && (
+        <DailyRewardModal
+          currentDay={user.reward_day}
+          canClaim={canClaimToday(user.last_reward_date)}
+          onClaim={handleClaimDailyReward}
+          onClose={() => setShowDailyReward(false)}
+        />
+      )}
+
       {/* 게임 설명 모달 */}
       {showGameInfo && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -251,6 +301,24 @@ export default function HomePage() {
                 <div className="bg-gray-50 rounded-lg p-2 space-y-1">
                   <p className="font-bold text-gray-600">새 등급</p>
                   <p>⬜ Common · 🟦 Rare · 🟪 Epic · 🟨 Unique</p>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-700 space-y-1.5">
+                <div className="bg-amber-50 rounded-lg p-2 space-y-1.5">
+                  <p className="font-bold text-amber-600">🎁 일일 보상 (Daily Reward)</p>
+                  <p>매일 홈 화면 접속 시 보상을 받을 수 있습니다!</p>
+                  <p>7일 주기로 보상이 순환됩니다.</p>
+                  <div className="bg-white/60 rounded p-1.5 space-y-0.5 text-[10px]">
+                    <p>Day 1: 💰 200 코인</p>
+                    <p>Day 2: 💰 300 코인</p>
+                    <p>Day 3: 🟦 레어 새 (랜덤)</p>
+                    <p>Day 4: 💰 500 코인</p>
+                    <p>Day 5: 🟪 에픽 새 (랜덤)</p>
+                    <p>Day 6: 💰 700 코인</p>
+                    <p>Day 7: 🟨 유니크 새 (랜덤)</p>
+                  </div>
+                  <p className="text-[10px] text-gray-500">※ 해당 등급 새를 모두 보유 시 코인으로 대체됩니다.</p>
                 </div>
               </div>
 

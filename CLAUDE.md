@@ -242,10 +242,12 @@ FLAPPY-BIRD/
 │   ├── bird-selection-page.tsx # 새 선택 화면 (등급별 격자, 장착/해제, 가챠 뽑기)
 │   ├── mode-selection-page.tsx # 모드 선택 화면 (RECORD/STAGE 모드 카드)
 │   ├── stage-select-page.tsx   # 스테이지 선택 화면 (잠금/해제 상태, 최고 기록 표시)
+│   ├── daily-reward-modal.tsx  # 일일 보상 모달 (7일 주기 캘린더, 코인/새 보상 연출)
 │   └── game-page.tsx           # 게임 엔진 (Canvas 렌더링, 물리엔진, 아이템, 코인 보상, 기믹)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
 │   ├── birds.ts                # 새 마스터 데이터 (37종), 등급별 매핑, 가챠 확률 로직
+│   ├── daily-rewards.ts         # 일일 보상 시스템 (7일 주기, KST 날짜, 새 랜덤 선택)
 │   ├── stages.ts               # 스테이지 데이터 (8개 스테이지, 파이프 배치, 기믹 설정)
 │   ├── supabase.ts             # Supabase 클라이언트 초기화 (환경변수 URL/Key)
 │   ├── device.ts               # 기기 UUID 생성/관리 (localStorage 영구 보관)

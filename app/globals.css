@@ -73,6 +73,25 @@ body {
   animation: spin-slow 3s linear infinite;
 }
 
+/* Daily Reward Animations */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 1.2s ease-in-out infinite;
+}
+
 /* Delay utilities for ping animation */
 .delay-300 {
   animation-delay: 300ms;
