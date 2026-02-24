@@ -2,6 +2,7 @@
  * 홈 화면 (메인 메뉴)
  * - 장착된 새 표시, 게임 시작/새 선택 버튼
  * - 닉네임 변경 모달
+ * - 게임 전체 설명 (i) 버튼 + 모달
  * - 유저 정보 (이름 + 코인), 계절 테마 선택
  */
 
@@ -10,7 +11,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Play, Bird, Power, User, Pencil } from "lucide-react";
+import { Play, Bird, Power, User, Pencil, Info } from "lucide-react";
 import {
   FlappyBird,
   SeasonalBackground,
@@ -28,6 +29,9 @@ export default function HomePage() {
   const { user, refreshUser, patchUser } = useUser();
 
   const [equippedBirdId, setEquippedBirdId] = useState("bird_common_1");
+
+  // 게임 설명 모달 상태
+  const [showGameInfo, setShowGameInfo] = useState(false);
 
   // 닉네임 변경 모달 상태
   const [showNameModal, setShowNameModal] = useState(false);
@@ -113,7 +117,14 @@ export default function HomePage() {
     <SeasonalBackground season={currentSeason}>
       {/* 상단 헤더 */}
       <div className="relative z-20 px-3 pt-2 pb-1">
-        <div className="flex items-center justify-end mb-1">
+        <div className="flex items-center justify-between mb-1">
+          <button
+            onClick={() => setShowGameInfo(true)}
+            className="p-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
+            aria-label="게임 설명"
+          >
+            <Info className="w-4 h-4 text-white" />
+          </button>
           <SeasonSelector
             currentSeason={currentSeason}
             onSeasonChange={setCurrentSeason}
@@ -185,6 +196,74 @@ export default function HomePage() {
           </button>
         </div>
       </div>
+
+      {/* 게임 설명 모달 */}
+      {showGameInfo && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-2xl w-64 max-h-[90%] overflow-y-auto overflow-hidden">
+            <div className="bg-[#4CAF50] py-2">
+              <h2 className="text-white text-sm font-bold text-center">
+                게임 설명
+              </h2>
+            </div>
+            <div className="p-3 space-y-2">
+              <Image
+                src="/images/game_explanation/homescreen.png"
+                alt="홈 화면"
+                width={224}
+                height={400}
+                className="w-full rounded-lg border border-gray-200"
+              />
+              <div className="text-xs text-gray-700 space-y-1.5">
+                <p className="font-bold text-green-600">Flappy Bird에 오신 것을 환영합니다!</p>
+                <p>화면을 <span className="font-bold">탭</span>하여 새를 조종하세요.</p>
+                <p>파이프 사이를 통과하며 점수를 획득합니다.</p>
+              </div>
+
+              <Image
+                src="/images/game_explanation/selectmode.png"
+                alt="모드 선택 화면"
+                width={224}
+                height={400}
+                className="w-full rounded-lg border border-gray-200"
+              />
+              <div className="text-xs text-gray-700 space-y-1.5">
+                <div className="bg-orange-50 rounded-lg p-2 space-y-1">
+                  <p className="font-bold text-orange-600">RECORD MODE</p>
+                  <p>끝없는 도전! 최고 점수를 갱신하세요.</p>
+                </div>
+                <div className="bg-indigo-50 rounded-lg p-2 space-y-1">
+                  <p className="font-bold text-indigo-600">STAGE MODE</p>
+                  <p>스테이지별 목표를 클리어하며 진행!</p>
+                </div>
+              </div>
+
+              <Image
+                src="/images/game_explanation/birdselection.png"
+                alt="새 선택 화면"
+                width={224}
+                height={400}
+                className="w-full rounded-lg border border-gray-200"
+              />
+              <div className="text-xs text-gray-700 space-y-1.5">
+                <p className="font-bold text-blue-600">37종의 새를 수집하세요!</p>
+                <p>가챠(뽑기)로 새로운 새를 획득할 수 있습니다.</p>
+                <div className="bg-gray-50 rounded-lg p-2 space-y-1">
+                  <p className="font-bold text-gray-600">새 등급</p>
+                  <p>⬜ Common · 🟦 Rare · 🟪 Epic · 🟨 Unique</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowGameInfo(false)}
+                className="w-full py-2 bg-[#4CAF50] hover:bg-[#43A047] active:bg-[#388E3C] text-white text-sm font-bold rounded-lg transition-all"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 닉네임 변경 모달 */}
       {showNameModal && (
