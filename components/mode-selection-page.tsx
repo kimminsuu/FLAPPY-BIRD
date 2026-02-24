@@ -151,11 +151,20 @@ export default function ModeSelectionPage() {
                   <p>• Epic: 11초마다</p>
                   <p>• Unique: 7초마다</p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-2 space-y-1">
+                <div className="bg-gray-50 rounded-lg p-2 space-y-1.5">
                   <p className="font-bold text-gray-600">아이템 종류</p>
-                  <p>💥 파이프 파괴</p>
-                  <p>🛡️ 무적</p>
-                  <p>⭐ 가산점</p>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm" style={{ background: "rgba(239, 68, 68, 0.9)" }}>💥</span>
+                    <span>파이프 파괴</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm" style={{ background: "rgba(168, 85, 247, 0.9)" }}>👻</span>
+                    <span>무적</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full text-sm" style={{ background: "rgba(234, 179, 8, 0.9)" }}>⭐</span>
+                    <span>가산점 (+5)</span>
+                  </div>
                 </div>
               </div>
               <button
@@ -197,11 +206,22 @@ export default function ModeSelectionPage() {
                 <p className="font-bold text-indigo-600">스테이지별 목표를 클리어하라!</p>
                 <p>목표 파이프 수를 통과하면 <span className="font-bold">클리어</span></p>
                 <p>클리어 시 다음 스테이지가 해금됩니다.</p>
-                <div className="bg-indigo-50 rounded-lg p-2 space-y-1">
+                <div className="bg-indigo-50 rounded-lg p-2 space-y-1.5">
                   <p className="font-bold text-indigo-600">스테이지별 고유 기믹</p>
-                  <p>🌀 텔레포트 포탈</p>
-                  <p>🔄 중력 반전 존</p>
-                  <p>💨 속도 변환 링</p>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-5 text-[9px] font-bold text-white rounded-sm" style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}>IN</span>
+                    <span className="inline-flex items-center justify-center w-7 h-5 text-[9px] font-bold text-white rounded-sm" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)" }}>OUT</span>
+                    <span>텔레포트 포탈</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded text-[10px] font-bold" style={{ background: "rgba(147, 51, 234, 0.15)", color: "rgba(120, 60, 200, 0.8)", border: "1.5px dashed rgba(147, 51, 234, 0.5)" }}>↕</span>
+                    <span>중력 반전 존</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-[3px] text-[7px] font-bold" style={{ borderColor: "#4ADE80", color: "#22C55E" }}>S</span>
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full border-[3px] text-[7px] font-bold" style={{ borderColor: "#EF4444", color: "#DC2626" }}>F</span>
+                    <span>속도 변환 링</span>
+                  </div>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-2">
                   <p className="font-bold text-gray-600">최고 기록</p>

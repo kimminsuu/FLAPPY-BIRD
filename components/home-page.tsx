@@ -246,7 +246,7 @@ export default function HomePage() {
                 className="w-full rounded-lg border border-gray-200"
               />
               <div className="text-xs text-gray-700 space-y-1.5">
-                <p className="font-bold text-blue-600">37종의 새를 수집하세요!</p>
+                <p className="font-bold text-blue-600">새로운 새를 수집하세요!</p>
                 <p>가챠(뽑기)로 새로운 새를 획득할 수 있습니다.</p>
                 <div className="bg-gray-50 rounded-lg p-2 space-y-1">
                   <p className="font-bold text-gray-600">새 등급</p>
