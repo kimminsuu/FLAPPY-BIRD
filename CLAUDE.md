@@ -243,9 +243,15 @@ FLAPPY-BIRD/
 │   ├── mode-selection-page.tsx # 모드 선택 화면 (RECORD/STAGE 모드 카드)
 │   ├── stage-select-page.tsx   # 스테이지 선택 화면 (잠금/해제 상태, 최고 기록 표시)
 │   ├── daily-reward-modal.tsx  # 일일 보상 모달 (7일 주기 캘린더, 코인/새 보상 연출)
-│   └── game-page.tsx           # 게임 엔진 (Canvas 렌더링, 물리엔진, 아이템, 코인 보상, 기믹)
+│   └── game-page.tsx           # 게임 엔진 오케스트레이터 (게임 루프, 입력, 모달)
 │
 ├── lib/                        # 비즈니스 로직 (Backend)
+│   ├── game/                   # 게임 엔진 모듈 (game-page.tsx에서 추출)
+│   │   ├── game-types.ts       # GameStateRef, createInitialState, calcStageTotalScrollDist
+│   │   ├── game-actions.ts     # spawnPipe, spawnItem, applyBreak/Wraith/Point, checkAABB
+│   │   ├── stage-spawner.ts    # 스테이지 파이프/포탈/중력존 생성
+│   │   ├── game-renderer.ts    # 캔버스 렌더링 (배경, 파이프, 포탈, HUD 등)
+│   │   └── game-over-handler.ts # 게임오버/클리어 처리 (점수, 코인, DB)
 │   ├── birds.ts                # 새 마스터 데이터 (37종), 등급별 매핑, 가챠 확률 로직
 │   ├── daily-rewards.ts         # 일일 보상 시스템 (7일 주기, KST 날짜, 새 랜덤 선택)
 │   ├── stages.ts               # 스테이지 데이터 (8개 스테이지, 파이프 배치, 기믹 설정)
