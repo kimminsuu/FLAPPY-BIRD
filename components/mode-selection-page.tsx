@@ -209,8 +209,7 @@ export default function ModeSelectionPage() {
                 <div className="bg-indigo-50 rounded-lg p-2 space-y-1.5">
                   <p className="font-bold text-indigo-600">스테이지별 고유 기믹</p>
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-7 h-5 text-[9px] font-bold text-white rounded-sm" style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)" }}>IN</span>
-                    <span className="inline-flex items-center justify-center w-7 h-5 text-[9px] font-bold text-white rounded-sm" style={{ background: "linear-gradient(135deg, #60a5fa, #2563eb)" }}>OUT</span>
+                    <span className="inline-flex items-center justify-center w-7 h-5 rounded-[50%] border-[3px]" style={{ borderColor: "#FBBF24", background: "linear-gradient(135deg, rgba(253,224,71,0.3), rgba(245,158,11,0.15))", boxShadow: "0 0 4px rgba(251,191,36,0.4)" }} />
                     <span>텔레포트 포탈</span>
                   </div>
                   <div className="flex items-center gap-2">

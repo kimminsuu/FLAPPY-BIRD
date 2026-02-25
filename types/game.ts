@@ -1,5 +1,7 @@
 /**
  * 게임 관련 타입 정의
+ * - 게임 상태, 파이프, 파티클, 아이템, 기믹 타입
+ * - GAME_CONFIG 상수 (물리, 크기, 보상, 파티클 제한)
  */
 
 import type { BirdRarity } from "./bird";
@@ -122,6 +124,7 @@ export const GAME_CONFIG = {
   speedRingDuration: 3, // 스피드 링 효과 지속 시간 (초)
   speedRingSlowDivisor: 1.5, // slow 링: 속도 ÷1.5
   speedRingFastMultiplier: 1.25, // fast 링: 속도 ×1.25
+  maxParticles: 80, // 파티클 최대 개수 (모바일 성능)
 } as const;
 
 // 등급별 아이템 생성 주기 (초, 0이면 아이템 없음)

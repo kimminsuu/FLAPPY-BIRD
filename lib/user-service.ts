@@ -69,13 +69,20 @@ export async function createUser(
   deviceId: string,
   username: string
 ): Promise<DbUser | null> {
+  // 이미 같은 device_id로 유저가 존재하면 해당 유저 반환
+  const existing = await getUserByDeviceId(deviceId);
+  if (existing) return existing;
+
   const { data: user, error: userError } = await supabase
     .from("user")
     .insert({ device_id: deviceId, username })
     .select()
     .single();
 
-  if (userError || !user) return null;
+  if (userError || !user) {
+    console.error("createUser failed:", userError?.message, userError?.code);
+    return null;
+  }
 
   // 기본 새 (bird_common_1) 지급
   await supabase.from("user_bird").insert({

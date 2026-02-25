@@ -1,5 +1,10 @@
 /**
  * 스테이지 데이터 정의
+ * - Stage 1~2: 기본 (초원, 숲길)
+ * - Stage 3~4: 텔레포트 (동굴, 심연)
+ * - Stage 5~6: 중력 반전 (역장, 혼돈)
+ * - Stage 7~8: 스피드 링 (가속, 융합)
+ * - Stage 9: 전 기믹 혼합 (시련)
  */
 
 import type { StageConfig } from "@/types/stage";
@@ -390,6 +395,83 @@ export const STAGES: StageConfig[] = [
       { gapY: 0.58, gapHeight: 107, spacing: 141 },
       { gapY: 0.45, gapHeight: 106, spacing: 140 },
       { gapY: 0.50, gapHeight: 105, spacing: 138 },
+    ],
+  },
+  {
+    id: 9,
+    name: "시련",
+    pipeSpacing: 198,
+    pipeSpeed: 2,
+    goalScore: 40,
+    enableItems: false,
+    pipes: [
+      // ── 구간 1: 워밍업 + SLOW (파이프 1~5) ──
+      { gapY: 0.45, gapHeight: 120 },
+      { gapY: 0.52, gapHeight: 119, spacing: 157 },
+      // ★ 파이프 3: SLOW
+      { gapY: 0.48, gapHeight: 118, spacing: 156, speedRing: "slow" },
+      { gapY: 0.55, gapHeight: 118, spacing: 155 },
+      { gapY: 0.40, gapHeight: 117, spacing: 154 },
+
+      // ── 구간 2: 중력 반전 존 1 + FAST + 텔레포트 (파이프 6~13) ──
+      // 파이프 6: 반전 시작
+      { gapY: 0.50, gapHeight: 116, spacing: 152, reverseGravity: true },
+      // ★ 파이프 7: FAST (반전 존 안에서 가속)
+      { gapY: 0.46, gapHeight: 115, spacing: 151, speedRing: "fast" },
+      { gapY: 0.54, gapHeight: 114, spacing: 150 },
+      { gapY: 0.42, gapHeight: 113, spacing: 148 },
+      // 파이프 10: 텔레포트 (반전+가속 중 텔레포트)
+      { gapY: 0.50, gapHeight: 112, spacing: 147, teleport: { inY: 0.30, outY: 0.72 } },
+      { gapY: 0.56, gapHeight: 111, spacing: 146 },
+      { gapY: 0.44, gapHeight: 110, spacing: 145 },
+      // 파이프 13: 반전 해제
+      { gapY: 0.50, gapHeight: 109, spacing: 144, reverseGravity: false },
+
+      // ── 구간 3: 회복 + SLOW (파이프 14~18) ──
+      { gapY: 0.55, gapHeight: 108, spacing: 146 },
+      { gapY: 0.38, gapHeight: 107, spacing: 144 },
+      // ★ 파이프 16: SLOW
+      { gapY: 0.50, gapHeight: 106, spacing: 142, speedRing: "slow" },
+      { gapY: 0.58, gapHeight: 106, spacing: 141 },
+      { gapY: 0.42, gapHeight: 105, spacing: 140 },
+
+      // ── 구간 4: 텔레포트 체인 + FAST (파이프 19~25) ──
+      // 파이프 19: 텔레포트 1 (아래→위)
+      { gapY: 0.50, gapHeight: 105, spacing: 140, teleport: { inY: 0.72, outY: 0.25 } },
+      // ★ 파이프 20: FAST
+      { gapY: 0.42, gapHeight: 104, spacing: 138, speedRing: "fast" },
+      { gapY: 0.60, gapHeight: 103, spacing: 136 },
+      { gapY: 0.35, gapHeight: 103, spacing: 135 },
+      // 파이프 23: 텔레포트 2 (위→아래)
+      { gapY: 0.50, gapHeight: 102, spacing: 134, teleport: { inY: 0.28, outY: 0.75 } },
+      { gapY: 0.58, gapHeight: 101, spacing: 133 },
+      { gapY: 0.40, gapHeight: 101, spacing: 132 },
+
+      // ── 구간 5: 중력 반전 존 2 + 텔레포트 (파이프 26~33) ──
+      // 파이프 26: 반전 시작
+      { gapY: 0.50, gapHeight: 101, spacing: 132, reverseGravity: true },
+      { gapY: 0.44, gapHeight: 100, spacing: 131 },
+      { gapY: 0.56, gapHeight: 100, spacing: 130 },
+      // 파이프 29: 텔레포트 (반전 존 안)
+      { gapY: 0.50, gapHeight: 99, spacing: 130, teleport: { inY: 0.68, outY: 0.28 } },
+      { gapY: 0.42, gapHeight: 99, spacing: 129 },
+      { gapY: 0.55, gapHeight: 98, spacing: 129 },
+      // 파이프 32: 반전 해제
+      { gapY: 0.48, gapHeight: 97, spacing: 128, reverseGravity: false },
+      { gapY: 0.52, gapHeight: 97, spacing: 128 },
+
+      // ── 구간 6: FAST + 중력 반전 존 3 피날레 (파이프 34~40) ──
+      // ★ 파이프 34: FAST
+      { gapY: 0.50, gapHeight: 97, spacing: 128, speedRing: "fast" },
+      // 파이프 35: 반전 시작 (가속 상태에서 즉시 반전)
+      { gapY: 0.46, gapHeight: 97, spacing: 127, reverseGravity: true },
+      { gapY: 0.54, gapHeight: 96, spacing: 127 },
+      { gapY: 0.42, gapHeight: 96, spacing: 126 },
+      { gapY: 0.50, gapHeight: 96, spacing: 126 },
+      // 파이프 39: 반전 해제
+      { gapY: 0.48, gapHeight: 96, spacing: 126, reverseGravity: false },
+      // 파이프 40: 마지막
+      { gapY: 0.50, gapHeight: 96, spacing: 126 },
     ],
   },
 ];
