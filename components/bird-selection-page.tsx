@@ -24,6 +24,7 @@ import {
   addBird,
 } from "@/lib/user-service";
 import { BIRDS, getBirdsByRarity, performGacha, getGachaCost, canPerformGacha } from "@/lib/birds";
+import { playClickSound, playEquipSound, playGachaResultSound } from "@/lib/sound";
 import { Bird, BirdRarity, BIRD_RARITIES, BIRD_RARITY_INFO, GACHA_CONFIG, GachaResult } from "@/types/bird";
 
 type GachaPhase = "idle" | "animating" | "result";
@@ -194,11 +195,13 @@ export default function BirdSelectionPage() {
 
   const handleBirdSelect = (birdId: string) => {
     if (ownedBirdIds.includes(birdId)) {
+      playClickSound();
       setSelectedBirdId(birdId);
     }
   };
 
   const handleEquip = () => {
+    playEquipSound();
     if (selectedBirdId && ownedBirdIds.includes(selectedBirdId) && user) {
       setEquippedBirdId(selectedBirdId);
       setSelectedBirdId(null);
@@ -208,12 +211,14 @@ export default function BirdSelectionPage() {
   };
 
   const handleBack = () => {
+    playClickSound();
     router.push("/home");
   };
 
   // 가챠 실행
   const handleGacha = async () => {
     if (!user || !canPerformGacha(userCoins)) return;
+    playClickSound();
 
     const { success, newAmount } = await subtractCoins(user.id, getGachaCost());
     if (!success) return;
@@ -227,6 +232,7 @@ export default function BirdSelectionPage() {
 
     setTimeout(async () => {
       setGachaPhase("result");
+      playGachaResultSound(result.bird.rarity);
 
       if (result.isNew) {
         const newOwnedBirds = [...ownedBirdIds, result.bird.id];
@@ -241,11 +247,13 @@ export default function BirdSelectionPage() {
   };
 
   const handleCloseGacha = () => {
+    playClickSound();
     setGachaPhase("idle");
     setGachaResult(null);
   };
 
   const handleGachaAgain = () => {
+    playClickSound();
     setGachaPhase("idle");
     setGachaResult(null);
     setTimeout(() => {

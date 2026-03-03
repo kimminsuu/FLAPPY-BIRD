@@ -259,7 +259,8 @@ FLAPPY-BIRD/
 │   ├── device.ts               # 기기 UUID 생성/관리 (localStorage 영구 보관)
 │   ├── user-context.tsx        # 유저 상태 관리 Context (기기 UUID 자동 로드, CRUD)
 │   ├── user-service.ts         # Supabase CRUD 서비스 (유저, 코인, 새, 점수, 스테이지)
-│   └── season-context.tsx      # 계절 테마 Context (DB 우선, localStorage fallback)
+│   ├── season-context.tsx      # 계절 테마 Context (DB 우선, localStorage fallback)
+│   └── sound.ts                # 사운드 유틸리티 (Web Audio API, 버튼 클릭 효과음)
 │
 ├── types/                      # TypeScript 타입 정의
 │   ├── bird.ts                 # 새 타입 (BirdData, Rarity, UserBird 등)

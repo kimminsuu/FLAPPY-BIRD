@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock, Check } from "lucide-react";
 import { SeasonalBackground } from "@/components/ui";
 import { Season } from "@/components/ui/SeasonalBackground";
+import { playClickSound } from "@/lib/sound";
 import { useSeason } from "@/lib/season-context";
 import { useUser } from "@/lib/user-context";
 import { getStageRecords } from "@/lib/user-service";
@@ -134,6 +135,7 @@ export default function StageSelectPage() {
   };
 
   const handleStageClick = (stage: number) => {
+    playClickSound();
     router.push(`/stage/${stage}`);
   };
 
@@ -141,7 +143,7 @@ export default function StageSelectPage() {
     <SeasonalBackground season={currentSeason}>
       <div className="relative z-20 flex items-center justify-between px-3 pt-2 pb-1">
         <button
-          onClick={() => router.push("/mode-select")}
+          onClick={() => { playClickSound(); router.push("/mode-select"); }}
           className="p-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
           aria-label="뒤로가기"
         >

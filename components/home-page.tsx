@@ -24,6 +24,7 @@ import { getBirdById } from "@/lib/birds";
 import { useUser } from "@/lib/user-context";
 import { isUsernameAvailable, updateUsername, claimDailyReward, getOwnedBirdIds } from "@/lib/user-service";
 import { canClaimToday } from "@/lib/daily-rewards";
+import { playClickSound } from "@/lib/sound";
 import DailyRewardModal from "@/components/daily-reward-modal";
 
 export default function HomePage() {
@@ -58,14 +59,17 @@ export default function HomePage() {
   const equippedBird = getBirdById(equippedBirdId);
 
   const handleStart = () => {
+    playClickSound();
     router.push("/mode-select");
   };
 
   const handleSelectBird = () => {
+    playClickSound();
     router.push("/bird-selection");
   };
 
   const handleExit = () => {
+    playClickSound();
     console.log("Exit");
   };
 
@@ -98,6 +102,7 @@ export default function HomePage() {
 
   // 닉네임 변경 처리
   const handleChangeName = async () => {
+    playClickSound();
     setNameError("");
     const trimmed = newName.trim();
 
@@ -149,7 +154,7 @@ export default function HomePage() {
       <div className="relative z-20 px-3 pt-2 pb-1">
         <div className="flex items-center justify-between mb-1">
           <button
-            onClick={() => setShowGameInfo(true)}
+            onClick={() => { playClickSound(); setShowGameInfo(true); }}
             className="p-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
             aria-label="게임 설명"
           >
@@ -167,7 +172,7 @@ export default function HomePage() {
 
         <div className="flex justify-end mt-1">
           <button
-            onClick={() => setShowDailyReward(true)}
+            onClick={() => { playClickSound(); setShowDailyReward(true); }}
             className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-orange-400/80 to-yellow-400/80 hover:from-orange-400 hover:to-yellow-400 active:from-orange-500 active:to-yellow-500 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
           >
             <Gift className="w-3.5 h-3.5 text-white" />
@@ -323,7 +328,7 @@ export default function HomePage() {
               </div>
 
               <button
-                onClick={() => setShowGameInfo(false)}
+                onClick={() => { playClickSound(); setShowGameInfo(false); }}
                 className="w-full py-2 bg-[#4CAF50] hover:bg-[#43A047] active:bg-[#388E3C] text-white text-sm font-bold rounded-lg transition-all"
               >
                 닫기
@@ -373,7 +378,7 @@ export default function HomePage() {
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowNameModal(false)}
+                  onClick={() => { playClickSound(); setShowNameModal(false); }}
                   disabled={isChangingName}
                   className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 text-sm font-bold rounded-lg transition-all disabled:opacity-50"
                 >

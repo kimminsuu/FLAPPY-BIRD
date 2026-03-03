@@ -20,6 +20,7 @@ import {
   type DailyRewardDef,
 } from "@/lib/daily-rewards";
 import { BIRD_RARITY_INFO } from "@/types/bird";
+import { playClickSound } from "@/lib/sound";
 
 /** 파티클 위치 (결정론적, 렌더 중 Math.random 금지) */
 const SPARKLE_POSITIONS = [
@@ -84,6 +85,7 @@ export default function DailyRewardModal({
   }, [phase, result]);
 
   const handleClaim = useCallback(async () => {
+    playClickSound();
     setPhase("animating");
 
     const claimResult = await onClaim();
@@ -103,6 +105,7 @@ export default function DailyRewardModal({
   }, [onClaim]);
 
   const handleClose = useCallback(() => {
+    playClickSound();
     setPhase("idle");
     setResult(null);
     onClose();
@@ -223,7 +226,7 @@ export default function DailyRewardModal({
                 </button>
               ) : (
                 <button
-                  onClick={onClose}
+                  onClick={() => { playClickSound(); onClose(); }}
                   className="w-full py-2.5 bg-gray-300 text-gray-500 text-sm font-bold rounded-xl flex items-center justify-center gap-2"
                 >
                   <Check className="w-4 h-4" />

@@ -13,6 +13,7 @@ import Image from "next/image";
 import { ArrowLeft, Trophy, Map, Info } from "lucide-react";
 import { SeasonalBackground } from "@/components/ui";
 import { useSeason } from "@/lib/season-context";
+import { playClickSound } from "@/lib/sound";
 
 export default function ModeSelectionPage() {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function ModeSelectionPage() {
       {/* 상단 헤더 */}
       <div className="relative z-20 px-3 pt-2 pb-1">
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => { playClickSound(); router.push("/home"); }}
           className="p-1.5 bg-white/20 hover:bg-white/30 active:bg-white/40 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
           aria-label="뒤로가기"
         >
@@ -56,7 +57,7 @@ export default function ModeSelectionPage() {
                 <Trophy className="w-5 h-5 text-yellow-200 drop-shadow-md" />
               </div>
               <button
-                onClick={() => setShowRecordInfo(true)}
+                onClick={() => { playClickSound(); setShowRecordInfo(true); }}
                 className="absolute top-1.5 right-1.5 p-1 bg-white/20 hover:bg-white/40 active:bg-white/50 rounded-full transition-all"
                 aria-label="레코드 모드 설명"
               >
@@ -77,7 +78,7 @@ export default function ModeSelectionPage() {
 
             <div className="p-2 pt-0">
               <button
-                onClick={() => router.push("/game")}
+                onClick={() => { playClickSound(); router.push("/game"); }}
                 className="w-full py-2 bg-orange-400 hover:bg-orange-300 active:bg-orange-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                 style={{ textShadow: "1px 1px 2px rgba(0,0,0,0.3)" }}
               >
@@ -93,7 +94,7 @@ export default function ModeSelectionPage() {
                 <Map className="w-5 h-5 text-blue-200 drop-shadow-md" />
               </div>
               <button
-                onClick={() => setShowStageInfo(true)}
+                onClick={() => { playClickSound(); setShowStageInfo(true); }}
                 className="absolute top-1.5 right-1.5 p-1 bg-white/20 hover:bg-white/40 active:bg-white/50 rounded-full transition-all"
                 aria-label="스테이지 모드 설명"
               >
@@ -114,7 +115,7 @@ export default function ModeSelectionPage() {
 
             <div className="p-2 pt-0">
               <button
-                onClick={() => router.push("/stage-select")}
+                onClick={() => { playClickSound(); router.push("/stage-select"); }}
                 className="w-full py-2 bg-indigo-400 hover:bg-indigo-300 active:bg-indigo-500 text-white text-sm font-bold rounded-lg transition-all shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                 style={{ textShadow: "1px 1px 2px rgba(0,0,0,0.3)" }}
               >
@@ -168,7 +169,7 @@ export default function ModeSelectionPage() {
                 </div>
               </div>
               <button
-                onClick={() => setShowRecordInfo(false)}
+                onClick={() => { playClickSound(); setShowRecordInfo(false); }}
                 className="w-full py-2 bg-[#FF9800] hover:bg-[#F57C00] active:bg-[#EF6C00] text-white text-sm font-bold rounded-lg transition-all"
               >
                 닫기
@@ -228,7 +229,7 @@ export default function ModeSelectionPage() {
                 </div>
               </div>
               <button
-                onClick={() => setShowStageInfo(false)}
+                onClick={() => { playClickSound(); setShowStageInfo(false); }}
                 className="w-full py-2 bg-[#3F51B5] hover:bg-[#303F9F] active:bg-[#283593] text-white text-sm font-bold rounded-lg transition-all"
               >
                 닫기

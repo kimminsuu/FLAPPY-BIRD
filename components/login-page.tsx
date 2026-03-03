@@ -17,6 +17,7 @@ import {
 } from "@/components/ui";
 import { useSeason } from "@/lib/season-context";
 import { getOrCreateDeviceId } from "@/lib/device";
+import { playClickSound } from "@/lib/sound";
 import { isUsernameAvailable, createUser } from "@/lib/user-service";
 import { useUser } from "@/lib/user-context";
 
@@ -30,6 +31,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    playClickSound();
     setError("");
 
     const trimmed = username.trim();

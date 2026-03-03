@@ -9,6 +9,7 @@
 import { useState } from "react";
 import { Palette, X } from "lucide-react";
 import { Season, seasonThemes } from "./SeasonalBackground";
+import { playClickSound } from "@/lib/sound";
 
 interface SeasonSelectorProps {
   currentSeason: Season;
@@ -32,6 +33,7 @@ export default function SeasonSelector({
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (season: Season) => {
+    playClickSound();
     onSeasonChange(season);
     setIsOpen(false);
   };
@@ -40,7 +42,7 @@ export default function SeasonSelector({
     <div className="relative z-50">
       {/* 배경 선택 버튼 */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => { playClickSound(); setIsOpen(!isOpen); }}
         className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-gray-50 rounded-xl shadow-lg transition-all"
         aria-label="배경 선택"
       >

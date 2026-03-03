@@ -3,6 +3,7 @@
  * - 레코드 모드 (무한) / 스테이지 모드 (정해진 파이프)
  * - 물리 엔진, 충돌 감지, 입력 처리, 게임 루프
  * - 실제 렌더링/액션/스폰/게임오버 처리는 lib/game/* 모듈에 위임
+ * - 최적화: splice→swap-pop, 상수 캐싱, setState 최소화, DPR 1.5
  */
 
 "use client";
@@ -34,6 +35,7 @@ import {
 } from "@/lib/game/game-actions";
 import { spawnStagePipe } from "@/lib/game/stage-spawner";
 import { buildGradientCache, renderFrame } from "@/lib/game/game-renderer";
+import { playClickSound, playJumpSound, playGameOverSound, playCoinSound, playWraithSound, playBreakSound } from "@/lib/sound";
 import { handleGameOver, handleStageClear, type GameOverCallbacks } from "@/lib/game/game-over-handler";
 
 // ==================== 메인 컴포넌트 ====================
@@ -57,6 +59,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
   patchUserRef.current = patchUser;
   const userCoinsRef = useRef(0);
   const highScoreRef = useRef(0);
+  const prevScoreRef = useRef(0);
 
   // React 상태 (UI 표시용)
   const [gameStatus, setGameStatus] = useState<GameStatus>("ready");
@@ -236,21 +239,21 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           }
 
           if (pipe.x + pipe.width < -10) {
-            state.pipes.splice(i, 1);
+            const last = state.pipes.length - 1;
+            if (i !== last) state.pipes[i] = state.pipes[last];
+            state.pipes.pop();
           }
         }
 
-        // 텔레포트 파이프 닫히는 애니메이션
+        // 텔레포트 파이프 닫히는 애니메이션 (캐시된 상수 사용)
         for (const pipe of state.pipes) {
           if (pipe.isTeleportPipe && pipe.originalGapHeight) {
-            const closeStartX = state.canvasWidth * 0.75;
-            const closeEndX = state.canvasWidth * 0.35;
-            if (pipe.x > closeStartX) {
+            if (pipe.x > state.closeStartX) {
               pipe.gapHeight = pipe.originalGapHeight;
-            } else if (pipe.x < closeEndX) {
+            } else if (pipe.x < state.closeEndX) {
               pipe.gapHeight = 0;
             } else {
-              const t = (pipe.x - closeEndX) / (closeStartX - closeEndX);
+              const t = (pipe.x - state.closeEndX) / state.closeRange;
               pipe.gapHeight = pipe.originalGapHeight * t;
             }
           }
@@ -260,7 +263,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         for (let i = state.items.length - 1; i >= 0; i--) {
           state.items[i].x -= currentPipeSpeed;
           if (state.items[i].x + state.items[i].size < -10) {
-            state.items.splice(i, 1);
+            const last = state.items.length - 1;
+            if (i !== last) state.items[i] = state.items[last];
+            state.items.pop();
           }
         }
 
@@ -268,7 +273,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
         for (let i = state.portals.length - 1; i >= 0; i--) {
           state.portals[i].x -= currentPipeSpeed;
           if (state.portals[i].x + state.portals[i].size < -60) {
-            state.portals.splice(i, 1);
+            const last = state.portals.length - 1;
+            if (i !== last) state.portals[i] = state.portals[last];
+            state.portals.pop();
           }
         }
 
@@ -281,7 +288,9 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             zone.startX -= currentPipeSpeed;
             zone.endX -= currentPipeSpeed;
             if (zone.endX < -100) {
-              state.gravityZones.splice(i, 1);
+              const last = state.gravityZones.length - 1;
+              if (i !== last) state.gravityZones[i] = state.gravityZones[last];
+              state.gravityZones.pop();
               continue;
             }
             if (birdCenterX >= zone.startX && birdCenterX <= zone.endX) {
@@ -454,11 +463,13 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           ) {
             item.collected = true;
             switch (item.type) {
-              case "break": applyBreak(state, currentSeason); break;
-              case "wraith": applyWraith(state, birdAspectRef.current); break;
-              case "point": applyPoint(state, birdAspectRef.current); break;
+              case "break": applyBreak(state, currentSeason); playBreakSound(); break;
+              case "wraith": applyWraith(state, birdAspectRef.current); playWraithSound(); break;
+              case "point": applyPoint(state, birdAspectRef.current); playCoinSound(); break;
             }
-            state.items.splice(i, 1);
+            const lastItem = state.items.length - 1;
+            if (i !== lastItem) state.items[i] = state.items[lastItem];
+            state.items.pop();
           }
         }
 
@@ -493,11 +504,16 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
         // 게임오버 처리
         if (state.status === "gameover") {
+          playGameOverSound();
           handleGameOver(state, stageConfig, cb);
           return;
         }
 
-        setScore(state.score);
+        // 점수 변경 시에만 React setState 호출 (매 프레임 리렌더 방지)
+        if (state.score !== prevScoreRef.current) {
+          prevScoreRef.current = state.score;
+          setScore(state.score);
+        }
       }
 
       // === 렌더링 ===
@@ -526,7 +542,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
@@ -581,17 +597,21 @@ export default function GamePage({ stageConfig }: GamePageProps) {
       state.bird.velocity = GAME_CONFIG.jumpForce;
       state.playStartTime = Date.now();
       state.lastFrameTime = performance.now();
+      playJumpSound();
     } else if (state.status === "playing" && !state.isTeleporting) {
       const jump = state.isGravityReversed ? -GAME_CONFIG.jumpForce : GAME_CONFIG.jumpForce;
       state.bird.velocity = jump;
+      playJumpSound();
     }
   }, []);
 
   const handleRestart = useCallback(() => {
+    playClickSound();
     initGame();
   }, [initGame]);
 
   const handleGoHome = useCallback(() => {
+    playClickSound();
     router.push("/home");
   }, [router]);
 
@@ -664,7 +684,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={stageConfig ? () => router.push("/stage-select") : handleGoHome}
+                  onClick={stageConfig ? () => { playClickSound(); router.push("/stage-select"); } : handleGoHome}
                   className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
                   {stageConfig ? (
@@ -714,14 +734,14 @@ export default function GamePage({ stageConfig }: GamePageProps) {
 
               <div className="flex gap-2 pt-1">
                 <button
-                  onClick={() => router.push("/stage-select")}
+                  onClick={() => { playClickSound(); router.push("/stage-select"); }}
                   className="flex-1 py-2 bg-gray-200 hover:bg-gray-300 active:bg-gray-400 text-gray-700 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
                   <List className="w-4 h-4" />
                   Stages
                 </button>
                 <button
-                  onClick={() => router.push(`/stage/${stageConfig.id + 1}`)}
+                  onClick={() => { playClickSound(); router.push(`/stage/${stageConfig.id + 1}`); }}
                   className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1"
                 >
                   Next

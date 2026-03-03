@@ -1,7 +1,16 @@
 /**
- * 게임 캔버스 렌더링
+ * 게임 캔버스 렌더링 (최적화 버전)
  * - buildGradientCache(): 계절별 그라디언트 캐시 빌드
  * - renderFrame(): 전체 프레임 렌더링 (배경, 중력존, 파이프, 스피드링, 포탈, 파티클, 잔디, 아이템, 새, 플래시, HUD, Ready 화면)
+ *
+ * 최적화:
+ * - 파이프 바디 세그먼트 1회 beginPath+stroke 배치
+ * - 파이프 캡 경로 재사용 (fill→동일 path stroke)
+ * - save/restore 제거 → translate/-translate 또는 좌표 직접 오프셋
+ * - 포탈 tilt 제거, 나선형 세그먼트 감소, 시간값 1회 계산
+ * - 스피드 링 pulse 1회 계산 공유
+ * - 중력존 save/restore 제거, 텍스트 최소화
+ * - 파티클 타입별 배치 렌더링
  */
 
 import { GAME_CONFIG, PIPE_COLORS } from "@/types/game";
@@ -96,6 +105,9 @@ export function renderFrame(
   const birdH = birdW * opts.birdAspect;
   const cache = opts.cache;
 
+  // 프레임당 1회 시간 계산
+  const now = Date.now();
+
   // 그라디언트 캐시 갱신
   buildGradientCache(ctx, H, opts.season, cache);
 
@@ -109,11 +121,11 @@ export function renderFrame(
   // 파이프
   renderPipes(ctx, state, playableHeight, cache);
 
-  // 스피드 링
-  renderSpeedRings(ctx, state);
+  // 스피드 링 (now 공유)
+  renderSpeedRings(ctx, state, now);
 
-  // 포탈
-  renderPortals(ctx, state, W);
+  // 포탈 (now 공유)
+  renderPortals(ctx, state, W, now);
 
   // 포탈 파티클 생성
   if (state.status === "playing") {
@@ -144,7 +156,7 @@ export function renderFrame(
 
   // Ready 화면
   if (state.status === "ready") {
-    renderReadyScreen(ctx, state, W, H, opts.stageConfig);
+    renderReadyScreen(ctx, state, W, H, now, opts.stageConfig);
   }
 }
 
@@ -156,15 +168,19 @@ function renderGravityZones(
   W: number,
   playableHeight: number
 ): void {
+  if (state.gravityZones.length === 0) return;
+
+  // save/restore 제거: 스타일을 직접 설정/복원
   for (const zone of state.gravityZones) {
     if (zone.startX > W || zone.endX < 0) continue;
 
-    ctx.save();
+    // 존 배경
     ctx.fillStyle = "rgba(100, 50, 180, 0.12)";
     const drawStartX = Math.max(0, zone.startX);
     const drawEndX = Math.min(W, zone.endX);
     ctx.fillRect(drawStartX, 0, drawEndX - drawStartX, playableHeight);
 
+    // 경계선 (dashed)
     ctx.strokeStyle = "rgba(120, 60, 200, 0.5)";
     ctx.lineWidth = 2;
     ctx.setLineDash([8, 6]);
@@ -182,6 +198,7 @@ function renderGravityZones(
     }
     ctx.setLineDash([]);
 
+    // 시작선에만 아이콘 + 텍스트 (4회→2회로 감소)
     ctx.fillStyle = "rgba(120, 60, 200, 0.6)";
     ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
@@ -189,10 +206,6 @@ function renderGravityZones(
     if (zone.startX > 0 && zone.startX < W) {
       ctx.fillText("\u2195", zone.startX + 14, playableHeight * 0.15);
       ctx.fillText("\u2195", zone.startX + 14, playableHeight * 0.85);
-    }
-    if (zone.endX > 0 && zone.endX < W) {
-      ctx.fillText("\u2195", zone.endX - 14, playableHeight * 0.15);
-      ctx.fillText("\u2195", zone.endX - 14, playableHeight * 0.85);
     }
 
     if (zone.startX + 8 > 0 && zone.startX + 8 < W) {
@@ -202,8 +215,6 @@ function renderGravityZones(
       ctx.textBaseline = "top";
       ctx.fillText("REVERSE", zone.startX + 8, 10);
     }
-
-    ctx.restore();
   }
 }
 
@@ -216,10 +227,11 @@ function renderPipes(
   const capH = 20;
   const capOverhang = 4;
 
+  // save/restore 제거 → translate + 역translate 사용
   const drawPipeBody = (x: number, y: number, w: number, h: number) => {
     if (h <= 0) return;
-    ctx.save();
     ctx.translate(x, 0);
+
     ctx.fillStyle = cache.pipeBodyGrad!;
     ctx.fillRect(0, y, w, h);
 
@@ -233,27 +245,28 @@ function renderPipes(
     ctx.fillStyle = "rgba(0,0,0,0.06)";
     ctx.fillRect(w - 10, y, 2, h);
 
+    // 세그먼트를 하나의 beginPath에 모아서 1회 stroke
     ctx.strokeStyle = "rgba(0,0,0,0.07)";
     ctx.lineWidth = 1;
     const segmentHeight = 20;
     const startSeg = Math.ceil(y / segmentHeight) * segmentHeight;
+    ctx.beginPath();
     for (let sy = startSeg; sy < y + h; sy += segmentHeight) {
-      ctx.beginPath();
       ctx.moveTo(2, sy);
       ctx.lineTo(w - 2, sy);
-      ctx.stroke();
     }
+    ctx.stroke();
 
     ctx.strokeStyle = "rgba(0,0,0,0.25)";
     ctx.lineWidth = 1.5;
     ctx.strokeRect(0.5, y, w - 1, h);
-    ctx.restore();
+
+    ctx.translate(-x, 0);
   };
 
+  // 파이프 캡: 경로 1회 그린 뒤 fill → 동일 경로 stroke
   const drawPipeCap = (x: number, y: number, w: number, h: number) => {
-    ctx.save();
     ctx.translate(x, 0);
-    ctx.fillStyle = cache.pipeCapGrad!;
 
     const r = 4;
     ctx.beginPath();
@@ -267,8 +280,15 @@ function renderPipes(
     ctx.lineTo(0, y + r);
     ctx.arcTo(0, y, r, y, r);
     ctx.closePath();
-    ctx.fill();
 
+    // fill + stroke on same path
+    ctx.fillStyle = cache.pipeCapGrad!;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.3)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 하이라이트/섀도
     ctx.fillStyle = "rgba(255,255,255,0.22)";
     ctx.fillRect(3, y + 2, w - 6, 4);
     ctx.fillStyle = "rgba(0,0,0,0.12)";
@@ -276,21 +296,7 @@ function renderPipes(
     ctx.fillStyle = "rgba(255,255,255,0.12)";
     ctx.fillRect(2, y + 4, 5, h - 8);
 
-    ctx.strokeStyle = "rgba(0,0,0,0.3)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(r, y);
-    ctx.lineTo(w - r, y);
-    ctx.arcTo(w, y, w, y + r, r);
-    ctx.lineTo(w, y + h - r);
-    ctx.arcTo(w, y + h, w - r, y + h, r);
-    ctx.lineTo(r, y + h);
-    ctx.arcTo(0, y + h, 0, y + h - r, r);
-    ctx.lineTo(0, y + r);
-    ctx.arcTo(0, y, r, y, r);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
+    ctx.translate(-x, 0);
   };
 
   for (const pipe of state.pipes) {
@@ -315,13 +321,14 @@ function renderPipes(
   }
 }
 
-function renderSpeedRings(ctx: CanvasRenderingContext2D, state: GameStateRef): void {
+function renderSpeedRings(ctx: CanvasRenderingContext2D, state: GameStateRef, now: number): void {
+  // pulse 1회 계산, 모든 링에서 공유
+  const pulse = 1 + Math.sin(now / 200) * 0.08;
+
   for (const pipe of state.pipes) {
     if (!pipe.speedRing || pipe.passed) continue;
-    ctx.save();
     const ringX = pipe.x + pipe.width / 2;
     const ringY = pipe.gapY;
-    const pulse = 1 + Math.sin(Date.now() / 200) * 0.08;
     const rW = 10 * pulse;
     const rH = 26 * pulse;
     const thickness = 5;
@@ -371,26 +378,30 @@ function renderSpeedRings(ctx: CanvasRenderingContext2D, state: GameStateRef): v
     ctx.strokeText(label, 0, rH + 4);
     ctx.fillText(label, 0, rH + 4);
 
-    ctx.restore();
+    ctx.translate(-ringX, -ringY);
   }
 }
 
-function renderPortals(ctx: CanvasRenderingContext2D, state: GameStateRef, W: number): void {
-  const now = Date.now();
+function renderPortals(ctx: CanvasRenderingContext2D, state: GameStateRef, W: number, now: number): void {
+  if (state.portals.length === 0) return;
+
+  // 프레임당 1회 trig 계산
+  const portalPulse = 1 + Math.sin(now / 180) * 0.1;
+  const spiralBaseTime = now / 300;
+
   for (const portal of state.portals) {
     if (portal.activated && portal.type === "in") continue;
     if (portal.x < -60 || portal.x > W + 60) continue;
-    ctx.save();
-    const pulse = 1 + Math.sin(now / 180) * 0.1;
-    const rW = portal.size * 0.7 * pulse;
-    const rH = portal.size * 0.35 * pulse;
+
+    const rW = portal.size * 0.7 * portalPulse;
+    const rH = portal.size * 0.35 * portalPulse;
     const thickness = 10;
     const innerRW = rW - thickness;
     const innerRH = rH - thickness * 0.5;
+
     ctx.translate(portal.x, portal.y);
 
-    const tilt = Math.sin(now / 400) * 0.15;
-    ctx.rotate(tilt);
+    // tilt 회전 제거 → 미세 흔들림 제거로 성능 향상
 
     ctx.fillStyle = "rgba(251, 191, 36, 0.1)";
     ctx.beginPath();
@@ -420,14 +431,14 @@ function renderPortals(ctx: CanvasRenderingContext2D, state: GameStateRef, W: nu
     ctx.ellipse(0, 0, innerRW, innerRH, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 소용돌이 라인
+    // 소용돌이 라인 (세그먼트 감소: 0.15→0.25)
     const isIn = portal.type === "in";
     ctx.strokeStyle = "rgba(251, 191, 36, 0.4)";
     ctx.lineWidth = 1.5;
     for (let s = 0; s < 2; s++) {
-      const baseAngle = (now / 300) * (isIn ? 1 : -1) + (Math.PI * 2 * s) / 2;
+      const baseAngle = spiralBaseTime * (isIn ? 1 : -1) + (Math.PI * 2 * s) / 2;
       ctx.beginPath();
-      for (let t = 0; t <= 1; t += 0.15) {
+      for (let t = 0; t <= 1; t += 0.25) {
         const angle = baseAngle + t * Math.PI * 1.5 * (isIn ? 1 : -1);
         const r = isIn ? innerRW * 0.8 * (1 - t) : innerRW * 0.8 * t;
         const rY = isIn ? innerRH * 0.8 * (1 - t) : innerRH * 0.8 * t;
@@ -439,8 +450,7 @@ function renderPortals(ctx: CanvasRenderingContext2D, state: GameStateRef, W: nu
       ctx.stroke();
     }
 
-    // IN/OUT 라벨
-    ctx.rotate(-tilt);
+    // IN/OUT 라벨 (tilt 제거로 rotate(-tilt) 불필요)
     ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
     ctx.strokeStyle = "rgba(0,0,0,0.4)";
     ctx.lineWidth = 2;
@@ -451,7 +461,7 @@ function renderPortals(ctx: CanvasRenderingContext2D, state: GameStateRef, W: nu
     ctx.strokeText(label, 0, rH + 4);
     ctx.fillText(label, 0, rH + 4);
 
-    ctx.restore();
+    ctx.translate(-portal.x, -portal.y);
   }
 }
 
@@ -486,23 +496,31 @@ function spawnPortalParticles(state: GameStateRef, W: number): void {
 }
 
 function renderParticles(ctx: CanvasRenderingContext2D, state: GameStateRef): void {
+  if (state.particles.length === 0) return;
+
+  // 타입별 배치 렌더링: circle 먼저, square 나중
+  // circle: globalAlpha만 변경 (rotate 불필요)
   for (const p of state.particles) {
-    if (p.type === "circle") {
-      ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.save();
-      ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = p.color;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.life * 0.1);
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-      ctx.restore();
-    }
+    if (p.type !== "circle") continue;
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size / 2, 0, Math.PI * 2);
+    ctx.fill();
   }
+
+  // square: translate → rotate → -translate (save/restore 대신)
+  for (const p of state.particles) {
+    if (p.type === "circle") continue;
+    ctx.globalAlpha = p.alpha;
+    ctx.fillStyle = p.color;
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.life * 0.1);
+    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    ctx.rotate(-p.life * 0.1);
+    ctx.translate(-p.x, -p.y);
+  }
+
   ctx.globalAlpha = 1;
 }
 
@@ -609,9 +627,6 @@ function renderHUD(
   W: number,
   stageConfig?: StageConfig
 ): void {
-  const birdW = GAME_CONFIG.birdWidth;
-  const birdH = birdW * (state.bird.y > 0 ? 1 : 1); // aspect handled externally
-
   ctx.save();
   ctx.textAlign = "center";
 
@@ -630,11 +645,6 @@ function renderHUD(
     const hudText = `${hudPct}%`;
     ctx.strokeText(hudText, W / 2, 16);
     ctx.fillText(hudText, W / 2, 16);
-    // [DEBUG] 1% 단위 수치
-    ctx.font = "bold 14px sans-serif";
-    ctx.lineWidth = 2;
-    ctx.strokeText(`${exactPct}%`, W / 2 + 60, 22);
-    ctx.fillText(`${exactPct}%`, W / 2 + 60, 22);
   } else {
     ctx.strokeText(state.score.toString(), W / 2, 16);
     ctx.fillText(state.score.toString(), W / 2, 16);
@@ -672,9 +682,10 @@ function renderReadyScreen(
   state: GameStateRef,
   W: number,
   H: number,
+  now: number,
   stageConfig?: StageConfig
 ): void {
-  state.bird.y = state.canvasHeight * 0.4 + Math.sin(Date.now() / 300) * 10;
+  state.bird.y = state.canvasHeight * 0.4 + Math.sin(now / 300) * 10;
 
   ctx.save();
   ctx.textAlign = "center";

@@ -1,6 +1,6 @@
 /**
  * 게임 상태 타입 및 초기화 함수
- * - GameStateRef: 게임 루프에서 ref로 관리하는 전체 상태
+ * - GameStateRef: 게임 루프에서 ref로 관리하는 전체 상태 (캐시 필드 포함)
  * - GradientCache: 캔버스 그라디언트 캐시 구조
  * - createInitialState(): 초기 상태 생성
  * - calcStageTotalScrollDist(): 스테이지 총 스크롤 거리 계산
@@ -59,6 +59,10 @@ export interface GameStateRef {
   speedTimeLeft: number; // UI 표시용 (초 단위)
   lastFrameTime: number; // 델타타임 계산용 (performance.now)
   nextRecordPipeScrollDist: number; // 레코드 모드: 다음 파이프 스폰 거리
+  // 캐시 (매 프레임 재계산 방지)
+  closeStartX: number; // 텔레포트 파이프 닫힘 시작 X (canvasWidth * 0.75)
+  closeEndX: number; // 텔레포트 파이프 닫힘 끝 X (canvasWidth * 0.35)
+  closeRange: number; // closeStartX - closeEndX (나누기용 캐시)
 }
 
 // ==================== 그라디언트 캐시 ====================
@@ -132,6 +136,9 @@ export function createInitialState(
     speedTimeLeft: 0,
     lastFrameTime: 0,
     nextRecordPipeScrollDist: GAME_CONFIG.pipeSpawnInterval * GAME_CONFIG.pipeSpeed,
+    closeStartX: canvasWidth * 0.75,
+    closeEndX: canvasWidth * 0.35,
+    closeRange: canvasWidth * 0.75 - canvasWidth * 0.35,
   };
 }
 
