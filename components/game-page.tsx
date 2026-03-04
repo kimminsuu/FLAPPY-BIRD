@@ -35,7 +35,7 @@ import {
 } from "@/lib/game/game-actions";
 import { spawnStagePipe } from "@/lib/game/stage-spawner";
 import { buildGradientCache, renderFrame } from "@/lib/game/game-renderer";
-import { playClickSound, playJumpSound, playGameOverSound, playCoinSound, playWraithSound, playBreakSound } from "@/lib/sound";
+import { playClickSound, playJumpSound, playGameOverSound, playCoinSound, playWraithSound, playBreakSound, playTeleportSound, playGravityFlipSound, playSlowRingSound, playFastRingSound } from "@/lib/sound";
 import { handleGameOver, handleStageClear, type GameOverCallbacks } from "@/lib/game/game-over-handler";
 
 // ==================== 메인 컴포넌트 ====================
@@ -212,6 +212,8 @@ export default function GamePage({ stageConfig }: GamePageProps) {
               state.speedState = pipe.speedRing;
               state.speedEndTime = Date.now() + GAME_CONFIG.speedRingDuration * 1000;
               state.speedTimeLeft = GAME_CONFIG.speedRingDuration;
+              if (pipe.speedRing === "slow") playSlowRingSound();
+              else playFastRingSound();
 
               const bCX = state.bird.x + birdW / 2;
               const bCY = state.bird.y + birdH / 2;
@@ -300,6 +302,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
           if (nowReversed !== state.isGravityReversed) {
             state.isGravityReversed = nowReversed;
             state.bird.velocity = 0;
+            playGravityFlipSound();
             state.screenFlash = {
               color: nowReversed ? "rgba(100, 50, 180, 0.35)" : "rgba(100, 50, 180, 0.25)",
               alpha: 1, life: 12,
@@ -335,6 +338,7 @@ export default function GamePage({ stageConfig }: GamePageProps) {
             if (checkAABB(bx, by, bw, bh, px, py, portal.size, portal.size)) {
               state.isTeleporting = true;
               portal.activated = true;
+              playTeleportSound();
               const outPortal = state.portals.find(
                 (p) => p.type === "out" && p.pairId === portal.pairId
               );

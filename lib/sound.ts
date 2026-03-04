@@ -10,9 +10,15 @@
  * - playEquipSound(): 장착 "착~" 효과음
  * - playGachaResultSound(rarity): 등급별 가챠 결과 효과음
  * BGM (HTML Audio):
- * - startBGM(): BGM 시작 (첫 사용자 인터랙션 후 호출)
+ * - startBGM(): BGM 재생 시작 (홈/선택 화면)
  * - pauseBGM(): BGM 일시정지 (게임 진입 시)
- * - resumeBGM(): BGM 재개 (게임 퇴장 시)
+ * - restartBGM(): BGM 처음부터 재시작 (게임 종료 후 복귀)
+ * - resumeBGMIfWanted(): 자동재생 차단 해제용 (첫 인터랙션에서 호출)
+ * 기믹 효과음:
+ * - playTeleportSound(): 텔레포트 포탈 진입 "슉~"
+ * - playGravityFlipSound(): 중력 반전/복귀 시 "휙" (책 넘기는 느낌)
+ * - playSlowRingSound(): Slow 링 통과 (느려지는 효과음)
+ * - playFastRingSound(): Fast 링 통과 (빨라지는 효과음)
  */
 
 import type { BirdRarity } from "@/types/bird";
@@ -20,10 +26,10 @@ import type { BirdRarity } from "@/types/bird";
 // ─── BGM (HTML Audio) ─────────────────────────────────────────────────────────
 
 const BGM_SRC = "/sounds/푸른 들판 점프.mp3";
-const BGM_VOLUME = 0.4;
+const BGM_VOLUME = 0.2;
 
 let bgmAudio: HTMLAudioElement | null = null;
-let bgmStarted = false;
+let bgmWanted = false; // BGM이 재생되어야 하는 상태인지 (자동재생 차단 대응)
 
 function getBGMAudio(): HTMLAudioElement | null {
   if (typeof window === "undefined") return null;
@@ -35,26 +41,31 @@ function getBGMAudio(): HTMLAudioElement | null {
   return bgmAudio;
 }
 
-/** BGM 시작 (첫 사용자 인터랙션 이후 호출) */
+/** BGM 재생 시작 (홈/선택 화면 진입 시) */
 export function startBGM(): void {
-  const audio = getBGMAudio();
-  if (!audio || bgmStarted) return;
-  bgmStarted = true;
-  audio.play().catch(() => {});
+  bgmWanted = true;
+  getBGMAudio()?.play().catch(() => {});
 }
 
 /** BGM 일시정지 (게임 진입 시) */
 export function pauseBGM(): void {
+  bgmWanted = false;
   bgmAudio?.pause();
 }
 
-/** BGM 재시작 (게임 퇴장 시 — 처음부터 다시 재생) */
-export function resumeBGM(): void {
-  if (!bgmStarted) return;
+/** BGM 처음부터 재시작 (게임 종료 후 복귀 시) */
+export function restartBGM(): void {
+  bgmWanted = true;
   const audio = getBGMAudio();
   if (!audio) return;
   audio.currentTime = 0;
   audio.play().catch(() => {});
+}
+
+/** 자동재생 차단 해제용 — bgmWanted이면 재생 재시도 (첫 인터랙션에서 호출) */
+export function resumeBGMIfWanted(): void {
+  if (!bgmWanted) return;
+  getBGMAudio()?.play().catch(() => {});
 }
 
 // ─── 효과음 (Web Audio API) ───────────────────────────────────────────────────
@@ -349,4 +360,140 @@ export function playGachaResultSound(rarity: BirdRarity): void {
       playTone(ctx, 2093, now + 0.3, 0.3, 0.04, "sine");    // C7 살짝
       break;
   }
+}
+
+/**
+ * 텔레포트 포탈 진입 효과음 "슉~"
+ * - 노이즈 버스트 + 고음 상승 스윕 (빠른 공간 이동 느낌)
+ */
+export function playTeleportSound(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 1) 노이즈 "슉" — 짧은 화이트 노이즈 버스트
+  const bufSize = Math.floor(ctx.sampleRate * 0.18);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 1.5);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf;
+
+  const bpFilter = ctx.createBiquadFilter();
+  bpFilter.type = "bandpass";
+  bpFilter.frequency.setValueAtTime(1200, now);
+  bpFilter.frequency.exponentialRampToValueAtTime(4000, now + 0.15);
+  bpFilter.Q.value = 0.8;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.18, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+  noise.connect(bpFilter);
+  bpFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+  noise.start(now);
+
+  // 2) 고음 상승 사인파 — 공간 이동 "슝"
+  playTone(ctx, 400, now, 0.15, 0.10, "sine", 1800);
+  playTone(ctx, 800, now + 0.04, 0.12, 0.07, "sine", 2400);
+}
+
+/**
+ * 중력 반전/복귀 효과음 (책 넘기는 "휙" 느낌)
+ * - 빠른 노이즈 "팟" + 중간음 스윕 (방향 전환 임팩트)
+ */
+export function playGravityFlipSound(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 1) 종이 넘기는 "팟" 노이즈
+  const bufSize = Math.floor(ctx.sampleRate * 0.12);
+  const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < bufSize; i++) {
+    const t = i / bufSize;
+    data[i] = (Math.random() * 2 - 1) * Math.pow(Math.sin(Math.PI * t), 0.7);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf;
+
+  const hpFilter = ctx.createBiquadFilter();
+  hpFilter.type = "highpass";
+  hpFilter.frequency.value = 800;
+
+  const noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.12, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+  noise.connect(hpFilter);
+  hpFilter.connect(noiseGain);
+  noiseGain.connect(ctx.destination);
+  noise.start(now);
+
+  // 2) 반전감 사인파 스윕 — 위→아래 or 아래→위 (빠르게)
+  playTone(ctx, 900, now, 0.1, 0.09, "triangle", 300);
+  playTone(ctx, 300, now + 0.06, 0.1, 0.07, "triangle", 700);
+}
+
+/**
+ * Slow 링 통과 효과음 (속도가 느려지는 느낌)
+ * - 하강 피치 + 진동하는 저음 (시간이 늘어지는 느낌)
+ */
+export function playSlowRingSound(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 메인: 느리게 하강하는 사인파
+  const osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(700, now);
+  osc.frequency.exponentialRampToValueAtTime(180, now + 0.45);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.linearRampToValueAtTime(0.14, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.45);
+
+  // 서브: 늘어지는 저음 울림
+  playTone(ctx, 120, now + 0.1, 0.4, 0.06, "triangle", 80);
+}
+
+/**
+ * Fast 링 통과 효과음 (속도가 빨라지는 느낌)
+ * - 상승 피치 스윕 + 짧은 고음 "팡" (가속 임팩트)
+ */
+export function playFastRingSound(): void {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 메인: 빠르게 상승하는 사인파
+  const osc = ctx.createOscillator();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.exponentialRampToValueAtTime(1400, now + 0.18);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.09, now);
+  gain.gain.linearRampToValueAtTime(0.13, now + 0.06);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.22);
+
+  // 고음 스파크 "팡!"
+  playTone(ctx, 1800, now + 0.12, 0.12, 0.10, "sine", 3200);
+  playTone(ctx, 2400, now + 0.15, 0.08, 0.07, "sine", 4000);
 }

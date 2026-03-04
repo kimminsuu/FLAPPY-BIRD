@@ -5,7 +5,8 @@
 
 import { supabase } from "./supabase";
 import {
-  canClaimToday,
+  canClaimReward,
+  getEffectiveRewardDay,
   getNextRewardDay,
   getRewardDef,
   getTodayKST,
@@ -324,13 +325,14 @@ export async function claimDailyReward(
 
   if (!user) return { claimed: false };
 
-  // 2. 오늘 이미 수령했으면 종료
-  if (!canClaimToday(user.last_reward_date)) {
+  // 2. 수령 가능 여부 체크 (오늘 이미 수령 or 이번 주 7일 완료)
+  if (!canClaimReward(user.reward_day, user.last_reward_date)) {
     return { claimed: false };
   }
 
-  // 3. 다음 보상 일차
-  const nextDay = getNextRewardDay(user.reward_day);
+  // 3. 주간 리셋 반영 후 다음 보상 일차
+  const effectiveDay = getEffectiveRewardDay(user.reward_day, user.last_reward_date);
+  const nextDay = getNextRewardDay(effectiveDay);
   const reward = getRewardDef(nextDay);
 
   // 4. 보상 처리

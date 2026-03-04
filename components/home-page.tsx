@@ -3,7 +3,7 @@
  * - 장착된 새 표시, 게임 시작/새 선택 버튼
  * - 닉네임 변경 모달
  * - 게임 전체 설명 (i) 버튼 + 모달
- * - 일일 보상 모달 (홈 진입 시 미수령 보상 자동 팝업)
+ * - 일일 보상 버튼 (미수령 시 빨간 점 + 안내 텍스트 표시, 수령 시 사라짐)
  * - 유저 정보 (이름 + 코인), 계절 테마 선택
  */
 
@@ -23,7 +23,7 @@ import { useSeason } from "@/lib/season-context";
 import { getBirdById } from "@/lib/birds";
 import { useUser } from "@/lib/user-context";
 import { isUsernameAvailable, updateUsername, claimDailyReward, getOwnedBirdIds } from "@/lib/user-service";
-import { canClaimToday } from "@/lib/daily-rewards";
+import { canClaimReward, getEffectiveRewardDay } from "@/lib/daily-rewards";
 import { playClickSound } from "@/lib/sound";
 import DailyRewardModal from "@/components/daily-reward-modal";
 
@@ -39,6 +39,7 @@ export default function HomePage() {
 
   // 일일 보상 모달 상태
   const [showDailyReward, setShowDailyReward] = useState(false);
+  const [hasUnclaimedReward, setHasUnclaimedReward] = useState(false);
 
   // 닉네임 변경 모달 상태
   const [showNameModal, setShowNameModal] = useState(false);
@@ -49,10 +50,7 @@ export default function HomePage() {
   useEffect(() => {
     if (user) {
       setEquippedBirdId(user.equipped_bird_id);
-      // 일일 보상 수령 가능 여부 체크
-      if (canClaimToday(user.last_reward_date)) {
-        setShowDailyReward(true);
-      }
+      setHasUnclaimedReward(canClaimReward(user.reward_day, user.last_reward_date));
     }
   }, [user]);
 
@@ -78,6 +76,7 @@ export default function HomePage() {
     if (!user) return { claimed: false as const };
     const result = await claimDailyReward(user.id);
     if (result.claimed) {
+      setHasUnclaimedReward(false);
       // 낙관적 업데이트: 코인, reward_day, last_reward_date
       const updates: Record<string, unknown> = {
         reward_day: result.day,
@@ -170,14 +169,22 @@ export default function HomePage() {
           <UserInfoBar onEditUsername={openNameModal} />
         </div>
 
-        <div className="flex justify-end mt-1">
+        <div className="flex flex-col items-end mt-1 gap-0.5">
           <button
             onClick={() => { playClickSound(); setShowDailyReward(true); }}
-            className="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-orange-400/80 to-yellow-400/80 hover:from-orange-400 hover:to-yellow-400 active:from-orange-500 active:to-yellow-500 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
+            className="relative flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-orange-400/80 to-yellow-400/80 hover:from-orange-400 hover:to-yellow-400 active:from-orange-500 active:to-yellow-500 backdrop-blur-sm rounded-lg border border-white/30 transition-all"
           >
             <Gift className="w-3.5 h-3.5 text-white" />
             <span className="text-white text-[10px] font-bold">일일보상</span>
+            {hasUnclaimedReward && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+            )}
           </button>
+          {hasUnclaimedReward && (
+            <p className="px-2 py-0.5 bg-purple-600/90 text-white text-[10px] font-bold rounded-full shadow-lg animate-pulse">
+              📬 미수령 보상이 있어요!
+            </p>
+          )}
         </div>
       </div>
 
@@ -245,8 +252,8 @@ export default function HomePage() {
       {/* 일일 보상 모달 */}
       {showDailyReward && user && (
         <DailyRewardModal
-          currentDay={user.reward_day}
-          canClaim={canClaimToday(user.last_reward_date)}
+          currentDay={getEffectiveRewardDay(user.reward_day, user.last_reward_date)}
+          canClaim={canClaimReward(user.reward_day, user.last_reward_date)}
           onClaim={handleClaimDailyReward}
           onClose={() => setShowDailyReward(false)}
         />

@@ -111,18 +111,9 @@ export default function DailyRewardModal({
     onClose();
   }, [onClose]);
 
-  /** 각 Day 칸의 상태 판별 */
+  /** 각 Day 칸의 상태 판별 (currentDay는 주간 리셋 반영된 effective day) */
   const getDayStatus = (day: number): "claimed" | "today" | "future" => {
-    // 7일 완료 후 새 주기: 전부 미수령
-    const isNewCycle = currentDay === 7 && canClaim;
-    if (isNewCycle) {
-      if (day === todayDay) return "today"; // todayDay=1
-      return "future";
-    }
-
-    // 1~currentDay까지는 수령 완료
     if (day <= currentDay) return "claimed";
-    // 다음 수령 대상
     if (day === todayDay && canClaim) return "today";
     return "future";
   };

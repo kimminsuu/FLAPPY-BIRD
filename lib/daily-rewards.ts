@@ -2,6 +2,7 @@
  * 일일 보상 (Daily Reward) 시스템
  * - 7일 주기 보상 정의 (코인 / 새)
  * - KST(UTC+9) 자정 기준 날짜 계산
+ * - 매주 월요일 주간 리셋 (이전 주 진행도 무관하게 Day 1부터 재시작)
  * - 보상 수령 가능 여부 판별
  * - 등급별 미보유 새 랜덤 선택
  */
@@ -64,9 +65,40 @@ export function getTodayKST(): string {
   return kst.toISOString().slice(0, 10);
 }
 
-/** 오늘 보상을 아직 수령하지 않았는지 */
-export function canClaimToday(lastRewardDate: string | null): boolean {
-  return lastRewardDate !== getTodayKST();
+/** KST 날짜 문자열이 속한 주의 월요일 (YYYY-MM-DD) */
+export function getMondayOfWeekKST(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  date.setDate(date.getDate() + diff);
+  const yy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yy}-${mm}-${dd}`;
+}
+
+/** 마지막 수령일 기준으로 새로운 주(월요일 리셋)인지 판별 */
+export function isNewWeek(lastRewardDate: string | null): boolean {
+  if (!lastRewardDate) return true;
+  return getMondayOfWeekKST(lastRewardDate) !== getMondayOfWeekKST(getTodayKST());
+}
+
+/**
+ * 주간 리셋을 반영한 실질적 보상 일차
+ * - 새 주(월요일 이후)면 0 반환 → Day 1부터 시작
+ * - 같은 주면 DB값 그대로 반환
+ */
+export function getEffectiveRewardDay(rewardDay: number, lastRewardDate: string | null): number {
+  if (isNewWeek(lastRewardDate)) return 0;
+  return rewardDay;
+}
+
+/** 오늘 보상을 수령할 수 있는지 (주간 7일 완료 체크 포함) */
+export function canClaimReward(rewardDay: number, lastRewardDate: string | null): boolean {
+  if (lastRewardDate === getTodayKST()) return false; // 오늘 이미 수령
+  const effective = getEffectiveRewardDay(rewardDay, lastRewardDate);
+  return effective < 7; // 이번 주 7일 모두 수령했으면 불가
 }
 
 /** 다음 보상 일차 (7일 주기 순환) */
